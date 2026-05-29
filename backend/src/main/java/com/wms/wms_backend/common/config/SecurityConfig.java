@@ -24,7 +24,10 @@ public class SecurityConfig {
                                 "/api/users",
                                 "/api/common-codes/**",
                                 "/api/warehouses",
-                                "/api/warehouse-locations"
+                                "/api/warehouse-locations",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );

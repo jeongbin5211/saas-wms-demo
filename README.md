@@ -561,6 +561,17 @@ Local MySQL:
 docker compose up -d
 ```
 
+### API Documentation
+
+Spring Boot 실행 후 Swagger UI와 OpenAPI 문서를 아래 URL에서 확인한다.
+
+```text
+http://localhost:8080/swagger-ui.html
+http://localhost:8080/v3/api-docs
+```
+
+Swagger UI는 백엔드 API를 브라우저에서 직접 확인하고 호출해볼 수 있는 개발용 API 문서로 사용한다.
+
 ---
 
 ## 13. Development Roadmap
