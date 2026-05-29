@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: wms-backend
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/withworks_demo?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: wms_user
+    password: wms_pass
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
+    show-sql: true
+
+server:
+  port: 8080
