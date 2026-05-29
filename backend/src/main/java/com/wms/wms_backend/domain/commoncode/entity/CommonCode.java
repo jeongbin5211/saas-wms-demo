@@ -53,4 +53,11 @@ public class CommonCode extends BaseEntity {
         this.sortOrder = sortOrder;
         this.useYn = "Y";
     }
+
+    public void updateDetails(String codeName, String description, Integer sortOrder) {
+        this.codeName = codeName;
+        this.description = description;
+        this.sortOrder = sortOrder;
+        this.useYn = "Y";
+    }
 }

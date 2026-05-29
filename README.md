@@ -387,8 +387,10 @@ common_codes
 
 초기 개발 단계에서는 Java/JPA 학습과 디버깅 편의성을 우선한다.
 
-- Git commit message는 Conventional Commits를 따른다.
-- 예: `chore: initialize saas wms demo project`, `feat: add warehouse location domain`, `docs: update architecture notes`
+- Git commit message는 `[type] 한글 작업 설명` 형식을 따른다.
+- 타입은 영어로 작성하고, 작업 설명은 한글로 명확하게 작성한다.
+- 예: `[feat] 창고 위치정보 도메인 추가`, `[fix] GitHub Actions 백엔드 빌드 실패 수정`, `[docs] README 코드 컨벤션 정리`
+- 주요 타입: `[feat]`, `[fix]`, `[docs]`, `[style]`, `[refactor]`, `[test]`, `[ci]`, `[chore]`
 
 - 목록 변환은 `stream().map().toList()`보다 명시적인 `for`문을 우선 사용한다.
 - 조회 결과, 응답 리스트, 변환 과정을 변수로 분리해 중간 상태를 확인하기 쉽게 작성한다.
@@ -578,7 +580,7 @@ docker compose up -d
 - [x] 공통코드 Entity 설계
 - [x] 거래처 Entity 설계
 - [x] User 기본 Entity 설계
-- [ ] 위치정보 Entity 설계
+- [x] 위치정보 Entity 설계
 - [ ] 품목정보 Entity 설계
 - [ ] OMS Entity 설계
 - [ ] WMS Entity 설계

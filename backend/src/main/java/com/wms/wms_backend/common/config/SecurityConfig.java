@@ -18,7 +18,14 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/health", "/api/accounts", "/api/users", "/api/common-codes/**").permitAll()
+                        .requestMatchers(
+                                "/api/health",
+                                "/api/accounts",
+                                "/api/users",
+                                "/api/common-codes/**",
+                                "/api/warehouses",
+                                "/api/warehouse-locations"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 );
 
