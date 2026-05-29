@@ -25,6 +25,10 @@ public class SecurityConfig {
                                 "/api/common-codes/**",
                                 "/api/warehouses",
                                 "/api/warehouse-locations",
+                                "/api/item-masters",
+                                "/api/item-classes",
+                                "/api/items",
+                                "/api/item-catalog",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"

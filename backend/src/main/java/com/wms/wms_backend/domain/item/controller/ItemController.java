@@ -1,0 +1,140 @@
+package com.wms.wms_backend.domain.item.controller;
+
+import com.wms.wms_backend.domain.item.entity.Item;
+import com.wms.wms_backend.domain.item.entity.ItemClass;
+import com.wms.wms_backend.domain.item.entity.ItemMaster;
+import com.wms.wms_backend.domain.item.repository.ItemClassRepository;
+import com.wms.wms_backend.domain.item.repository.ItemMasterRepository;
+import com.wms.wms_backend.domain.item.repository.ItemRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@RequiredArgsConstructor
+@RestController
+public class ItemController {
+
+    private final ItemMasterRepository itemMasterRepository;
+    private final ItemClassRepository itemClassRepository;
+    private final ItemRepository itemRepository;
+
+    @GetMapping("/api/item-masters")
+    public List<ItemMasterResponse> findItemMasters() {
+        List<ItemMaster> itemMasters = itemMasterRepository.findAllByUseYnOrderByIdAsc("Y");
+        List<ItemMasterResponse> responses = new ArrayList<>();
+
+        for (ItemMaster itemMaster : itemMasters) {
+            responses.add(ItemMasterResponse.from(itemMaster));
+        }
+
+        return responses;
+    }
+
+    @GetMapping("/api/item-classes")
+    public List<ItemClassResponse> findItemClasses() {
+        List<ItemClass> itemClasses = itemClassRepository.findAllByUseYnOrderByIdAsc("Y");
+        List<ItemClassResponse> responses = new ArrayList<>();
+
+        for (ItemClass itemClass : itemClasses) {
+            responses.add(ItemClassResponse.from(itemClass));
+        }
+
+        return responses;
+    }
+
+    @GetMapping("/api/items")
+    public List<ItemResponse> findItems() {
+        List<Item> items = itemRepository.findAllByUseYnOrderByIdAsc("Y");
+        List<ItemResponse> responses = new ArrayList<>();
+
+        for (Item item : items) {
+            responses.add(ItemResponse.from(item));
+        }
+
+        return responses;
+    }
+
+    @GetMapping("/api/item-catalog")
+    public ItemCatalogResponse findItemCatalog() {
+        List<ItemMasterResponse> itemMasters = findItemMasters();
+        List<ItemClassResponse> itemClasses = findItemClasses();
+        List<ItemResponse> items = findItems();
+
+        return new ItemCatalogResponse(itemMasters, itemClasses, items);
+    }
+
+    public record ItemMasterResponse(
+            Long id,
+            Long accountId,
+            Long topAccountId,
+            String itemMasterCode,
+            String itemMasterName,
+            String useYn
+    ) {
+        public static ItemMasterResponse from(ItemMaster itemMaster) {
+            return new ItemMasterResponse(
+                    itemMaster.getId(),
+                    itemMaster.getAccount().getId(),
+                    itemMaster.getTopAccountId(),
+                    itemMaster.getItemMasterCode(),
+                    itemMaster.getItemMasterName(),
+                    itemMaster.getUseYn()
+            );
+        }
+    }
+
+    public record ItemClassResponse(
+            Long id,
+            Long itemMasterId,
+            String itemClassCode,
+            String itemClassName,
+            String useYn
+    ) {
+        public static ItemClassResponse from(ItemClass itemClass) {
+            return new ItemClassResponse(
+                    itemClass.getId(),
+                    itemClass.getItemMaster().getId(),
+                    itemClass.getItemClassCode(),
+                    itemClass.getItemClassName(),
+                    itemClass.getUseYn()
+            );
+        }
+    }
+
+    public record ItemResponse(
+            Long id,
+            Long itemClassId,
+            String itemCode,
+            String itemName,
+            String barcode,
+            String unit,
+            BigDecimal purchasePrice,
+            BigDecimal salesPrice,
+            String useYn
+    ) {
+        public static ItemResponse from(Item item) {
+            return new ItemResponse(
+                    item.getId(),
+                    item.getItemClass().getId(),
+                    item.getItemCode(),
+                    item.getItemName(),
+                    item.getBarcode(),
+                    item.getUnit(),
+                    item.getPurchasePrice(),
+                    item.getSalesPrice(),
+                    item.getUseYn()
+            );
+        }
+    }
+
+    public record ItemCatalogResponse(
+            List<ItemMasterResponse> itemMasters,
+            List<ItemClassResponse> itemClasses,
+            List<ItemResponse> items
+    ) {
+    }
+}
