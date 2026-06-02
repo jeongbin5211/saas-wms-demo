@@ -342,6 +342,55 @@ const shippingDetailColumns = [
   { header: '출고 수량', name: 'shippedQuantity', width: 110, align: 'right' },
 ]
 
+const purchaseReturnColumns = [
+  { header: '구매반품 번호', name: 'purchaseReturnNo', width: 170 },
+  { header: '구매주문 번호', name: 'purchaseOrderNo', width: 180 },
+  { header: '반품 상태', name: 'returnStatusSubCode', width: 120, align: 'center' },
+  { header: '반품일', name: 'returnDate', width: 120, align: 'center' },
+  { header: '사유', name: 'reason', width: 280 },
+]
+
+const purchaseReturnDetailColumns = [
+  { header: '구매반품 번호', name: 'purchaseReturnNo', width: 170 },
+  { header: '품목 코드', name: 'itemCode', width: 180 },
+  { header: '품목명', name: 'itemName', width: 210 },
+  { header: '로케이션', name: 'locationCode', width: 130, align: 'center' },
+  { header: '반품 수량', name: 'returnQuantity', width: 110, align: 'right' },
+]
+
+const salesReturnColumns = [
+  { header: '판매반품 번호', name: 'salesReturnNo', width: 170 },
+  { header: '판매주문 번호', name: 'salesOrderNo', width: 180 },
+  { header: '반품 상태', name: 'returnStatusSubCode', width: 120, align: 'center' },
+  { header: '반품일', name: 'returnDate', width: 120, align: 'center' },
+  { header: '사유', name: 'reason', width: 280 },
+]
+
+const salesReturnDetailColumns = [
+  { header: '판매반품 번호', name: 'salesReturnNo', width: 170 },
+  { header: '품목 코드', name: 'itemCode', width: 180 },
+  { header: '품목명', name: 'itemName', width: 210 },
+  { header: '로케이션', name: 'locationCode', width: 130, align: 'center' },
+  { header: '반품 수량', name: 'returnQuantity', width: 110, align: 'right' },
+]
+
+const billColumns = [
+  { header: '청구 번호', name: 'billNo', width: 170 },
+  { header: '판매주문 번호', name: 'salesOrderNo', width: 180 },
+  { header: '청구 상태', name: 'billStatusSubCode', width: 120, align: 'center' },
+  { header: '청구일', name: 'billDate', width: 120, align: 'center' },
+  { header: '청구 금액', name: 'totalAmount', width: 120, align: 'right' },
+]
+
+const billDetailColumns = [
+  { header: '청구 번호', name: 'billNo', width: 170 },
+  { header: '품목 코드', name: 'itemCode', width: 180 },
+  { header: '품목명', name: 'itemName', width: 210 },
+  { header: '청구 수량', name: 'billQuantity', width: 110, align: 'right' },
+  { header: '단가', name: 'unitPrice', width: 100, align: 'right' },
+  { header: '금액', name: 'amount', width: 110, align: 'right' },
+]
+
 const rowNumberHeaders = ['rowNum']
 const selectableRowHeaders = ['rowNum', 'checkbox']
 const inventorySummaryColumns = ['quantity', 'allocatedQuantity', 'availableQuantity']
@@ -349,6 +398,8 @@ const emptyLocationCatalog = { warehouses: [], areas: [], zones: [], locations: 
 const emptyItemCatalog = { itemMasters: [], itemClasses: [], items: [] }
 const emptyInboundFlow = { purchaseOrders: [], purchaseOrderDetails: [], receivings: [], receivingDetails: [] }
 const emptyOutboundFlow = { salesOrders: [], salesOrderDetails: [], shippings: [], shippingDetails: [] }
+const emptyReturnFlow = { purchaseReturns: [], purchaseReturnDetails: [], salesReturns: [], salesReturnDetails: [] }
+const emptyBillingFlow = { bills: [], billDetails: [] }
 
 function App() {
   const [route, setRoute] = useState(() => window.location.pathname)
@@ -678,16 +729,22 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
   const [itemCatalog, setItemCatalog] = useState(emptyItemCatalog)
   const [inboundFlow, setInboundFlow] = useState(emptyInboundFlow)
   const [outboundFlow, setOutboundFlow] = useState(emptyOutboundFlow)
+  const [returnFlow, setReturnFlow] = useState(emptyReturnFlow)
+  const [billingFlow, setBillingFlow] = useState(emptyBillingFlow)
   const [keyword, setKeyword] = useState('')
   const [historyKeyword, setHistoryKeyword] = useState('')
   const [loading, setLoading] = useState(false)
   const [masterLoading, setMasterLoading] = useState(false)
   const [inboundLoading, setInboundLoading] = useState(false)
   const [outboundLoading, setOutboundLoading] = useState(false)
+  const [returnLoading, setReturnLoading] = useState(false)
+  const [billingLoading, setBillingLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [masterErrorMessage, setMasterErrorMessage] = useState('')
   const [inboundErrorMessage, setInboundErrorMessage] = useState('')
   const [outboundErrorMessage, setOutboundErrorMessage] = useState('')
+  const [returnErrorMessage, setReturnErrorMessage] = useState('')
+  const [billingErrorMessage, setBillingErrorMessage] = useState('')
   const activeMenu = route.replace(/^\/app\/?/, '') || 'inventory'
   const activePage = internalPages[activeMenu] ?? internalPages.inventory
 
@@ -901,18 +958,81 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
     }
   }, [])
 
+  const loadReturnFlow = useCallback(async () => {
+    setReturnLoading(true)
+    setReturnErrorMessage('')
+
+    try {
+      const [purchaseReturnResponse, purchaseReturnDetailResponse, salesReturnResponse, salesReturnDetailResponse] =
+        await Promise.all([
+          fetch('/api/purchase-returns'),
+          fetch('/api/purchase-return-details'),
+          fetch('/api/sales-returns'),
+          fetch('/api/sales-return-details'),
+        ])
+
+      if (
+        !purchaseReturnResponse.ok ||
+        !purchaseReturnDetailResponse.ok ||
+        !salesReturnResponse.ok ||
+        !salesReturnDetailResponse.ok
+      ) {
+        throw new Error('API response was not successful.')
+      }
+
+      const [purchaseReturns, purchaseReturnDetails, salesReturns, salesReturnDetails] = await Promise.all([
+        purchaseReturnResponse.json(),
+        purchaseReturnDetailResponse.json(),
+        salesReturnResponse.json(),
+        salesReturnDetailResponse.json(),
+      ])
+
+      setReturnFlow({ purchaseReturns, purchaseReturnDetails, salesReturns, salesReturnDetails })
+    } catch {
+      setReturnErrorMessage('반품 API에 연결할 수 없습니다. 백엔드 서버 상태를 확인하세요.')
+    } finally {
+      setReturnLoading(false)
+    }
+  }, [])
+
+  const loadBillingFlow = useCallback(async () => {
+    setBillingLoading(true)
+    setBillingErrorMessage('')
+
+    try {
+      const [billResponse, billDetailResponse] = await Promise.all([
+        fetch('/api/bills'),
+        fetch('/api/bill-details'),
+      ])
+
+      if (!billResponse.ok || !billDetailResponse.ok) {
+        throw new Error('API response was not successful.')
+      }
+
+      const [bills, billDetails] = await Promise.all([billResponse.json(), billDetailResponse.json()])
+
+      setBillingFlow({ bills, billDetails })
+    } catch {
+      setBillingErrorMessage('청구 API에 연결할 수 없습니다. 백엔드 서버 상태를 확인하세요.')
+    } finally {
+      setBillingLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     const timerId = window.setTimeout(() => {
       loadWarehouseData()
       loadMasterData()
       loadInboundFlow()
       loadOutboundFlow()
+      loadReturnFlow()
+      loadBillingFlow()
     }, 0)
 
     return () => {
       window.clearTimeout(timerId)
     }
-  }, [loadInboundFlow, loadMasterData, loadOutboundFlow, loadWarehouseData])
+  }, [loadBillingFlow, loadInboundFlow, loadMasterData, loadOutboundFlow, loadReturnFlow, loadWarehouseData])
 
   return (
     <div className="app-shell">
@@ -1042,6 +1162,24 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
             page={activePage}
           />
         ) : null}
+        {activeMenu === 'returns' ? (
+          <ReturnView
+            errorMessage={returnErrorMessage}
+            flow={returnFlow}
+            loading={returnLoading}
+            onRefresh={loadReturnFlow}
+            page={activePage}
+          />
+        ) : null}
+        {activeMenu === 'billing' ? (
+          <BillingView
+            errorMessage={billingErrorMessage}
+            flow={billingFlow}
+            loading={billingLoading}
+            onRefresh={loadBillingFlow}
+            page={activePage}
+          />
+        ) : null}
         {![
           'guide',
           'inventory',
@@ -1052,6 +1190,8 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
           'receiving',
           'sales',
           'shipping',
+          'returns',
+          'billing',
         ].includes(activeMenu) ? (
           <PlaceholderWorkView page={activePage} />
         ) : null}
@@ -1351,6 +1491,72 @@ function ShippingView({ errorMessage, flow, loading, onRefresh, page }) {
         <div className="master-grid-layout">
           <GridSection columns={shippingColumns} data={flow.shippings} title="출고" />
           <GridSection columns={shippingDetailColumns} data={flow.shippingDetails} title="출고 상세" />
+        </div>
+      </WorkPage>
+    </div>
+  )
+}
+
+function ReturnView({ errorMessage, flow, loading, onRefresh, page }) {
+  const purchaseReturnQuantity = flow.purchaseReturnDetails.reduce(
+    (sum, detail) => sum + Number(detail.returnQuantity ?? 0),
+    0,
+  )
+  const salesReturnQuantity = flow.salesReturnDetails.reduce(
+    (sum, detail) => sum + Number(detail.returnQuantity ?? 0),
+    0,
+  )
+
+  return (
+    <div className="screen-stack">
+      <section className="metric-grid">
+        <MetricCard label="구매반품" value={flow.purchaseReturns.length} tone="blue" />
+        <MetricCard label="판매반품" value={flow.salesReturns.length} tone="teal" />
+        <MetricCard label="구매반품 수량" value={purchaseReturnQuantity.toLocaleString()} tone="navy" />
+        <MetricCard label="판매반품 수량" value={salesReturnQuantity.toLocaleString()} tone="amber" />
+      </section>
+
+      <WorkPage
+        description={page.description}
+        eyebrow="반품 흐름"
+        title="반품관리"
+        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+      >
+        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        <div className="master-grid-layout">
+          <GridSection columns={purchaseReturnColumns} data={flow.purchaseReturns} title="구매반품" />
+          <GridSection columns={purchaseReturnDetailColumns} data={flow.purchaseReturnDetails} title="구매반품 상세" />
+          <GridSection columns={salesReturnColumns} data={flow.salesReturns} title="판매반품" />
+          <GridSection columns={salesReturnDetailColumns} data={flow.salesReturnDetails} title="판매반품 상세" />
+        </div>
+      </WorkPage>
+    </div>
+  )
+}
+
+function BillingView({ errorMessage, flow, loading, onRefresh, page }) {
+  const totalAmount = flow.bills.reduce((sum, bill) => sum + Number(bill.totalAmount ?? 0), 0)
+  const detailAmount = flow.billDetails.reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0)
+
+  return (
+    <div className="screen-stack">
+      <section className="metric-grid">
+        <MetricCard label="청구서" value={flow.bills.length} tone="blue" />
+        <MetricCard label="청구 상세" value={flow.billDetails.length} tone="teal" />
+        <MetricCard label="청구 금액" value={totalAmount.toLocaleString()} tone="navy" />
+        <MetricCard label="상세 금액" value={detailAmount.toLocaleString()} tone="amber" />
+      </section>
+
+      <WorkPage
+        description={page.description}
+        eyebrow="청구 흐름"
+        title="청구관리"
+        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+      >
+        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        <div className="master-grid-layout">
+          <GridSection columns={billColumns} data={flow.bills} title="청구서" />
+          <GridSection columns={billDetailColumns} data={flow.billDetails} title="청구 상세" />
         </div>
       </WorkPage>
     </div>
