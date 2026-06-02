@@ -205,6 +205,89 @@ const internalPages = {
   billing: { title: '청구관리', eyebrow: '운영관리', description: '출고 완료 내역을 기준으로 청구서를 생성하고 상태를 추적합니다.' },
 }
 
+const statusCodeGroups = [
+  'WAREHOUSE_TYPE',
+  'INVENTORY_HISTORY_TYPE',
+  'PURCHASE_ORDER_STATUS',
+  'RECEIVING_STATUS',
+  'SALES_ORDER_STATUS',
+  'SHIPPING_STATUS',
+  'PURCHASE_RETURN_STATUS',
+  'SALES_RETURN_STATUS',
+  'BILL_STATUS',
+]
+
+const fallbackCodeNames = {
+  WAREHOUSE_TYPE: {
+    MAIN: '일반 창고',
+    RETURN: '반품 창고',
+  },
+  INVENTORY_HISTORY_TYPE: {
+    INBOUND: '입고',
+    OUTBOUND: '출고',
+    ADJUSTMENT: '조정',
+    RETURN_INBOUND: '반품입고',
+    RETURN_OUTBOUND: '반품출고',
+  },
+  PURCHASE_ORDER_STATUS: {
+    WAITING: '대기',
+    RECEIVED: '입고완료',
+    CLOSED: '마감',
+  },
+  RECEIVING_STATUS: {
+    WAITING: '대기',
+    CONFIRMED: '확정',
+  },
+  SALES_ORDER_STATUS: {
+    WAITING: '대기',
+    SHIPPED: '출고완료',
+    BILLED: '청구완료',
+  },
+  SHIPPING_STATUS: {
+    WAITING: '대기',
+    CONFIRMED: '확정',
+  },
+  PURCHASE_RETURN_STATUS: {
+    WAITING: '대기',
+    SHIPPED: '반품출고',
+  },
+  SALES_RETURN_STATUS: {
+    WAITING: '대기',
+    RECEIVED: '반품입고',
+  },
+  BILL_STATUS: {
+    ISSUED: '발행',
+    PAID: '입금완료',
+  },
+}
+
+const statusToneBySubCode = {
+  WAITING: 'amber',
+  CONFIRMED: 'teal',
+  RECEIVED: 'teal',
+  SHIPPED: 'blue',
+  BILLED: 'blue',
+  ISSUED: 'blue',
+  PAID: 'teal',
+  CLOSED: 'navy',
+  INBOUND: 'teal',
+  OUTBOUND: 'blue',
+  ADJUSTMENT: 'amber',
+  RETURN_INBOUND: 'teal',
+  RETURN_OUTBOUND: 'red',
+}
+
+const statusBadgeFormatter = ({ value }) => {
+  if (!value) {
+    return ''
+  }
+
+  const label = value.label ?? value
+  const tone = value.tone ?? 'navy'
+
+  return `<span class="status-badge ${tone}">${label}</span>`
+}
+
 const inventoryColumns = [
   { header: '품목 코드', name: 'itemCode', width: 170 },
   { header: '품목명', name: 'itemName', width: 210 },
@@ -216,7 +299,7 @@ const inventoryColumns = [
 ]
 
 const historyColumns = [
-  { header: '이력 유형', name: 'historyTypeSubCode', width: 150 },
+  { header: '이력 유형', name: 'historyTypeDisplay', width: 150, formatter: statusBadgeFormatter },
   { header: '품목 코드', name: 'itemCode', width: 170 },
   { header: '로케이션', name: 'locationCode', width: 130, align: 'center' },
   { header: '변경 수량', name: 'changeQuantity', width: 100, align: 'right' },
@@ -228,7 +311,7 @@ const historyColumns = [
 const warehouseColumns = [
   { header: '창고 코드', name: 'warehouseCode', width: 150 },
   { header: '창고명', name: 'warehouseName', width: 210 },
-  { header: '창고 유형', name: 'warehouseTypeSubCode', width: 120, align: 'center' },
+  { header: '창고 유형', name: 'warehouseTypeDisplay', width: 120, align: 'center', formatter: statusBadgeFormatter },
   { header: '거래처 ID', name: 'accountId', width: 100, align: 'right' },
   { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
 ]
@@ -281,7 +364,7 @@ const itemColumns = [
 const purchaseOrderColumns = [
   { header: '구매주문 번호', name: 'purchaseOrderNo', width: 180 },
   { header: '공급사', name: 'supplierAccountName', width: 180 },
-  { header: '주문 상태', name: 'orderStatusSubCode', width: 120, align: 'center' },
+  { header: '주문 상태', name: 'orderStatusDisplay', width: 120, align: 'center', formatter: statusBadgeFormatter },
   { header: '주문일', name: 'orderDate', width: 120, align: 'center' },
   { header: '비고', name: 'note', width: 280 },
 ]
@@ -298,7 +381,7 @@ const purchaseOrderDetailColumns = [
 const receivingColumns = [
   { header: '입고 번호', name: 'receivingNo', width: 170 },
   { header: '구매주문 번호', name: 'purchaseOrderNo', width: 180 },
-  { header: '입고 상태', name: 'receivingStatusSubCode', width: 120, align: 'center' },
+  { header: '입고 상태', name: 'receivingStatusDisplay', width: 120, align: 'center', formatter: statusBadgeFormatter },
   { header: '입고일', name: 'receivingDate', width: 120, align: 'center' },
 ]
 
@@ -313,7 +396,7 @@ const receivingDetailColumns = [
 const salesOrderColumns = [
   { header: '판매주문 번호', name: 'salesOrderNo', width: 180 },
   { header: '고객사', name: 'customerAccountName', width: 180 },
-  { header: '주문 상태', name: 'orderStatusSubCode', width: 120, align: 'center' },
+  { header: '주문 상태', name: 'orderStatusDisplay', width: 120, align: 'center', formatter: statusBadgeFormatter },
   { header: '주문일', name: 'orderDate', width: 120, align: 'center' },
   { header: '비고', name: 'note', width: 280 },
 ]
@@ -330,7 +413,7 @@ const salesOrderDetailColumns = [
 const shippingColumns = [
   { header: '출고 번호', name: 'shippingNo', width: 170 },
   { header: '판매주문 번호', name: 'salesOrderNo', width: 180 },
-  { header: '출고 상태', name: 'shippingStatusSubCode', width: 120, align: 'center' },
+  { header: '출고 상태', name: 'shippingStatusDisplay', width: 120, align: 'center', formatter: statusBadgeFormatter },
   { header: '출고일', name: 'shippingDate', width: 120, align: 'center' },
 ]
 
@@ -345,7 +428,7 @@ const shippingDetailColumns = [
 const purchaseReturnColumns = [
   { header: '구매반품 번호', name: 'purchaseReturnNo', width: 170 },
   { header: '구매주문 번호', name: 'purchaseOrderNo', width: 180 },
-  { header: '반품 상태', name: 'returnStatusSubCode', width: 120, align: 'center' },
+  { header: '반품 상태', name: 'returnStatusDisplay', width: 120, align: 'center', formatter: statusBadgeFormatter },
   { header: '반품일', name: 'returnDate', width: 120, align: 'center' },
   { header: '사유', name: 'reason', width: 280 },
 ]
@@ -361,7 +444,7 @@ const purchaseReturnDetailColumns = [
 const salesReturnColumns = [
   { header: '판매반품 번호', name: 'salesReturnNo', width: 170 },
   { header: '판매주문 번호', name: 'salesOrderNo', width: 180 },
-  { header: '반품 상태', name: 'returnStatusSubCode', width: 120, align: 'center' },
+  { header: '반품 상태', name: 'returnStatusDisplay', width: 120, align: 'center', formatter: statusBadgeFormatter },
   { header: '반품일', name: 'returnDate', width: 120, align: 'center' },
   { header: '사유', name: 'reason', width: 280 },
 ]
@@ -377,7 +460,7 @@ const salesReturnDetailColumns = [
 const billColumns = [
   { header: '청구 번호', name: 'billNo', width: 170 },
   { header: '판매주문 번호', name: 'salesOrderNo', width: 180 },
-  { header: '청구 상태', name: 'billStatusSubCode', width: 120, align: 'center' },
+  { header: '청구 상태', name: 'billStatusDisplay', width: 120, align: 'center', formatter: statusBadgeFormatter },
   { header: '청구일', name: 'billDate', width: 120, align: 'center' },
   { header: '청구 금액', name: 'totalAmount', width: 120, align: 'right' },
 ]
@@ -400,6 +483,43 @@ const emptyInboundFlow = { purchaseOrders: [], purchaseOrderDetails: [], receivi
 const emptyOutboundFlow = { salesOrders: [], salesOrderDetails: [], shippings: [], shippingDetails: [] }
 const emptyReturnFlow = { purchaseReturns: [], purchaseReturnDetails: [], salesReturns: [], salesReturnDetails: [] }
 const emptyBillingFlow = { bills: [], billDetails: [] }
+const emptyCodeMaps = {}
+
+function buildCodeMaps(groupResults) {
+  const codeMaps = {}
+
+  for (const result of groupResults) {
+    codeMaps[result.groupCode] = {}
+
+    for (const code of result.codes) {
+      codeMaps[result.groupCode][code.subCode] = code.codeName
+    }
+  }
+
+  return codeMaps
+}
+
+function resolveCodeName(codeMaps, groupCode, subCode) {
+  if (!subCode) {
+    return ''
+  }
+
+  return codeMaps[groupCode]?.[subCode] ?? fallbackCodeNames[groupCode]?.[subCode] ?? subCode
+}
+
+function buildStatusDisplay(codeMaps, groupCode, subCode) {
+  return {
+    label: resolveCodeName(codeMaps, groupCode, subCode),
+    tone: statusToneBySubCode[subCode] ?? 'navy',
+  }
+}
+
+function withStatusDisplay(row, codeMaps, groupCode, sourceField, targetField) {
+  return {
+    ...row,
+    [targetField]: buildStatusDisplay(codeMaps, groupCode, row[sourceField]),
+  }
+}
 
 function App() {
   const [route, setRoute] = useState(() => window.location.pathname)
@@ -731,6 +851,7 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
   const [outboundFlow, setOutboundFlow] = useState(emptyOutboundFlow)
   const [returnFlow, setReturnFlow] = useState(emptyReturnFlow)
   const [billingFlow, setBillingFlow] = useState(emptyBillingFlow)
+  const [codeMaps, setCodeMaps] = useState(emptyCodeMaps)
   const [keyword, setKeyword] = useState('')
   const [historyKeyword, setHistoryKeyword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -747,6 +868,111 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
   const [billingErrorMessage, setBillingErrorMessage] = useState('')
   const activeMenu = route.replace(/^\/app\/?/, '') || 'inventory'
   const activePage = internalPages[activeMenu] ?? internalPages.inventory
+
+  const displayHistories = useMemo(() => {
+    const rows = []
+
+    for (const history of histories) {
+      rows.push(withStatusDisplay(history, codeMaps, 'INVENTORY_HISTORY_TYPE', 'historyTypeSubCode', 'historyTypeDisplay'))
+    }
+
+    return rows
+  }, [codeMaps, histories])
+
+  const displayLocationCatalog = useMemo(() => {
+    const warehouses = []
+
+    for (const warehouse of locationCatalog.warehouses) {
+      warehouses.push(withStatusDisplay(warehouse, codeMaps, 'WAREHOUSE_TYPE', 'warehouseTypeSubCode', 'warehouseTypeDisplay'))
+    }
+
+    return {
+      ...locationCatalog,
+      warehouses,
+    }
+  }, [codeMaps, locationCatalog])
+
+  const displayInboundFlow = useMemo(() => {
+    const purchaseOrders = []
+    const receivings = []
+
+    for (const purchaseOrder of inboundFlow.purchaseOrders) {
+      purchaseOrders.push(
+        withStatusDisplay(purchaseOrder, codeMaps, 'PURCHASE_ORDER_STATUS', 'orderStatusSubCode', 'orderStatusDisplay'),
+      )
+    }
+
+    for (const receiving of inboundFlow.receivings) {
+      receivings.push(
+        withStatusDisplay(receiving, codeMaps, 'RECEIVING_STATUS', 'receivingStatusSubCode', 'receivingStatusDisplay'),
+      )
+    }
+
+    return {
+      ...inboundFlow,
+      purchaseOrders,
+      receivings,
+    }
+  }, [codeMaps, inboundFlow])
+
+  const displayOutboundFlow = useMemo(() => {
+    const salesOrders = []
+    const shippings = []
+
+    for (const salesOrder of outboundFlow.salesOrders) {
+      salesOrders.push(
+        withStatusDisplay(salesOrder, codeMaps, 'SALES_ORDER_STATUS', 'orderStatusSubCode', 'orderStatusDisplay'),
+      )
+    }
+
+    for (const shipping of outboundFlow.shippings) {
+      shippings.push(
+        withStatusDisplay(shipping, codeMaps, 'SHIPPING_STATUS', 'shippingStatusSubCode', 'shippingStatusDisplay'),
+      )
+    }
+
+    return {
+      ...outboundFlow,
+      salesOrders,
+      shippings,
+    }
+  }, [codeMaps, outboundFlow])
+
+  const displayReturnFlow = useMemo(() => {
+    const purchaseReturns = []
+    const salesReturns = []
+
+    for (const purchaseReturn of returnFlow.purchaseReturns) {
+      purchaseReturns.push(
+        withStatusDisplay(purchaseReturn, codeMaps, 'PURCHASE_RETURN_STATUS', 'returnStatusSubCode', 'returnStatusDisplay'),
+      )
+    }
+
+    for (const salesReturn of returnFlow.salesReturns) {
+      salesReturns.push(
+        withStatusDisplay(salesReturn, codeMaps, 'SALES_RETURN_STATUS', 'returnStatusSubCode', 'returnStatusDisplay'),
+      )
+    }
+
+    return {
+      ...returnFlow,
+      purchaseReturns,
+      salesReturns,
+    }
+  }, [codeMaps, returnFlow])
+
+  const displayBillingFlow = useMemo(() => {
+    const bills = []
+
+    for (const bill of billingFlow.bills) {
+      bills.push(withStatusDisplay(bill, codeMaps, 'BILL_STATUS', 'billStatusSubCode', 'billStatusDisplay'))
+    }
+
+    return {
+      ...billingFlow,
+      bills,
+    }
+  }, [billingFlow, codeMaps])
 
   const filteredInventories = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
@@ -768,23 +994,25 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
     const normalizedKeyword = historyKeyword.trim().toLowerCase()
 
     if (!normalizedKeyword) {
-      return histories
+      return displayHistories
     }
 
-    return histories.filter((history) => {
+    return displayHistories.filter((history) => {
       const historyType = String(history.historyTypeSubCode ?? '').toLowerCase()
+      const historyTypeLabel = String(history.historyTypeDisplay?.label ?? '').toLowerCase()
       const itemCode = String(history.itemCode ?? '').toLowerCase()
       const locationCode = String(history.locationCode ?? '').toLowerCase()
       const reason = String(history.reason ?? '').toLowerCase()
 
       return (
         historyType.includes(normalizedKeyword) ||
+        historyTypeLabel.includes(normalizedKeyword) ||
         itemCode.includes(normalizedKeyword) ||
         locationCode.includes(normalizedKeyword) ||
         reason.includes(normalizedKeyword)
       )
     })
-  }, [histories, historyKeyword])
+  }, [displayHistories, historyKeyword])
 
   const dashboardSummary = useMemo(() => {
     let totalStock = 0
@@ -860,6 +1088,27 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
       setErrorMessage('백엔드 API에 연결할 수 없습니다. Spring Boot 서버와 Docker MySQL 상태를 확인하세요.')
     } finally {
       setLoading(false)
+    }
+  }, [])
+
+  const loadCommonCodes = useCallback(async () => {
+    try {
+      const groupResults = []
+
+      for (const groupCode of statusCodeGroups) {
+        const response = await fetch(`/api/common-codes/${groupCode}`)
+
+        if (!response.ok) {
+          throw new Error('API response was not successful.')
+        }
+
+        const codes = await response.json()
+        groupResults.push({ groupCode, codes })
+      }
+
+      setCodeMaps(buildCodeMaps(groupResults))
+    } catch {
+      setCodeMaps(emptyCodeMaps)
     }
   }, [])
 
@@ -1022,6 +1271,7 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
   useEffect(() => {
     const timerId = window.setTimeout(() => {
       loadWarehouseData()
+      loadCommonCodes()
       loadMasterData()
       loadInboundFlow()
       loadOutboundFlow()
@@ -1032,7 +1282,15 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
     return () => {
       window.clearTimeout(timerId)
     }
-  }, [loadBillingFlow, loadInboundFlow, loadMasterData, loadOutboundFlow, loadReturnFlow, loadWarehouseData])
+  }, [
+    loadBillingFlow,
+    loadCommonCodes,
+    loadInboundFlow,
+    loadMasterData,
+    loadOutboundFlow,
+    loadReturnFlow,
+    loadWarehouseData,
+  ])
 
   return (
     <div className="app-shell">
@@ -1110,7 +1368,7 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
         ) : null}
         {activeMenu === 'locations' ? (
           <LocationMasterView
-            catalog={locationCatalog}
+            catalog={displayLocationCatalog}
             errorMessage={masterErrorMessage}
             loading={masterLoading}
             onRefresh={loadMasterData}
@@ -1129,7 +1387,7 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
         {activeMenu === 'purchase' ? (
           <PurchaseOrderView
             errorMessage={inboundErrorMessage}
-            flow={inboundFlow}
+            flow={displayInboundFlow}
             loading={inboundLoading}
             onRefresh={loadInboundFlow}
             page={activePage}
@@ -1138,7 +1396,7 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
         {activeMenu === 'receiving' ? (
           <ReceivingView
             errorMessage={inboundErrorMessage}
-            flow={inboundFlow}
+            flow={displayInboundFlow}
             loading={inboundLoading}
             onRefresh={loadInboundFlow}
             page={activePage}
@@ -1147,7 +1405,7 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
         {activeMenu === 'sales' ? (
           <SalesOrderView
             errorMessage={outboundErrorMessage}
-            flow={outboundFlow}
+            flow={displayOutboundFlow}
             loading={outboundLoading}
             onRefresh={loadOutboundFlow}
             page={activePage}
@@ -1156,7 +1414,7 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
         {activeMenu === 'shipping' ? (
           <ShippingView
             errorMessage={outboundErrorMessage}
-            flow={outboundFlow}
+            flow={displayOutboundFlow}
             loading={outboundLoading}
             onRefresh={loadOutboundFlow}
             page={activePage}
@@ -1165,7 +1423,7 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
         {activeMenu === 'returns' ? (
           <ReturnView
             errorMessage={returnErrorMessage}
-            flow={returnFlow}
+            flow={displayReturnFlow}
             loading={returnLoading}
             onRefresh={loadReturnFlow}
             page={activePage}
@@ -1174,7 +1432,7 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
         {activeMenu === 'billing' ? (
           <BillingView
             errorMessage={billingErrorMessage}
-            flow={billingFlow}
+            flow={displayBillingFlow}
             loading={billingLoading}
             onRefresh={loadBillingFlow}
             page={activePage}

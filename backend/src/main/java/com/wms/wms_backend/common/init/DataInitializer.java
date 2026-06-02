@@ -99,46 +99,46 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initCommonCodes() {
-        saveCommonCode("USER_ROLE", "ADMIN", "Admin", "User who can manage master data and business data", 10);
-        saveCommonCode("USER_ROLE", "STAFF", "Staff", "User who can process orders, inbound, outbound, and inventory", 20);
-        saveCommonCode("USER_ROLE", "GUEST", "Guest", "Limited user for portfolio demo", 90);
+        saveCommonCode("USER_ROLE", "ADMIN", "관리자", "기준정보와 업무 데이터를 관리할 수 있는 사용자", 10);
+        saveCommonCode("USER_ROLE", "STAFF", "일반 직원", "주문, 입고, 출고, 재고 업무를 처리하는 사용자", 20);
+        saveCommonCode("USER_ROLE", "GUEST", "게스트", "시연 확인용 제한 사용자", 90);
 
-        saveCommonCode("ACCOUNT_TYPE", "HQ", "Headquarters", "Top-level organization", 10);
-        saveCommonCode("ACCOUNT_TYPE", "CUSTOMER", "Customer", "Account for sales orders and outbound process", 20);
-        saveCommonCode("ACCOUNT_TYPE", "SUPPLIER", "Supplier", "Account for purchase orders and inbound process", 30);
-        saveCommonCode("ACCOUNT_TYPE", "PARTNER", "Partner", "Operational partner account", 40);
+        saveCommonCode("ACCOUNT_TYPE", "HQ", "본사", "상위 조직", 10);
+        saveCommonCode("ACCOUNT_TYPE", "CUSTOMER", "고객사", "판매주문과 출고 흐름의 거래처", 20);
+        saveCommonCode("ACCOUNT_TYPE", "SUPPLIER", "공급사", "구매주문과 입고 흐름의 거래처", 30);
+        saveCommonCode("ACCOUNT_TYPE", "PARTNER", "협력사", "운영 협력 거래처", 40);
 
-        saveCommonCode("WAREHOUSE_TYPE", "MAIN", "Main Warehouse", "Warehouse for regular inbound and outbound operations", 10);
-        saveCommonCode("WAREHOUSE_TYPE", "RETURN", "Return Warehouse", "Warehouse for return receiving and inspection", 20);
+        saveCommonCode("WAREHOUSE_TYPE", "MAIN", "일반 창고", "일반 입고와 출고를 처리하는 창고", 10);
+        saveCommonCode("WAREHOUSE_TYPE", "RETURN", "반품 창고", "반품 입고와 검수를 처리하는 창고", 20);
 
-        saveCommonCode("INVENTORY_HISTORY_TYPE", "INBOUND", "Inbound", "Inventory increased by receiving confirmation", 10);
-        saveCommonCode("INVENTORY_HISTORY_TYPE", "OUTBOUND", "Outbound", "Inventory decreased by shipping confirmation", 20);
-        saveCommonCode("INVENTORY_HISTORY_TYPE", "ADJUSTMENT", "Adjustment", "Inventory changed by manual adjustment or initial stock setup", 30);
-        saveCommonCode("INVENTORY_HISTORY_TYPE", "RETURN_INBOUND", "Return Inbound", "Inventory increased by sales return receiving", 40);
-        saveCommonCode("INVENTORY_HISTORY_TYPE", "RETURN_OUTBOUND", "Return Outbound", "Inventory decreased by purchase return shipping", 50);
+        saveCommonCode("INVENTORY_HISTORY_TYPE", "INBOUND", "입고", "입고 확정으로 증가한 재고", 10);
+        saveCommonCode("INVENTORY_HISTORY_TYPE", "OUTBOUND", "출고", "출고 확정으로 감소한 재고", 20);
+        saveCommonCode("INVENTORY_HISTORY_TYPE", "ADJUSTMENT", "조정", "수동 조정 또는 기초재고 설정으로 변경된 재고", 30);
+        saveCommonCode("INVENTORY_HISTORY_TYPE", "RETURN_INBOUND", "반품입고", "판매반품 입고로 증가한 재고", 40);
+        saveCommonCode("INVENTORY_HISTORY_TYPE", "RETURN_OUTBOUND", "반품출고", "구매반품 출고로 감소한 재고", 50);
 
-        saveCommonCode("PURCHASE_ORDER_STATUS", "WAITING", "Waiting", "Purchase order is created and waiting for receiving", 10);
-        saveCommonCode("PURCHASE_ORDER_STATUS", "RECEIVED", "Received", "Purchase order receiving is completed", 20);
-        saveCommonCode("PURCHASE_ORDER_STATUS", "CLOSED", "Closed", "Purchase order is closed", 30);
+        saveCommonCode("PURCHASE_ORDER_STATUS", "WAITING", "대기", "구매주문이 생성되어 입고를 기다리는 상태", 10);
+        saveCommonCode("PURCHASE_ORDER_STATUS", "RECEIVED", "입고완료", "구매주문 입고가 완료된 상태", 20);
+        saveCommonCode("PURCHASE_ORDER_STATUS", "CLOSED", "마감", "구매주문이 마감된 상태", 30);
 
-        saveCommonCode("RECEIVING_STATUS", "WAITING", "Waiting", "Receiving is created and waiting for confirmation", 10);
-        saveCommonCode("RECEIVING_STATUS", "CONFIRMED", "Confirmed", "Receiving is confirmed and inventory is increased", 20);
+        saveCommonCode("RECEIVING_STATUS", "WAITING", "대기", "입고가 생성되어 확정을 기다리는 상태", 10);
+        saveCommonCode("RECEIVING_STATUS", "CONFIRMED", "확정", "입고가 확정되어 재고가 증가한 상태", 20);
 
-        saveCommonCode("SALES_ORDER_STATUS", "WAITING", "Waiting", "Sales order is created and waiting for shipping", 10);
-        saveCommonCode("SALES_ORDER_STATUS", "SHIPPED", "Shipped", "Sales order shipping is completed", 20);
-        saveCommonCode("SALES_ORDER_STATUS", "BILLED", "Billed", "Sales order billing is completed", 30);
+        saveCommonCode("SALES_ORDER_STATUS", "WAITING", "대기", "판매주문이 생성되어 출고를 기다리는 상태", 10);
+        saveCommonCode("SALES_ORDER_STATUS", "SHIPPED", "출고완료", "판매주문 출고가 완료된 상태", 20);
+        saveCommonCode("SALES_ORDER_STATUS", "BILLED", "청구완료", "판매주문 청구가 완료된 상태", 30);
 
-        saveCommonCode("SHIPPING_STATUS", "WAITING", "Waiting", "Shipping is created and waiting for confirmation", 10);
-        saveCommonCode("SHIPPING_STATUS", "CONFIRMED", "Confirmed", "Shipping is confirmed and inventory is decreased", 20);
+        saveCommonCode("SHIPPING_STATUS", "WAITING", "대기", "출고가 생성되어 확정을 기다리는 상태", 10);
+        saveCommonCode("SHIPPING_STATUS", "CONFIRMED", "확정", "출고가 확정되어 재고가 감소한 상태", 20);
 
-        saveCommonCode("BILL_STATUS", "ISSUED", "Issued", "Bill is issued", 10);
-        saveCommonCode("BILL_STATUS", "PAID", "Paid", "Bill payment is completed", 20);
+        saveCommonCode("BILL_STATUS", "ISSUED", "발행", "청구서가 발행된 상태", 10);
+        saveCommonCode("BILL_STATUS", "PAID", "입금완료", "청구 금액 입금이 완료된 상태", 20);
 
-        saveCommonCode("PURCHASE_RETURN_STATUS", "WAITING", "Waiting", "Purchase return is created and waiting for outbound", 10);
-        saveCommonCode("PURCHASE_RETURN_STATUS", "SHIPPED", "Shipped", "Purchase return outbound is completed", 20);
+        saveCommonCode("PURCHASE_RETURN_STATUS", "WAITING", "대기", "구매반품이 생성되어 반품출고를 기다리는 상태", 10);
+        saveCommonCode("PURCHASE_RETURN_STATUS", "SHIPPED", "반품출고", "구매반품 출고가 완료된 상태", 20);
 
-        saveCommonCode("SALES_RETURN_STATUS", "WAITING", "Waiting", "Sales return is created and waiting for inbound", 10);
-        saveCommonCode("SALES_RETURN_STATUS", "RECEIVED", "Received", "Sales return inbound is completed", 20);
+        saveCommonCode("SALES_RETURN_STATUS", "WAITING", "대기", "판매반품이 생성되어 반품입고를 기다리는 상태", 10);
+        saveCommonCode("SALES_RETURN_STATUS", "RECEIVED", "반품입고", "판매반품 입고가 완료된 상태", 20);
     }
 
     private void saveCommonCode(String groupCode, String subCode, String codeName, String description, int sortOrder) {
