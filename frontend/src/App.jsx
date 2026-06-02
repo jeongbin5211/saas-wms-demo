@@ -1,27 +1,66 @@
 import {
+  ArrowRight,
   BarChart3,
   Boxes,
+  Building2,
   ClipboardList,
   FileText,
   Home,
   LayoutGrid,
+  LogIn,
+  PackageCheck,
   PackageSearch,
   RefreshCw,
   Search,
+  ServerCog,
   ShieldCheck,
   Truck,
   Warehouse,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
+import warehouseHero from './assets/warehouse-hero.png'
 import { WmsGrid } from './components/WmsGrid.jsx'
 
 const pointColors = [
-  { name: 'Control Navy', value: '#172033', usage: '사이드바와 핵심 구조' },
-  { name: 'Process Blue', value: '#2563eb', usage: '주요 버튼과 활성 메뉴' },
-  { name: 'Inventory Teal', value: '#0f766e', usage: '재고와 확정 상태' },
-  { name: 'Pending Amber', value: '#d97706', usage: '대기 상태와 주의 수량' },
-  { name: 'Exception Red', value: '#dc2626', usage: '부족/오류/취소 상태' },
+  { name: 'Control Navy', value: '#172033', usage: '사이드바, 핵심 구조, 주요 제목' },
+  { name: 'Process Blue', value: '#2563eb', usage: '주요 버튼, 활성 메뉴, 조회 액션' },
+  { name: 'Inventory Teal', value: '#0f766e', usage: '재고, 확정 상태, 정상 처리' },
+  { name: 'Pending Amber', value: '#d97706', usage: '대기 상태, 주의 수량' },
+  { name: 'Exception Red', value: '#dc2626', usage: '부족, 오류, 취소 상태' },
+]
+
+const introTabs = [
+  {
+    id: 'service',
+    label: '서비스 소개',
+    title: '물류 운영을 하나의 업무 흐름으로 연결합니다.',
+    body: '구매주문, 입고, 재고, 출고, 반품, 청구까지 물류 운영에서 반복되는 핵심 프로세스를 한 화면 흐름으로 관리합니다.',
+  },
+  {
+    id: 'features',
+    label: '주요 기능',
+    title: 'OMS, WMS, Billing을 단순하고 명확하게 구성합니다.',
+    body: '거래처와 사용자, 창고 위치, 품목, 주문, 입출고, 재고 이력, 청구서를 기준으로 운영 데이터를 추적합니다.',
+  },
+  {
+    id: 'knowledge',
+    label: '물류 기본 지식',
+    title: '업무 개념을 모르는 사용자도 흐름을 따라갈 수 있습니다.',
+    body: 'OMS는 주문을 관리하고, WMS는 창고 작업과 재고를 관리합니다. 입고는 재고를 늘리고, 출고는 재고를 줄이며, 청구는 출고 결과를 금액으로 확정합니다.',
+  },
+  {
+    id: 'demo',
+    label: '시연 가이드',
+    title: '게스트 시연으로 실제 운영 화면을 확인합니다.',
+    body: '재고 현황에서 시작해 구매주문, 입고, 판매주문, 출고, 반품, 청구 흐름을 순서대로 확인할 수 있습니다.',
+  },
+  {
+    id: 'tech',
+    label: '기술/인프라',
+    title: 'Java, React, MySQL 기반의 3-Tier 구조를 사용합니다.',
+    body: 'Spring Boot와 JPA로 도메인을 구성하고, React와 TOAST UI Grid로 업무 화면을 구현합니다. AWS 배포 구조와 GitHub Actions 기반 검증 흐름을 설계합니다.',
+  },
 ]
 
 const menuGroups = [
@@ -75,6 +114,167 @@ const selectableRowHeaders = ['rowNum', 'checkbox']
 const inventorySummaryColumns = ['quantity', 'allocatedQuantity', 'availableQuantity']
 
 function App() {
+  const [route, setRoute] = useState(() => window.location.pathname)
+
+  const navigate = useCallback((path) => {
+    window.history.pushState({}, '', path)
+    setRoute(path)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setRoute(window.location.pathname)
+    }
+
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [])
+
+  if (route.startsWith('/app')) {
+    return <WorkspaceApp onMoveHome={() => navigate('/')} />
+  }
+
+  return <LandingPage onEnterApp={() => navigate('/app')} />
+}
+
+function LandingPage({ onEnterApp }) {
+  const [activeTab, setActiveTab] = useState('service')
+  const activeContent = introTabs.find((tab) => tab.id === activeTab) ?? introTabs[0]
+
+  return (
+    <div className="landing-page">
+      <header className="landing-nav">
+        <button type="button" className="landing-brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <span className="brand-mark light">
+            <LayoutGrid size={21} />
+          </span>
+          <strong>SaaS WMS</strong>
+        </button>
+        <nav>
+          {introTabs.map((tab) => (
+            <button
+              type="button"
+              className={activeTab === tab.id ? 'active' : ''}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+        <button type="button" className="nav-login-button" onClick={onEnterApp}>
+          <LogIn size={16} />
+          로그인
+        </button>
+      </header>
+
+      <section className="landing-hero" style={{ backgroundImage: `linear-gradient(90deg, rgb(23 32 51 / 90%), rgb(23 32 51 / 54%), rgb(23 32 51 / 16%)), url(${warehouseHero})` }}>
+        <div className="hero-copy">
+          <p className="hero-kicker">OMS + WMS + Billing</p>
+          <h1>물류 운영을 하나의 흐름으로 연결하는 OMS + WMS 플랫폼</h1>
+          <p>
+            구매주문, 입고, 재고, 출고, 반품, 청구까지 물류 운영의 핵심 프로세스를 통합 관리합니다.
+          </p>
+          <div className="hero-actions">
+            <button type="button" className="hero-primary" onClick={onEnterApp}>
+              게스트 시연
+              <ArrowRight size={17} />
+            </button>
+            <button type="button" className="hero-secondary" onClick={() => setActiveTab('features')}>
+              서비스 둘러보기
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <main className="landing-content">
+        <section className="intro-tabs" aria-label="서비스 안내 탭">
+          {introTabs.map((tab) => (
+            <button
+              type="button"
+              className={activeTab === tab.id ? 'active' : ''}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </section>
+
+        <section className="intro-panel">
+          <div>
+            <p className="eyebrow">Service Overview</p>
+            <h2>{activeContent.title}</h2>
+            <p>{activeContent.body}</p>
+          </div>
+          <div className="process-flow" aria-label="업무 흐름">
+            <span>PO</span>
+            <ArrowRight size={16} />
+            <span>Inbound</span>
+            <ArrowRight size={16} />
+            <span>Inventory</span>
+            <ArrowRight size={16} />
+            <span>Outbound</span>
+            <ArrowRight size={16} />
+            <span>Billing</span>
+          </div>
+        </section>
+
+        <section className="feature-grid">
+          <FeatureCard
+            icon={Building2}
+            title="기준정보 관리"
+            description="거래처, 사용자, 창고, Area, Zone, Location, 품목 체계를 한 곳에서 관리합니다."
+          />
+          <FeatureCard
+            icon={PackageCheck}
+            title="입출고와 재고"
+            description="입고 확정은 재고를 증가시키고, 출고 확정은 재고를 감소시키며 모든 변화는 이력으로 남깁니다."
+          />
+          <FeatureCard
+            icon={ServerCog}
+            title="운영 구조 설계"
+            description="Spring Boot, JPA, React, MySQL, GitHub Actions 기반으로 서비스 운영 구조를 설계합니다."
+          />
+        </section>
+
+        <section className="color-story">
+          <div>
+            <p className="eyebrow">Visual System</p>
+            <h2>업무 상태를 구분하는 5가지 포인트 컬러</h2>
+          </div>
+          <div className="landing-color-list">
+            {pointColors.map((color) => (
+              <article key={color.name}>
+                <span style={{ backgroundColor: color.value }} />
+                <strong>{color.name}</strong>
+                <code>{color.value}</code>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
+  )
+}
+
+function FeatureCard({ icon: Icon, title, description }) {
+  return (
+    <article className="feature-card">
+      <div>
+        <Icon size={21} />
+      </div>
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </article>
+  )
+}
+
+function WorkspaceApp({ onMoveHome }) {
   const [activeMenu, setActiveMenu] = useState('inventory')
   const [inventories, setInventories] = useState([])
   const [histories, setHistories] = useState([])
@@ -160,12 +360,12 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">
+          <button type="button" className="brand-mark" onClick={onMoveHome} title="메인으로 이동">
             <LayoutGrid size={21} />
-          </div>
+          </button>
           <div>
             <strong>SaaS WMS</strong>
-            <span>Portfolio Demo</span>
+            <span>Operations Console</span>
           </div>
         </div>
 
@@ -196,8 +396,8 @@ function App() {
       <main className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyebrow">OMS + WMS demo workspace</p>
-            <h1>{activeMenu === 'guide' ? 'Project Guide' : 'Inventory Control Center'}</h1>
+            <p className="eyebrow">OMS + WMS Operations</p>
+            <h1>{activeMenu === 'guide' ? '시연 가이드' : 'Inventory Control Center'}</h1>
           </div>
           <div className="user-chip">
             <span>Guest</span>
@@ -319,18 +519,16 @@ function GuideView() {
       <section className="work-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">Design Direction</p>
-            <h2>위드웍스식 그리드 중심 WMS</h2>
+            <p className="eyebrow">Operation Guide</p>
+            <h2>업무 흐름 시연 순서</h2>
           </div>
         </div>
         <div className="guide-copy">
           <p>
-            이 데모는 실제 OMS + WMS 구조를 포트폴리오용으로 단순화한 프로젝트입니다.
-            업무 화면은 검색 조건, 작업 버튼, 대형 그리드, 상세 패널이 중심이 되도록 구성합니다.
+            재고 현황에서 현재 수량을 확인한 뒤 구매주문, 입고, 판매주문, 출고, 반품, 청구 흐름을 순서대로 확인합니다.
           </p>
           <p>
-            TOAST UI Grid 기반 공통 컴포넌트를 사용해 행 선택, 컬럼 리사이즈, 수량 합계,
-            입출고/반품/청구 흐름을 일관된 화면 경험으로 보여주는 것이 목표입니다.
+            입고와 판매반품은 재고를 증가시키고, 출고와 구매반품은 재고를 감소시킵니다. 모든 수량 변화는 재고 이력으로 추적됩니다.
           </p>
         </div>
       </section>
@@ -339,7 +537,7 @@ function GuideView() {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Point Colors</p>
-            <h2>프론트 포인트 컬러 5가지</h2>
+            <h2>업무 상태를 구분하는 포인트 컬러</h2>
           </div>
         </div>
         <div className="color-grid">
