@@ -126,7 +126,8 @@ flowchart LR
 ### Frontend Design Direction
 
 - `/`는 서비스 소개 메인 페이지, `/app`은 로그인 이후 업무 화면으로 분리한다.
-- 외부 메인 페이지는 서비스 소개, 주요 기능, 물류 기본 지식, 시연 가이드, 기술/인프라 탭으로 구성한다.
+- 외부 메인 페이지는 Hero, 운영 문제 제기, 처리 과정, 서비스 소개, 주요 기능, 시연 가이드, 기술/인프라, CTA 섹션으로 구성한다.
+- 메인 페이지 색상은 Control Navy, Process Blue, Inventory Teal, Pending Amber, Exception Red 체계를 크게 벗어나지 않는다.
 - 내부 업무 화면은 위드웍스 medical 화면의 TOAST UI Grid 기반 업무 화면 패턴을 참고한다.
 - 내부 화면은 검색 조건, 작업 버튼, 대형 Grid, 상세 패널 중심으로 구성한다.
 

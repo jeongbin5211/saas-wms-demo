@@ -3,6 +3,7 @@ import {
   BarChart3,
   Boxes,
   Building2,
+  CircleDollarSign,
   ClipboardList,
   FileText,
   Home,
@@ -10,16 +11,17 @@ import {
   LogIn,
   PackageCheck,
   PackageSearch,
+  RotateCcw,
   RefreshCw,
   Search,
   ServerCog,
   ShieldCheck,
+  ShoppingCart,
   Truck,
   Warehouse,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
-import warehouseHero from './assets/warehouse-hero.png'
 import { WmsGrid } from './components/WmsGrid.jsx'
 
 const pointColors = [
@@ -61,6 +63,78 @@ const introTabs = [
     title: 'Java, React, MySQL 기반의 3-Tier 구조를 사용합니다.',
     body: 'Spring Boot와 JPA로 도메인을 구성하고, React와 TOAST UI Grid로 업무 화면을 구현합니다. AWS 배포 구조와 GitHub Actions 기반 검증 흐름을 설계합니다.',
   },
+]
+
+const painPoints = [
+  {
+    label: '주문 처리',
+    title: '구매와 판매 주문이 흩어져 있어요',
+    description: '주문 상태와 입출고 진행 상황을 따로 확인하면 운영 판단이 늦어집니다.',
+  },
+  {
+    label: '창고 운영',
+    title: '창고 위치와 재고 수량을 바로 보기 어려워요',
+    description: '창고, Area, Zone, Location 체계가 없으면 재고 추적이 복잡해집니다.',
+  },
+  {
+    label: '반품 관리',
+    title: '구매반품과 판매반품의 재고 반영이 헷갈려요',
+    description: '반품입고와 반품출고를 구분해 재고 이력까지 남겨야 운영 신뢰도가 높아집니다.',
+  },
+  {
+    label: '정산/청구',
+    title: '출고 이후 청구 흐름이 분리되어 있어요',
+    description: '판매주문, 출고, 청구서가 연결되어야 주문 마감 상태를 명확하게 볼 수 있습니다.',
+  },
+]
+
+const processSteps = [
+  { label: '구매주문', icon: ClipboardList },
+  { label: '입고', icon: PackageCheck },
+  { label: '재고', icon: Boxes },
+  { label: '출고', icon: Truck },
+  { label: '반품', icon: RotateCcw },
+  { label: '청구', icon: CircleDollarSign },
+]
+
+const serviceCards = [
+  {
+    icon: Building2,
+    title: '기준정보',
+    description: '거래처, 사용자, 창고 위치, 품목 대/중/소 분류를 운영 기준으로 관리합니다.',
+  },
+  {
+    icon: ShoppingCart,
+    title: '주문관리',
+    description: '구매주문과 판매주문을 기준으로 입고와 출고 프로세스를 연결합니다.',
+  },
+  {
+    icon: Warehouse,
+    title: '입출고 관리',
+    description: '입고 확정, 출고 확정, 반품입고, 반품출고를 재고 증감과 연결합니다.',
+  },
+  {
+    icon: Boxes,
+    title: '재고관리',
+    description: '품목과 로케이션별 현재고, 가용재고, 재고 이력을 그리드로 확인합니다.',
+  },
+  {
+    icon: FileText,
+    title: '청구관리',
+    description: '출고 완료된 판매주문을 기준으로 청구서를 생성하고 상태를 관리합니다.',
+  },
+  {
+    icon: ServerCog,
+    title: '운영 구조',
+    description: 'Spring Boot, JPA, React, MySQL 기반으로 확장 가능한 3-Tier 구조를 설계합니다.',
+  },
+]
+
+const guideSteps = [
+  '게스트 시연으로 내부 업무 화면 진입',
+  '재고 현황과 최근 재고 이력 확인',
+  '구매주문과 입고 흐름 확인',
+  '판매주문, 출고, 반품, 청구 흐름 확인',
 ]
 
 const menuGroups = [
@@ -172,7 +246,7 @@ function LandingPage({ onEnterApp }) {
         </button>
       </header>
 
-      <section className="landing-hero" style={{ backgroundImage: `linear-gradient(90deg, rgb(23 32 51 / 90%), rgb(23 32 51 / 54%), rgb(23 32 51 / 16%)), url(${warehouseHero})` }}>
+      <section className="landing-hero">
         <div className="hero-copy">
           <p className="hero-kicker">OMS + WMS + Billing</p>
           <h1>물류 운영을 하나의 흐름으로 연결하는 OMS + WMS 플랫폼</h1>
@@ -189,57 +263,179 @@ function LandingPage({ onEnterApp }) {
             </button>
           </div>
         </div>
+        <div className="hero-product">
+          <div className="hero-screen-toolbar">
+            <span />
+            <span />
+            <span />
+            <strong>Operations Console</strong>
+          </div>
+          <div className="hero-screen" aria-label="내부 업무 화면 미리보기">
+            <div className="hero-screen-sidebar">
+              <strong>SaaS WMS</strong>
+              <span className="active">Inventory</span>
+              <span>Purchase / Inbound</span>
+              <span>Sales / Outbound</span>
+              <span>Billing</span>
+            </div>
+            <div className="hero-screen-main">
+              <div className="mini-metrics">
+                <span>SKU 3</span>
+                <span>Stock 617</span>
+                <span>Available 577</span>
+              </div>
+              <div className="mini-grid">
+                <div>Item Code</div>
+                <div>Location</div>
+                <div>Qty</div>
+                <div>ITEM-DETERGENT-1L</div>
+                <div>L-PICK-001</div>
+                <div>152</div>
+                <div>ITEM-USB-C-1M</div>
+                <div>L-PICK-002</div>
+                <div>395</div>
+                <div>ITEM-WIRELESS-KB</div>
+                <div>L-PICK-002</div>
+                <div>70</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <main className="landing-content">
-        <section className="intro-tabs" aria-label="서비스 안내 탭">
-          {introTabs.map((tab) => (
-            <button
-              type="button"
-              className={activeTab === tab.id ? 'active' : ''}
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <section className="pain-section">
+          <div className="section-heading centered">
+            <p className="eyebrow">Operation Issues</p>
+            <h2>아직도 물류 운영 데이터를 따로 확인하고 계신가요?</h2>
+            <p>주문, 창고, 재고, 반품, 청구가 분리되면 운영 흐름을 한눈에 보기 어렵습니다.</p>
+          </div>
+          <div className="pain-card-track">
+            {painPoints.map((point) => (
+              <article className="pain-card" key={point.label}>
+                <span>{point.label}</span>
+                <h3>{point.title}</h3>
+                <p>{point.description}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
-        <section className="intro-panel">
-          <div>
-            <p className="eyebrow">Service Overview</p>
-            <h2>{activeContent.title}</h2>
-            <p>{activeContent.body}</p>
+        <section className="process-section">
+          <div className="section-heading">
+            <p className="eyebrow">Process</p>
+            <h2>주문부터 청구까지 이어지는 처리 과정</h2>
+            <p>각 업무는 다음 업무의 기준 데이터가 되고, 재고 변화는 이력으로 추적됩니다.</p>
           </div>
-          <div className="process-flow" aria-label="업무 흐름">
-            <span>PO</span>
-            <ArrowRight size={16} />
-            <span>Inbound</span>
-            <ArrowRight size={16} />
-            <span>Inventory</span>
-            <ArrowRight size={16} />
-            <span>Outbound</span>
-            <ArrowRight size={16} />
-            <span>Billing</span>
+          <div className="process-timeline">
+            {processSteps.map((step, index) => {
+              const Icon = step.icon
+
+              return (
+                <div className="process-step" key={step.label}>
+                  <div>
+                    <Icon size={22} />
+                  </div>
+                  <strong>{step.label}</strong>
+                  {index < processSteps.length - 1 ? <ArrowRight className="step-arrow" size={18} /> : null}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="intro-section">
+          <div className="intro-tabs" aria-label="서비스 안내 탭">
+            {introTabs.map((tab) => (
+              <button
+                type="button"
+                className={activeTab === tab.id ? 'active' : ''}
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="intro-panel">
+            <div>
+              <p className="eyebrow">Service Overview</p>
+              <h2>{activeContent.title}</h2>
+              <p>{activeContent.body}</p>
+            </div>
+            <div className="process-flow" aria-label="업무 흐름">
+              <span>PO</span>
+              <ArrowRight size={16} />
+              <span>Inbound</span>
+              <ArrowRight size={16} />
+              <span>Inventory</span>
+              <ArrowRight size={16} />
+              <span>Outbound</span>
+              <ArrowRight size={16} />
+              <span>Billing</span>
+            </div>
           </div>
         </section>
 
         <section className="feature-grid">
-          <FeatureCard
-            icon={Building2}
-            title="기준정보 관리"
-            description="거래처, 사용자, 창고, Area, Zone, Location, 품목 체계를 한 곳에서 관리합니다."
-          />
-          <FeatureCard
-            icon={PackageCheck}
-            title="입출고와 재고"
-            description="입고 확정은 재고를 증가시키고, 출고 확정은 재고를 감소시키며 모든 변화는 이력으로 남깁니다."
-          />
-          <FeatureCard
-            icon={ServerCog}
-            title="운영 구조 설계"
-            description="Spring Boot, JPA, React, MySQL, GitHub Actions 기반으로 서비스 운영 구조를 설계합니다."
-          />
+          {serviceCards.map((card) => (
+            <FeatureCard
+              description={card.description}
+              icon={card.icon}
+              key={card.title}
+              title={card.title}
+            />
+          ))}
+        </section>
+
+        <section className="preview-section">
+          <div className="preview-copy">
+            <p className="eyebrow">WMS Grid</p>
+            <h2>운영 데이터는 그리드에서 빠르게 확인합니다.</h2>
+            <p>
+              재고 현황과 재고 이력은 TOAST UI Grid 기반 화면으로 구성해 컬럼 리사이즈, 행 선택, 합계 표시가 가능합니다.
+            </p>
+            <button type="button" className="section-cta" onClick={onEnterApp}>
+              내부 화면 보기
+              <ArrowRight size={16} />
+            </button>
+          </div>
+          <div className="preview-window">
+            <div className="preview-table">
+              <div>Type</div>
+              <div>Item Code</div>
+              <div>Location</div>
+              <div>After</div>
+              <div>INBOUND</div>
+              <div>ITEM-DETERGENT-1L</div>
+              <div>L-PICK-001</div>
+              <div>170</div>
+              <div>OUTBOUND</div>
+              <div>ITEM-WIRELESS-KB</div>
+              <div>L-PICK-002</div>
+              <div>70</div>
+              <div>RETURN_INBOUND</div>
+              <div>ITEM-DETERGENT-1L</div>
+              <div>L-PICK-001</div>
+              <div>152</div>
+            </div>
+          </div>
+        </section>
+
+        <section className="demo-guide-section">
+          <div className="section-heading centered">
+            <p className="eyebrow">Demo Guide</p>
+            <h2>게스트 시연은 이 순서로 확인하면 됩니다.</h2>
+          </div>
+          <div className="guide-step-list">
+            {guideSteps.map((step, index) => (
+              <article key={step}>
+                <span>{index + 1}</span>
+                <p>{step}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="color-story">
@@ -256,6 +452,17 @@ function LandingPage({ onEnterApp }) {
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="final-cta">
+          <div>
+            <p className="eyebrow">Start Demo</p>
+            <h2>물류 운영 흐름을 직접 확인해보세요.</h2>
+          </div>
+          <button type="button" onClick={onEnterApp}>
+            게스트 시연 시작
+            <ArrowRight size={17} />
+          </button>
         </section>
       </main>
     </div>
