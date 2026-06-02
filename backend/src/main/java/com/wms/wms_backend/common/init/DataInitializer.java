@@ -14,6 +14,10 @@ import com.wms.wms_backend.domain.item.entity.ItemMaster;
 import com.wms.wms_backend.domain.item.repository.ItemClassRepository;
 import com.wms.wms_backend.domain.item.repository.ItemMasterRepository;
 import com.wms.wms_backend.domain.item.repository.ItemRepository;
+import com.wms.wms_backend.domain.purchase.entity.PurchaseOrder;
+import com.wms.wms_backend.domain.purchase.entity.PurchaseOrderDetail;
+import com.wms.wms_backend.domain.purchase.repository.PurchaseOrderDetailRepository;
+import com.wms.wms_backend.domain.purchase.repository.PurchaseOrderRepository;
 import com.wms.wms_backend.domain.user.entity.User;
 import com.wms.wms_backend.domain.user.repository.UserRepository;
 import com.wms.wms_backend.domain.warehouse.entity.Area;
@@ -30,6 +34,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @RequiredArgsConstructor
 @Component
@@ -47,6 +52,8 @@ public class DataInitializer implements CommandLineRunner {
     private final ItemRepository itemRepository;
     private final InventoryRepository inventoryRepository;
     private final InventoryHistoryRepository inventoryHistoryRepository;
+    private final PurchaseOrderRepository purchaseOrderRepository;
+    private final PurchaseOrderDetailRepository purchaseOrderDetailRepository;
 
     @Override
     @Transactional
@@ -73,6 +80,10 @@ public class DataInitializer implements CommandLineRunner {
         saveCommonCode("INVENTORY_HISTORY_TYPE", "ADJUSTMENT", "Adjustment", "Inventory changed by manual adjustment or initial stock setup", 30);
         saveCommonCode("INVENTORY_HISTORY_TYPE", "RETURN_INBOUND", "Return Inbound", "Inventory increased by sales return receiving", 40);
         saveCommonCode("INVENTORY_HISTORY_TYPE", "RETURN_OUTBOUND", "Return Outbound", "Inventory decreased by purchase return shipping", 50);
+
+        saveCommonCode("PURCHASE_ORDER_STATUS", "WAITING", "Waiting", "Purchase order is created and waiting for receiving", 10);
+        saveCommonCode("PURCHASE_ORDER_STATUS", "RECEIVED", "Received", "Purchase order receiving is completed", 20);
+        saveCommonCode("PURCHASE_ORDER_STATUS", "CLOSED", "Closed", "Purchase order is closed", 30);
     }
 
     private void saveCommonCode(String groupCode, String subCode, String codeName, String description, int sortOrder) {
@@ -155,6 +166,18 @@ public class DataInitializer implements CommandLineRunner {
         saveInventory(hq, detergentItem, pickingLocation1, 120, 10, "Initial demo stock");
         saveInventory(hq, usbCable, pickingLocation2, 300, 25, "Initial demo stock");
         saveInventory(hq, keyboard, pickingLocation2, 80, 5, "Initial demo stock");
+
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findByPurchaseOrderNo("PO-20260602-001")
+                .orElseGet(() -> purchaseOrderRepository.save(new PurchaseOrder(
+                        hq,
+                        supplier,
+                        "PO-20260602-001",
+                        LocalDate.of(2026, 6, 2),
+                        "Demo purchase order for inbound process"
+                )));
+
+        savePurchaseOrderDetail(purchaseOrder, detergentItem, 50, "3200.00");
+        savePurchaseOrderDetail(purchaseOrder, usbCable, 100, "1800.00");
     }
 
     private void saveUser(Account account, Long topAccountId, String name, String email, String roleSubCode) {
@@ -226,6 +249,19 @@ public class DataInitializer implements CommandLineRunner {
                 0,
                 quantity,
                 reason
+        ));
+    }
+
+    private void savePurchaseOrderDetail(PurchaseOrder purchaseOrder, Item item, Integer orderQuantity, String unitPrice) {
+        if (purchaseOrderDetailRepository.existsByPurchaseOrderIdAndItemId(purchaseOrder.getId(), item.getId())) {
+            return;
+        }
+
+        purchaseOrderDetailRepository.save(new PurchaseOrderDetail(
+                purchaseOrder,
+                item,
+                orderQuantity,
+                new BigDecimal(unitPrice)
         ));
     }
 }
