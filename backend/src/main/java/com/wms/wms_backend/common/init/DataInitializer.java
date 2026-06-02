@@ -26,6 +26,10 @@ import com.wms.wms_backend.domain.sales.entity.SalesOrder;
 import com.wms.wms_backend.domain.sales.entity.SalesOrderDetail;
 import com.wms.wms_backend.domain.sales.repository.SalesOrderDetailRepository;
 import com.wms.wms_backend.domain.sales.repository.SalesOrderRepository;
+import com.wms.wms_backend.domain.shipping.entity.Shipping;
+import com.wms.wms_backend.domain.shipping.entity.ShippingDetail;
+import com.wms.wms_backend.domain.shipping.repository.ShippingDetailRepository;
+import com.wms.wms_backend.domain.shipping.repository.ShippingRepository;
 import com.wms.wms_backend.domain.user.entity.User;
 import com.wms.wms_backend.domain.user.repository.UserRepository;
 import com.wms.wms_backend.domain.warehouse.entity.Area;
@@ -66,6 +70,8 @@ public class DataInitializer implements CommandLineRunner {
     private final ReceivingDetailRepository receivingDetailRepository;
     private final SalesOrderRepository salesOrderRepository;
     private final SalesOrderDetailRepository salesOrderDetailRepository;
+    private final ShippingRepository shippingRepository;
+    private final ShippingDetailRepository shippingDetailRepository;
 
     @Override
     @Transactional
@@ -103,6 +109,9 @@ public class DataInitializer implements CommandLineRunner {
         saveCommonCode("SALES_ORDER_STATUS", "WAITING", "Waiting", "Sales order is created and waiting for shipping", 10);
         saveCommonCode("SALES_ORDER_STATUS", "SHIPPED", "Shipped", "Sales order shipping is completed", 20);
         saveCommonCode("SALES_ORDER_STATUS", "BILLED", "Billed", "Sales order billing is completed", 30);
+
+        saveCommonCode("SHIPPING_STATUS", "WAITING", "Waiting", "Shipping is created and waiting for confirmation", 10);
+        saveCommonCode("SHIPPING_STATUS", "CONFIRMED", "Confirmed", "Shipping is confirmed and inventory is decreased", 20);
     }
 
     private void saveCommonCode(String groupCode, String subCode, String codeName, String description, int sortOrder) {
@@ -221,6 +230,18 @@ public class DataInitializer implements CommandLineRunner {
 
         saveSalesOrderDetail(salesOrder, detergentItem, 20, "5500.00");
         saveSalesOrderDetail(salesOrder, keyboard, 10, "24900.00");
+
+        Shipping shipping = shippingRepository.findByShippingNo("SHP-20260602-001")
+                .orElseGet(() -> shippingRepository.save(new Shipping(
+                        hq,
+                        salesOrder,
+                        "SHP-20260602-001",
+                        LocalDate.of(2026, 6, 2)
+                )));
+
+        saveShippingDetailAndDecreaseInventory(hq, shipping, detergentItem, pickingLocation1, 20);
+        saveShippingDetailAndDecreaseInventory(hq, shipping, keyboard, pickingLocation2, 10);
+        salesOrder.completeShipping();
     }
 
     private void saveUser(Account account, Long topAccountId, String name, String email, String roleSubCode) {
@@ -349,6 +370,37 @@ public class DataInitializer implements CommandLineRunner {
                 item,
                 orderQuantity,
                 new BigDecimal(unitPrice)
+        ));
+    }
+
+    private void saveShippingDetailAndDecreaseInventory(
+            Account account,
+            Shipping shipping,
+            Item item,
+            Location location,
+            Integer shippedQuantity
+    ) {
+        if (shippingDetailRepository.existsByShippingIdAndItemIdAndLocationId(shipping.getId(), item.getId(), location.getId())) {
+            return;
+        }
+
+        shippingDetailRepository.save(new ShippingDetail(shipping, item, location, shippedQuantity));
+
+        Inventory inventory = inventoryRepository.findByItemIdAndLocationId(item.getId(), location.getId())
+                .orElseThrow();
+
+        Integer beforeQuantity = inventory.getQuantity();
+        inventory.decreaseQuantity(shippedQuantity);
+
+        inventoryHistoryRepository.save(new InventoryHistory(
+                account,
+                item,
+                location,
+                "OUTBOUND",
+                shippedQuantity,
+                beforeQuantity,
+                inventory.getQuantity(),
+                "Shipping confirmed: " + shipping.getShippingNo()
         ));
     }
 }
