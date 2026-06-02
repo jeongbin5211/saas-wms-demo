@@ -5,10 +5,13 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
     boolean existsByItemIdAndLocationId(Long itemId, Long locationId);
+
+    Optional<Inventory> findByItemIdAndLocationId(Long itemId, Long locationId);
 
     @EntityGraph(attributePaths = {"item", "location"})
     List<Inventory> findAllByUseYnOrderByIdAsc(String useYn);

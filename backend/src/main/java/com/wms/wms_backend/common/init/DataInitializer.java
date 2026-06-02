@@ -18,6 +18,10 @@ import com.wms.wms_backend.domain.purchase.entity.PurchaseOrder;
 import com.wms.wms_backend.domain.purchase.entity.PurchaseOrderDetail;
 import com.wms.wms_backend.domain.purchase.repository.PurchaseOrderDetailRepository;
 import com.wms.wms_backend.domain.purchase.repository.PurchaseOrderRepository;
+import com.wms.wms_backend.domain.receiving.entity.Receiving;
+import com.wms.wms_backend.domain.receiving.entity.ReceivingDetail;
+import com.wms.wms_backend.domain.receiving.repository.ReceivingDetailRepository;
+import com.wms.wms_backend.domain.receiving.repository.ReceivingRepository;
 import com.wms.wms_backend.domain.user.entity.User;
 import com.wms.wms_backend.domain.user.repository.UserRepository;
 import com.wms.wms_backend.domain.warehouse.entity.Area;
@@ -54,6 +58,8 @@ public class DataInitializer implements CommandLineRunner {
     private final InventoryHistoryRepository inventoryHistoryRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final PurchaseOrderDetailRepository purchaseOrderDetailRepository;
+    private final ReceivingRepository receivingRepository;
+    private final ReceivingDetailRepository receivingDetailRepository;
 
     @Override
     @Transactional
@@ -84,6 +90,9 @@ public class DataInitializer implements CommandLineRunner {
         saveCommonCode("PURCHASE_ORDER_STATUS", "WAITING", "Waiting", "Purchase order is created and waiting for receiving", 10);
         saveCommonCode("PURCHASE_ORDER_STATUS", "RECEIVED", "Received", "Purchase order receiving is completed", 20);
         saveCommonCode("PURCHASE_ORDER_STATUS", "CLOSED", "Closed", "Purchase order is closed", 30);
+
+        saveCommonCode("RECEIVING_STATUS", "WAITING", "Waiting", "Receiving is created and waiting for confirmation", 10);
+        saveCommonCode("RECEIVING_STATUS", "CONFIRMED", "Confirmed", "Receiving is confirmed and inventory is increased", 20);
     }
 
     private void saveCommonCode(String groupCode, String subCode, String codeName, String description, int sortOrder) {
@@ -178,6 +187,18 @@ public class DataInitializer implements CommandLineRunner {
 
         savePurchaseOrderDetail(purchaseOrder, detergentItem, 50, "3200.00");
         savePurchaseOrderDetail(purchaseOrder, usbCable, 100, "1800.00");
+
+        Receiving receiving = receivingRepository.findByReceivingNo("RCV-20260602-001")
+                .orElseGet(() -> receivingRepository.save(new Receiving(
+                        hq,
+                        purchaseOrder,
+                        "RCV-20260602-001",
+                        LocalDate.of(2026, 6, 2)
+                )));
+
+        saveReceivingDetailAndIncreaseInventory(hq, receiving, detergentItem, pickingLocation1, 50);
+        saveReceivingDetailAndIncreaseInventory(hq, receiving, usbCable, pickingLocation2, 100);
+        purchaseOrder.completeReceiving();
     }
 
     private void saveUser(Account account, Long topAccountId, String name, String email, String roleSubCode) {
@@ -262,6 +283,37 @@ public class DataInitializer implements CommandLineRunner {
                 item,
                 orderQuantity,
                 new BigDecimal(unitPrice)
+        ));
+    }
+
+    private void saveReceivingDetailAndIncreaseInventory(
+            Account account,
+            Receiving receiving,
+            Item item,
+            Location location,
+            Integer receivedQuantity
+    ) {
+        if (receivingDetailRepository.existsByReceivingIdAndItemIdAndLocationId(receiving.getId(), item.getId(), location.getId())) {
+            return;
+        }
+
+        receivingDetailRepository.save(new ReceivingDetail(receiving, item, location, receivedQuantity));
+
+        Inventory inventory = inventoryRepository.findByItemIdAndLocationId(item.getId(), location.getId())
+                .orElseGet(() -> inventoryRepository.save(new Inventory(account, item, location, 0, 0)));
+
+        Integer beforeQuantity = inventory.getQuantity();
+        inventory.increaseQuantity(receivedQuantity);
+
+        inventoryHistoryRepository.save(new InventoryHistory(
+                account,
+                item,
+                location,
+                "INBOUND",
+                receivedQuantity,
+                beforeQuantity,
+                inventory.getQuantity(),
+                "Receiving confirmed: " + receiving.getReceivingNo()
         ));
     }
 }
