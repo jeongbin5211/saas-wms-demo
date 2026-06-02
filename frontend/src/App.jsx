@@ -225,9 +225,64 @@ const historyColumns = [
   { header: '사유', name: 'reason', width: 320 },
 ]
 
+const warehouseColumns = [
+  { header: '창고 코드', name: 'warehouseCode', width: 150 },
+  { header: '창고명', name: 'warehouseName', width: 210 },
+  { header: '창고 유형', name: 'warehouseTypeSubCode', width: 120, align: 'center' },
+  { header: '거래처 ID', name: 'accountId', width: 100, align: 'right' },
+  { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
+]
+
+const areaColumns = [
+  { header: 'Area 코드', name: 'areaCode', width: 150 },
+  { header: 'Area명', name: 'areaName', width: 210 },
+  { header: '창고 ID', name: 'warehouseId', width: 100, align: 'right' },
+  { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
+]
+
+const zoneColumns = [
+  { header: 'Zone 코드', name: 'zoneCode', width: 150 },
+  { header: 'Zone명', name: 'zoneName', width: 210 },
+  { header: 'Area ID', name: 'areaId', width: 100, align: 'right' },
+  { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
+]
+
+const locationColumns = [
+  { header: 'Location 코드', name: 'locationCode', width: 170 },
+  { header: 'Location명', name: 'locationName', width: 230 },
+  { header: 'Zone ID', name: 'zoneId', width: 100, align: 'right' },
+  { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
+]
+
+const itemMasterColumns = [
+  { header: '대분류 코드', name: 'itemMasterCode', width: 180 },
+  { header: '대분류명', name: 'itemMasterName', width: 220 },
+  { header: '거래처 ID', name: 'accountId', width: 100, align: 'right' },
+  { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
+]
+
+const itemClassColumns = [
+  { header: '중분류 코드', name: 'itemClassCode', width: 180 },
+  { header: '중분류명', name: 'itemClassName', width: 220 },
+  { header: '대분류 ID', name: 'itemMasterId', width: 100, align: 'right' },
+  { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
+]
+
+const itemColumns = [
+  { header: '품목 코드', name: 'itemCode', width: 190 },
+  { header: '품목명', name: 'itemName', width: 220 },
+  { header: '바코드', name: 'barcode', width: 150 },
+  { header: '단위', name: 'unit', width: 80, align: 'center' },
+  { header: '매입가', name: 'purchasePrice', width: 100, align: 'right' },
+  { header: '판매가', name: 'salesPrice', width: 100, align: 'right' },
+  { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
+]
+
 const rowNumberHeaders = ['rowNum']
 const selectableRowHeaders = ['rowNum', 'checkbox']
 const inventorySummaryColumns = ['quantity', 'allocatedQuantity', 'availableQuantity']
+const emptyLocationCatalog = { warehouses: [], areas: [], zones: [], locations: [] }
+const emptyItemCatalog = { itemMasters: [], itemClasses: [], items: [] }
 
 function App() {
   const [route, setRoute] = useState(() => window.location.pathname)
@@ -553,10 +608,14 @@ function FeatureCard({ icon: Icon, title, description }) {
 function WorkspaceApp({ onMoveHome, onNavigate, route }) {
   const [inventories, setInventories] = useState([])
   const [histories, setHistories] = useState([])
+  const [locationCatalog, setLocationCatalog] = useState(emptyLocationCatalog)
+  const [itemCatalog, setItemCatalog] = useState(emptyItemCatalog)
   const [keyword, setKeyword] = useState('')
   const [historyKeyword, setHistoryKeyword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [masterLoading, setMasterLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [masterErrorMessage, setMasterErrorMessage] = useState('')
   const activeMenu = route.replace(/^\/app\/?/, '') || 'inventory'
   const activePage = internalPages[activeMenu] ?? internalPages.inventory
 
@@ -675,15 +734,42 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
     }
   }, [])
 
+  const loadMasterData = useCallback(async () => {
+    setMasterLoading(true)
+    setMasterErrorMessage('')
+
+    try {
+      const [locationResponse, itemResponse] = await Promise.all([
+        fetch('/api/warehouse-locations'),
+        fetch('/api/item-catalog'),
+      ])
+
+      if (!locationResponse.ok || !itemResponse.ok) {
+        throw new Error('API response was not successful.')
+      }
+
+      const locationData = await locationResponse.json()
+      const itemData = await itemResponse.json()
+
+      setLocationCatalog(locationData)
+      setItemCatalog(itemData)
+    } catch {
+      setMasterErrorMessage('기준정보 API에 연결할 수 없습니다. 백엔드 서버 상태를 확인하세요.')
+    } finally {
+      setMasterLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     const timerId = window.setTimeout(() => {
       loadWarehouseData()
+      loadMasterData()
     }, 0)
 
     return () => {
       window.clearTimeout(timerId)
     }
-  }, [loadWarehouseData])
+  }, [loadMasterData, loadWarehouseData])
 
   return (
     <div className="app-shell">
@@ -759,7 +845,25 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
             page={activePage}
           />
         ) : null}
-        {!['guide', 'inventory', 'inventory-history'].includes(activeMenu) ? (
+        {activeMenu === 'locations' ? (
+          <LocationMasterView
+            catalog={locationCatalog}
+            errorMessage={masterErrorMessage}
+            loading={masterLoading}
+            onRefresh={loadMasterData}
+            page={activePage}
+          />
+        ) : null}
+        {activeMenu === 'items' ? (
+          <ItemMasterView
+            catalog={itemCatalog}
+            errorMessage={masterErrorMessage}
+            loading={masterLoading}
+            onRefresh={loadMasterData}
+            page={activePage}
+          />
+        ) : null}
+        {!['guide', 'inventory', 'inventory-history', 'locations', 'items'].includes(activeMenu) ? (
           <PlaceholderWorkView page={activePage} />
         ) : null}
       </main>
@@ -891,6 +995,81 @@ function InventoryHistoryView({
         />
       </WorkPage>
     </div>
+  )
+}
+
+function LocationMasterView({ catalog, errorMessage, loading, onRefresh, page }) {
+  return (
+    <div className="screen-stack">
+      <section className="metric-grid">
+        <MetricCard label="창고" value={catalog.warehouses.length} tone="blue" />
+        <MetricCard label="Area" value={catalog.areas.length} tone="teal" />
+        <MetricCard label="Zone" value={catalog.zones.length} tone="navy" />
+        <MetricCard label="Location" value={catalog.locations.length} tone="amber" />
+      </section>
+
+      <WorkPage
+        description={page.description}
+        eyebrow="위치 기준정보"
+        title="창고 위치 체계"
+        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+      >
+        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        <div className="master-grid-layout">
+          <GridSection columns={warehouseColumns} data={catalog.warehouses} title="창고" />
+          <GridSection columns={areaColumns} data={catalog.areas} title="Area" />
+          <GridSection columns={zoneColumns} data={catalog.zones} title="Zone" />
+          <GridSection columns={locationColumns} data={catalog.locations} title="Location" />
+        </div>
+      </WorkPage>
+    </div>
+  )
+}
+
+function ItemMasterView({ catalog, errorMessage, loading, onRefresh, page }) {
+  return (
+    <div className="screen-stack">
+      <section className="metric-grid">
+        <MetricCard label="대분류" value={catalog.itemMasters.length} tone="blue" />
+        <MetricCard label="중분류" value={catalog.itemClasses.length} tone="teal" />
+        <MetricCard label="품목" value={catalog.items.length} tone="navy" />
+        <MetricCard label="사용 품목" value={catalog.items.filter((item) => item.useYn === 'Y').length} tone="amber" />
+      </section>
+
+      <WorkPage
+        description={page.description}
+        eyebrow="품목 기준정보"
+        title="품목 분류 체계"
+        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+      >
+        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        <div className="master-grid-layout">
+          <GridSection columns={itemMasterColumns} data={catalog.itemMasters} title="품목 마스터" />
+          <GridSection columns={itemClassColumns} data={catalog.itemClasses} title="품목 클래스" />
+          <GridSection columns={itemColumns} data={catalog.items} title="품목" wide />
+        </div>
+      </WorkPage>
+    </div>
+  )
+}
+
+function GridSection({ columns, data, title, wide = false }) {
+  return (
+    <section className={`grid-section ${wide ? 'wide' : ''}`}>
+      <div className="grid-section-header">
+        <h3>{title}</h3>
+        <span>{data.length}건</span>
+      </div>
+      <WmsGrid columns={columns} data={data} minBodyHeight={190} rowHeaders={rowNumberHeaders} />
+    </section>
+  )
+}
+
+function RefreshButton({ loading, onRefresh }) {
+  return (
+    <button type="button" className="icon-button" disabled={loading} onClick={onRefresh} title="새로고침">
+      <RefreshCw size={16} />
+    </button>
   )
 }
 

@@ -1193,6 +1193,47 @@ button {
   font-size: 13px;
 }
 
+.master-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 14px;
+}
+
+.grid-section {
+  min-width: 0;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+}
+
+.grid-section.wide {
+  grid-column: 1 / -1;
+}
+
+.grid-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.grid-section-header h3 {
+  margin: 0;
+  color: var(--control-navy);
+  font-size: 14px;
+}
+
+.grid-section-header span {
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .wms-grid {
   padding: 0;
 }
@@ -1349,6 +1390,7 @@ button {
   }
 
   .metric-grid,
+  .master-grid-layout,
   .color-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1424,6 +1466,7 @@ button {
   }
 
   .metric-grid,
+  .master-grid-layout,
   .color-grid {
     grid-template-columns: 1fr;
   }
