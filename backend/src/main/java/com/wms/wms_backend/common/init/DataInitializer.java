@@ -22,6 +22,10 @@ import com.wms.wms_backend.domain.receiving.entity.Receiving;
 import com.wms.wms_backend.domain.receiving.entity.ReceivingDetail;
 import com.wms.wms_backend.domain.receiving.repository.ReceivingDetailRepository;
 import com.wms.wms_backend.domain.receiving.repository.ReceivingRepository;
+import com.wms.wms_backend.domain.sales.entity.SalesOrder;
+import com.wms.wms_backend.domain.sales.entity.SalesOrderDetail;
+import com.wms.wms_backend.domain.sales.repository.SalesOrderDetailRepository;
+import com.wms.wms_backend.domain.sales.repository.SalesOrderRepository;
 import com.wms.wms_backend.domain.user.entity.User;
 import com.wms.wms_backend.domain.user.repository.UserRepository;
 import com.wms.wms_backend.domain.warehouse.entity.Area;
@@ -60,6 +64,8 @@ public class DataInitializer implements CommandLineRunner {
     private final PurchaseOrderDetailRepository purchaseOrderDetailRepository;
     private final ReceivingRepository receivingRepository;
     private final ReceivingDetailRepository receivingDetailRepository;
+    private final SalesOrderRepository salesOrderRepository;
+    private final SalesOrderDetailRepository salesOrderDetailRepository;
 
     @Override
     @Transactional
@@ -93,6 +99,10 @@ public class DataInitializer implements CommandLineRunner {
 
         saveCommonCode("RECEIVING_STATUS", "WAITING", "Waiting", "Receiving is created and waiting for confirmation", 10);
         saveCommonCode("RECEIVING_STATUS", "CONFIRMED", "Confirmed", "Receiving is confirmed and inventory is increased", 20);
+
+        saveCommonCode("SALES_ORDER_STATUS", "WAITING", "Waiting", "Sales order is created and waiting for shipping", 10);
+        saveCommonCode("SALES_ORDER_STATUS", "SHIPPED", "Shipped", "Sales order shipping is completed", 20);
+        saveCommonCode("SALES_ORDER_STATUS", "BILLED", "Billed", "Sales order billing is completed", 30);
     }
 
     private void saveCommonCode(String groupCode, String subCode, String codeName, String description, int sortOrder) {
@@ -199,6 +209,18 @@ public class DataInitializer implements CommandLineRunner {
         saveReceivingDetailAndIncreaseInventory(hq, receiving, detergentItem, pickingLocation1, 50);
         saveReceivingDetailAndIncreaseInventory(hq, receiving, usbCable, pickingLocation2, 100);
         purchaseOrder.completeReceiving();
+
+        SalesOrder salesOrder = salesOrderRepository.findBySalesOrderNo("SO-20260602-001")
+                .orElseGet(() -> salesOrderRepository.save(new SalesOrder(
+                        hq,
+                        customer,
+                        "SO-20260602-001",
+                        LocalDate.of(2026, 6, 2),
+                        "Demo sales order for outbound process"
+                )));
+
+        saveSalesOrderDetail(salesOrder, detergentItem, 20, "5500.00");
+        saveSalesOrderDetail(salesOrder, keyboard, 10, "24900.00");
     }
 
     private void saveUser(Account account, Long topAccountId, String name, String email, String roleSubCode) {
@@ -314,6 +336,19 @@ public class DataInitializer implements CommandLineRunner {
                 beforeQuantity,
                 inventory.getQuantity(),
                 "Receiving confirmed: " + receiving.getReceivingNo()
+        ));
+    }
+
+    private void saveSalesOrderDetail(SalesOrder salesOrder, Item item, Integer orderQuantity, String unitPrice) {
+        if (salesOrderDetailRepository.existsBySalesOrderIdAndItemId(salesOrder.getId(), item.getId())) {
+            return;
+        }
+
+        salesOrderDetailRepository.save(new SalesOrderDetail(
+                salesOrder,
+                item,
+                orderQuantity,
+                new BigDecimal(unitPrice)
         ));
     }
 }

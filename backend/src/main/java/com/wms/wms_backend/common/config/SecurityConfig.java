@@ -35,6 +35,8 @@ public class SecurityConfig {
                                 "/api/purchase-order-details",
                                 "/api/receivings",
                                 "/api/receiving-details",
+                                "/api/sales-orders",
+                                "/api/sales-order-details",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
