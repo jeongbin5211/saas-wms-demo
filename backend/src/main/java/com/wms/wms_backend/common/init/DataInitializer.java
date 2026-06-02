@@ -4,6 +4,10 @@ import com.wms.wms_backend.domain.account.entity.Account;
 import com.wms.wms_backend.domain.account.repository.AccountRepository;
 import com.wms.wms_backend.domain.commoncode.entity.CommonCode;
 import com.wms.wms_backend.domain.commoncode.repository.CommonCodeRepository;
+import com.wms.wms_backend.domain.inventory.entity.Inventory;
+import com.wms.wms_backend.domain.inventory.entity.InventoryHistory;
+import com.wms.wms_backend.domain.inventory.repository.InventoryHistoryRepository;
+import com.wms.wms_backend.domain.inventory.repository.InventoryRepository;
 import com.wms.wms_backend.domain.item.entity.Item;
 import com.wms.wms_backend.domain.item.entity.ItemClass;
 import com.wms.wms_backend.domain.item.entity.ItemMaster;
@@ -41,6 +45,8 @@ public class DataInitializer implements CommandLineRunner {
     private final ItemMasterRepository itemMasterRepository;
     private final ItemClassRepository itemClassRepository;
     private final ItemRepository itemRepository;
+    private final InventoryRepository inventoryRepository;
+    private final InventoryHistoryRepository inventoryHistoryRepository;
 
     @Override
     @Transactional
@@ -61,6 +67,12 @@ public class DataInitializer implements CommandLineRunner {
 
         saveCommonCode("WAREHOUSE_TYPE", "MAIN", "Main Warehouse", "Warehouse for regular inbound and outbound operations", 10);
         saveCommonCode("WAREHOUSE_TYPE", "RETURN", "Return Warehouse", "Warehouse for return receiving and inspection", 20);
+
+        saveCommonCode("INVENTORY_HISTORY_TYPE", "INBOUND", "Inbound", "Inventory increased by receiving confirmation", 10);
+        saveCommonCode("INVENTORY_HISTORY_TYPE", "OUTBOUND", "Outbound", "Inventory decreased by shipping confirmation", 20);
+        saveCommonCode("INVENTORY_HISTORY_TYPE", "ADJUSTMENT", "Adjustment", "Inventory changed by manual adjustment or initial stock setup", 30);
+        saveCommonCode("INVENTORY_HISTORY_TYPE", "RETURN_INBOUND", "Return Inbound", "Inventory increased by sales return receiving", 40);
+        saveCommonCode("INVENTORY_HISTORY_TYPE", "RETURN_OUTBOUND", "Return Outbound", "Inventory decreased by purchase return shipping", 50);
     }
 
     private void saveCommonCode(String groupCode, String subCode, String codeName, String description, int sortOrder) {
@@ -127,6 +139,22 @@ public class DataInitializer implements CommandLineRunner {
         saveItem(hq, detergent, "ITEM-DETERGENT-1L", "Liquid Detergent 1L", "880100000001", "EA", "3200.00", "5500.00");
         saveItem(hq, accessories, "ITEM-USB-C-1M", "USB-C Cable 1m", "880100000002", "EA", "1800.00", "3900.00");
         saveItem(hq, accessories, "ITEM-WIRELESS-KB", "Wireless Keyboard", "880100000003", "EA", "12000.00", "24900.00");
+
+        Item detergentItem = itemRepository.findByItemCode("ITEM-DETERGENT-1L")
+                .orElseThrow();
+        Item usbCable = itemRepository.findByItemCode("ITEM-USB-C-1M")
+                .orElseThrow();
+        Item keyboard = itemRepository.findByItemCode("ITEM-WIRELESS-KB")
+                .orElseThrow();
+
+        Location pickingLocation1 = locationRepository.findByLocationCode("L-PICK-001")
+                .orElseThrow();
+        Location pickingLocation2 = locationRepository.findByLocationCode("L-PICK-002")
+                .orElseThrow();
+
+        saveInventory(hq, detergentItem, pickingLocation1, 120, 10, "Initial demo stock");
+        saveInventory(hq, usbCable, pickingLocation2, 300, 25, "Initial demo stock");
+        saveInventory(hq, keyboard, pickingLocation2, 80, 5, "Initial demo stock");
     }
 
     private void saveUser(Account account, Long topAccountId, String name, String email, String roleSubCode) {
@@ -168,6 +196,36 @@ public class DataInitializer implements CommandLineRunner {
                 unit,
                 new BigDecimal(purchasePrice),
                 new BigDecimal(salesPrice)
+        ));
+    }
+
+    private void saveInventory(
+            Account account,
+            Item item,
+            Location location,
+            Integer quantity,
+            Integer allocatedQuantity,
+            String reason
+    ) {
+        if (inventoryRepository.existsByItemIdAndLocationId(item.getId(), location.getId())) {
+            return;
+        }
+
+        inventoryRepository.save(new Inventory(account, item, location, quantity, allocatedQuantity));
+
+        if (inventoryHistoryRepository.existsByItemIdAndLocationIdAndHistoryTypeSubCode(item.getId(), location.getId(), "ADJUSTMENT")) {
+            return;
+        }
+
+        inventoryHistoryRepository.save(new InventoryHistory(
+                account,
+                item,
+                location,
+                "ADJUSTMENT",
+                quantity,
+                0,
+                quantity,
+                reason
         ));
     }
 }
