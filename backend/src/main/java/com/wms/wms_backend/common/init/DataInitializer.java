@@ -2,6 +2,10 @@ package com.wms.wms_backend.common.init;
 
 import com.wms.wms_backend.domain.account.entity.Account;
 import com.wms.wms_backend.domain.account.repository.AccountRepository;
+import com.wms.wms_backend.domain.billing.entity.Bill;
+import com.wms.wms_backend.domain.billing.entity.BillDetail;
+import com.wms.wms_backend.domain.billing.repository.BillDetailRepository;
+import com.wms.wms_backend.domain.billing.repository.BillRepository;
 import com.wms.wms_backend.domain.commoncode.entity.CommonCode;
 import com.wms.wms_backend.domain.commoncode.repository.CommonCodeRepository;
 import com.wms.wms_backend.domain.inventory.entity.Inventory;
@@ -72,6 +76,8 @@ public class DataInitializer implements CommandLineRunner {
     private final SalesOrderDetailRepository salesOrderDetailRepository;
     private final ShippingRepository shippingRepository;
     private final ShippingDetailRepository shippingDetailRepository;
+    private final BillRepository billRepository;
+    private final BillDetailRepository billDetailRepository;
 
     @Override
     @Transactional
@@ -112,6 +118,9 @@ public class DataInitializer implements CommandLineRunner {
 
         saveCommonCode("SHIPPING_STATUS", "WAITING", "Waiting", "Shipping is created and waiting for confirmation", 10);
         saveCommonCode("SHIPPING_STATUS", "CONFIRMED", "Confirmed", "Shipping is confirmed and inventory is decreased", 20);
+
+        saveCommonCode("BILL_STATUS", "ISSUED", "Issued", "Bill is issued", 10);
+        saveCommonCode("BILL_STATUS", "PAID", "Paid", "Bill payment is completed", 20);
     }
 
     private void saveCommonCode(String groupCode, String subCode, String codeName, String description, int sortOrder) {
@@ -242,6 +251,23 @@ public class DataInitializer implements CommandLineRunner {
         saveShippingDetailAndDecreaseInventory(hq, shipping, detergentItem, pickingLocation1, 20);
         saveShippingDetailAndDecreaseInventory(hq, shipping, keyboard, pickingLocation2, 10);
         salesOrder.completeShipping();
+
+        BigDecimal billTotalAmount = new BigDecimal("0.00")
+                .add(new BigDecimal("5500.00").multiply(BigDecimal.valueOf(20)))
+                .add(new BigDecimal("24900.00").multiply(BigDecimal.valueOf(10)));
+
+        Bill bill = billRepository.findByBillNo("BILL-20260602-001")
+                .orElseGet(() -> billRepository.save(new Bill(
+                        hq,
+                        salesOrder,
+                        "BILL-20260602-001",
+                        LocalDate.of(2026, 6, 2),
+                        billTotalAmount
+                )));
+
+        saveBillDetail(bill, detergentItem, 20, "5500.00");
+        saveBillDetail(bill, keyboard, 10, "24900.00");
+        salesOrder.completeBilling();
     }
 
     private void saveUser(Account account, Long topAccountId, String name, String email, String roleSubCode) {
@@ -401,6 +427,19 @@ public class DataInitializer implements CommandLineRunner {
                 beforeQuantity,
                 inventory.getQuantity(),
                 "Shipping confirmed: " + shipping.getShippingNo()
+        ));
+    }
+
+    private void saveBillDetail(Bill bill, Item item, Integer billQuantity, String unitPrice) {
+        if (billDetailRepository.existsByBillIdAndItemId(bill.getId(), item.getId())) {
+            return;
+        }
+
+        billDetailRepository.save(new BillDetail(
+                bill,
+                item,
+                billQuantity,
+                new BigDecimal(unitPrice)
         ));
     }
 }
