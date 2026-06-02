@@ -122,6 +122,23 @@ flowchart LR
 | 시연 가이드 | 게스트 계정, 추천 테스트 흐름 안내 |
 | 기술/인프라 | Java, React, MySQL, AWS, Docker 구조 설명 |
 
+### Frontend Design Direction
+
+- 위드웍스 medical 화면의 TOAST UI Grid 기반 업무 화면 패턴을 참고한다.
+- 포트폴리오 랜딩보다 실제 운영자가 사용하는 백오피스 화면의 밀도와 구조를 우선한다.
+- 검색 조건, 작업 버튼, 대형 Grid, 상세 패널 중심으로 화면을 구성한다.
+- 카드형 마케팅 화면보다 테이블/그리드 중심의 업무 시스템 인상을 만든다.
+
+### Frontend Point Colors
+
+| 색상명 | Hex | 사용 목적 |
+| --- | --- | --- |
+| Control Navy | `#172033` | 사이드바, 핵심 구조, 주요 제목 |
+| Process Blue | `#2563eb` | 주요 버튼, 활성 메뉴, 조회 액션 |
+| Inventory Teal | `#0f766e` | 재고, 확정 상태, 정상 처리 |
+| Pending Amber | `#d97706` | 대기 상태, 주의 수량 |
+| Exception Red | `#dc2626` | 부족, 오류, 취소 상태 |
+
 ### 로그인 버튼
 
 - Google OAuth 로그인
