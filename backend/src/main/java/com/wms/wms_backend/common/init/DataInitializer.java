@@ -26,6 +26,14 @@ import com.wms.wms_backend.domain.receiving.entity.Receiving;
 import com.wms.wms_backend.domain.receiving.entity.ReceivingDetail;
 import com.wms.wms_backend.domain.receiving.repository.ReceivingDetailRepository;
 import com.wms.wms_backend.domain.receiving.repository.ReceivingRepository;
+import com.wms.wms_backend.domain.returnorder.entity.PurchaseReturn;
+import com.wms.wms_backend.domain.returnorder.entity.PurchaseReturnDetail;
+import com.wms.wms_backend.domain.returnorder.entity.SalesReturn;
+import com.wms.wms_backend.domain.returnorder.entity.SalesReturnDetail;
+import com.wms.wms_backend.domain.returnorder.repository.PurchaseReturnDetailRepository;
+import com.wms.wms_backend.domain.returnorder.repository.PurchaseReturnRepository;
+import com.wms.wms_backend.domain.returnorder.repository.SalesReturnDetailRepository;
+import com.wms.wms_backend.domain.returnorder.repository.SalesReturnRepository;
 import com.wms.wms_backend.domain.sales.entity.SalesOrder;
 import com.wms.wms_backend.domain.sales.entity.SalesOrderDetail;
 import com.wms.wms_backend.domain.sales.repository.SalesOrderDetailRepository;
@@ -78,6 +86,10 @@ public class DataInitializer implements CommandLineRunner {
     private final ShippingDetailRepository shippingDetailRepository;
     private final BillRepository billRepository;
     private final BillDetailRepository billDetailRepository;
+    private final PurchaseReturnRepository purchaseReturnRepository;
+    private final PurchaseReturnDetailRepository purchaseReturnDetailRepository;
+    private final SalesReturnRepository salesReturnRepository;
+    private final SalesReturnDetailRepository salesReturnDetailRepository;
 
     @Override
     @Transactional
@@ -121,6 +133,12 @@ public class DataInitializer implements CommandLineRunner {
 
         saveCommonCode("BILL_STATUS", "ISSUED", "Issued", "Bill is issued", 10);
         saveCommonCode("BILL_STATUS", "PAID", "Paid", "Bill payment is completed", 20);
+
+        saveCommonCode("PURCHASE_RETURN_STATUS", "WAITING", "Waiting", "Purchase return is created and waiting for outbound", 10);
+        saveCommonCode("PURCHASE_RETURN_STATUS", "SHIPPED", "Shipped", "Purchase return outbound is completed", 20);
+
+        saveCommonCode("SALES_RETURN_STATUS", "WAITING", "Waiting", "Sales return is created and waiting for inbound", 10);
+        saveCommonCode("SALES_RETURN_STATUS", "RECEIVED", "Received", "Sales return inbound is completed", 20);
     }
 
     private void saveCommonCode(String groupCode, String subCode, String codeName, String description, int sortOrder) {
@@ -268,6 +286,30 @@ public class DataInitializer implements CommandLineRunner {
         saveBillDetail(bill, detergentItem, 20, "5500.00");
         saveBillDetail(bill, keyboard, 10, "24900.00");
         salesOrder.completeBilling();
+
+        PurchaseReturn purchaseReturn = purchaseReturnRepository.findByPurchaseReturnNo("PR-20260602-001")
+                .orElseGet(() -> purchaseReturnRepository.save(new PurchaseReturn(
+                        hq,
+                        purchaseOrder,
+                        "PR-20260602-001",
+                        LocalDate.of(2026, 6, 2),
+                        "Supplier return for damaged inbound stock"
+                )));
+
+        savePurchaseReturnDetailAndDecreaseInventory(hq, purchaseReturn, usbCable, pickingLocation2, 5);
+        purchaseReturn.completeReturnOutbound();
+
+        SalesReturn salesReturn = salesReturnRepository.findBySalesReturnNo("SR-20260602-001")
+                .orElseGet(() -> salesReturnRepository.save(new SalesReturn(
+                        hq,
+                        salesOrder,
+                        "SR-20260602-001",
+                        LocalDate.of(2026, 6, 2),
+                        "Customer return for simple exchange"
+                )));
+
+        saveSalesReturnDetailAndIncreaseInventory(hq, salesReturn, detergentItem, pickingLocation1, 2);
+        salesReturn.completeReturnInbound();
     }
 
     private void saveUser(Account account, Long topAccountId, String name, String email, String roleSubCode) {
@@ -440,6 +482,68 @@ public class DataInitializer implements CommandLineRunner {
                 item,
                 billQuantity,
                 new BigDecimal(unitPrice)
+        ));
+    }
+
+    private void savePurchaseReturnDetailAndDecreaseInventory(
+            Account account,
+            PurchaseReturn purchaseReturn,
+            Item item,
+            Location location,
+            Integer returnQuantity
+    ) {
+        if (purchaseReturnDetailRepository.existsByPurchaseReturnIdAndItemIdAndLocationId(purchaseReturn.getId(), item.getId(), location.getId())) {
+            return;
+        }
+
+        purchaseReturnDetailRepository.save(new PurchaseReturnDetail(purchaseReturn, item, location, returnQuantity));
+
+        Inventory inventory = inventoryRepository.findByItemIdAndLocationId(item.getId(), location.getId())
+                .orElseThrow();
+
+        Integer beforeQuantity = inventory.getQuantity();
+        inventory.decreaseQuantity(returnQuantity);
+
+        inventoryHistoryRepository.save(new InventoryHistory(
+                account,
+                item,
+                location,
+                "RETURN_OUTBOUND",
+                returnQuantity,
+                beforeQuantity,
+                inventory.getQuantity(),
+                "Purchase return outbound confirmed: " + purchaseReturn.getPurchaseReturnNo()
+        ));
+    }
+
+    private void saveSalesReturnDetailAndIncreaseInventory(
+            Account account,
+            SalesReturn salesReturn,
+            Item item,
+            Location location,
+            Integer returnQuantity
+    ) {
+        if (salesReturnDetailRepository.existsBySalesReturnIdAndItemIdAndLocationId(salesReturn.getId(), item.getId(), location.getId())) {
+            return;
+        }
+
+        salesReturnDetailRepository.save(new SalesReturnDetail(salesReturn, item, location, returnQuantity));
+
+        Inventory inventory = inventoryRepository.findByItemIdAndLocationId(item.getId(), location.getId())
+                .orElseGet(() -> inventoryRepository.save(new Inventory(account, item, location, 0, 0)));
+
+        Integer beforeQuantity = inventory.getQuantity();
+        inventory.increaseQuantity(returnQuantity);
+
+        inventoryHistoryRepository.save(new InventoryHistory(
+                account,
+                item,
+                location,
+                "RETURN_INBOUND",
+                returnQuantity,
+                beforeQuantity,
+                inventory.getQuantity(),
+                "Sales return inbound confirmed: " + salesReturn.getSalesReturnNo()
         ));
     }
 }

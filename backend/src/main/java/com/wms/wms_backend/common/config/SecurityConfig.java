@@ -41,6 +41,10 @@ public class SecurityConfig {
                                 "/api/shipping-details",
                                 "/api/bills",
                                 "/api/bill-details",
+                                "/api/purchase-returns",
+                                "/api/purchase-return-details",
+                                "/api/sales-returns",
+                                "/api/sales-return-details",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
