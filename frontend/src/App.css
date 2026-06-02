@@ -333,7 +333,11 @@ button {
   flex-direction: column;
   gap: 0;
   width: min(1160px, calc(100% - 40px));
-  margin: 0 auto 56px;
+  margin: 20px auto 56px;
+}
+
+.landing-hero + .landing-content {
+  margin-top: 0;
 }
 
 .intro-tabs,
@@ -357,6 +361,99 @@ button {
 .demo-guide-section,
 .color-story,
 .final-cta {
+  margin-top: 20px;
+}
+
+.home-link-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.home-link-grid button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: center;
+  min-height: 110px;
+  padding: 18px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.home-link-grid strong {
+  color: var(--control-navy);
+  font-size: 17px;
+}
+
+.home-link-grid span {
+  grid-column: 1 / -1;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.home-link-grid svg {
+  color: var(--process-blue);
+}
+
+.subpage-hero {
+  padding: 34px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.subpage-hero h2 {
+  max-width: 850px;
+  margin: 0;
+  color: var(--control-navy);
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.28;
+  letter-spacing: 0;
+  word-break: keep-all;
+}
+
+.subpage-hero p:not(.eyebrow) {
+  max-width: 860px;
+  margin: 18px 0 0;
+  color: var(--text-muted);
+  font-size: 17px;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.subpage-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.subpage-card-grid article {
+  min-height: 160px;
+  padding: 22px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.subpage-card-grid h3 {
+  margin: 0 0 10px;
+  color: var(--control-navy);
+  font-size: 18px;
+}
+
+.subpage-card-grid p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.page-feature-grid {
   margin-top: 20px;
 }
 
@@ -1191,6 +1288,11 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .home-link-grid,
+  .subpage-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .pain-card-track,
   .process-timeline,
   .guide-step-list {
@@ -1249,6 +1351,11 @@ button {
   }
 
   .landing-color-list {
+    grid-template-columns: 1fr;
+  }
+
+  .home-link-grid,
+  .subpage-card-grid {
     grid-template-columns: 1fr;
   }
 
