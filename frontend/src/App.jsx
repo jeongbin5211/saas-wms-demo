@@ -310,12 +310,45 @@ const receivingDetailColumns = [
   { header: '입고 수량', name: 'receivedQuantity', width: 110, align: 'right' },
 ]
 
+const salesOrderColumns = [
+  { header: '판매주문 번호', name: 'salesOrderNo', width: 180 },
+  { header: '고객사', name: 'customerAccountName', width: 180 },
+  { header: '주문 상태', name: 'orderStatusSubCode', width: 120, align: 'center' },
+  { header: '주문일', name: 'orderDate', width: 120, align: 'center' },
+  { header: '비고', name: 'note', width: 280 },
+]
+
+const salesOrderDetailColumns = [
+  { header: '판매주문 번호', name: 'salesOrderNo', width: 180 },
+  { header: '품목 코드', name: 'itemCode', width: 180 },
+  { header: '품목명', name: 'itemName', width: 210 },
+  { header: '주문 수량', name: 'orderQuantity', width: 110, align: 'right' },
+  { header: '단가', name: 'unitPrice', width: 100, align: 'right' },
+  { header: '금액', name: 'amount', width: 110, align: 'right' },
+]
+
+const shippingColumns = [
+  { header: '출고 번호', name: 'shippingNo', width: 170 },
+  { header: '판매주문 번호', name: 'salesOrderNo', width: 180 },
+  { header: '출고 상태', name: 'shippingStatusSubCode', width: 120, align: 'center' },
+  { header: '출고일', name: 'shippingDate', width: 120, align: 'center' },
+]
+
+const shippingDetailColumns = [
+  { header: '출고 번호', name: 'shippingNo', width: 170 },
+  { header: '품목 코드', name: 'itemCode', width: 180 },
+  { header: '품목명', name: 'itemName', width: 210 },
+  { header: '로케이션', name: 'locationCode', width: 130, align: 'center' },
+  { header: '출고 수량', name: 'shippedQuantity', width: 110, align: 'right' },
+]
+
 const rowNumberHeaders = ['rowNum']
 const selectableRowHeaders = ['rowNum', 'checkbox']
 const inventorySummaryColumns = ['quantity', 'allocatedQuantity', 'availableQuantity']
 const emptyLocationCatalog = { warehouses: [], areas: [], zones: [], locations: [] }
 const emptyItemCatalog = { itemMasters: [], itemClasses: [], items: [] }
 const emptyInboundFlow = { purchaseOrders: [], purchaseOrderDetails: [], receivings: [], receivingDetails: [] }
+const emptyOutboundFlow = { salesOrders: [], salesOrderDetails: [], shippings: [], shippingDetails: [] }
 
 function App() {
   const [route, setRoute] = useState(() => window.location.pathname)
@@ -644,14 +677,17 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
   const [locationCatalog, setLocationCatalog] = useState(emptyLocationCatalog)
   const [itemCatalog, setItemCatalog] = useState(emptyItemCatalog)
   const [inboundFlow, setInboundFlow] = useState(emptyInboundFlow)
+  const [outboundFlow, setOutboundFlow] = useState(emptyOutboundFlow)
   const [keyword, setKeyword] = useState('')
   const [historyKeyword, setHistoryKeyword] = useState('')
   const [loading, setLoading] = useState(false)
   const [masterLoading, setMasterLoading] = useState(false)
   const [inboundLoading, setInboundLoading] = useState(false)
+  const [outboundLoading, setOutboundLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [masterErrorMessage, setMasterErrorMessage] = useState('')
   const [inboundErrorMessage, setInboundErrorMessage] = useState('')
+  const [outboundErrorMessage, setOutboundErrorMessage] = useState('')
   const activeMenu = route.replace(/^\/app\/?/, '') || 'inventory'
   const activePage = internalPages[activeMenu] ?? internalPages.inventory
 
@@ -833,17 +869,50 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
     }
   }, [])
 
+  const loadOutboundFlow = useCallback(async () => {
+    setOutboundLoading(true)
+    setOutboundErrorMessage('')
+
+    try {
+      const [salesResponse, salesDetailResponse, shippingResponse, shippingDetailResponse] =
+        await Promise.all([
+          fetch('/api/sales-orders'),
+          fetch('/api/sales-order-details'),
+          fetch('/api/shippings'),
+          fetch('/api/shipping-details'),
+        ])
+
+      if (!salesResponse.ok || !salesDetailResponse.ok || !shippingResponse.ok || !shippingDetailResponse.ok) {
+        throw new Error('API response was not successful.')
+      }
+
+      const [salesOrders, salesOrderDetails, shippings, shippingDetails] = await Promise.all([
+        salesResponse.json(),
+        salesDetailResponse.json(),
+        shippingResponse.json(),
+        shippingDetailResponse.json(),
+      ])
+
+      setOutboundFlow({ salesOrders, salesOrderDetails, shippings, shippingDetails })
+    } catch {
+      setOutboundErrorMessage('판매/출고 API에 연결할 수 없습니다. 백엔드 서버 상태를 확인하세요.')
+    } finally {
+      setOutboundLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     const timerId = window.setTimeout(() => {
       loadWarehouseData()
       loadMasterData()
       loadInboundFlow()
+      loadOutboundFlow()
     }, 0)
 
     return () => {
       window.clearTimeout(timerId)
     }
-  }, [loadInboundFlow, loadMasterData, loadWarehouseData])
+  }, [loadInboundFlow, loadMasterData, loadOutboundFlow, loadWarehouseData])
 
   return (
     <div className="app-shell">
@@ -955,7 +1024,35 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
             page={activePage}
           />
         ) : null}
-        {!['guide', 'inventory', 'inventory-history', 'locations', 'items', 'purchase', 'receiving'].includes(activeMenu) ? (
+        {activeMenu === 'sales' ? (
+          <SalesOrderView
+            errorMessage={outboundErrorMessage}
+            flow={outboundFlow}
+            loading={outboundLoading}
+            onRefresh={loadOutboundFlow}
+            page={activePage}
+          />
+        ) : null}
+        {activeMenu === 'shipping' ? (
+          <ShippingView
+            errorMessage={outboundErrorMessage}
+            flow={outboundFlow}
+            loading={outboundLoading}
+            onRefresh={loadOutboundFlow}
+            page={activePage}
+          />
+        ) : null}
+        {![
+          'guide',
+          'inventory',
+          'inventory-history',
+          'locations',
+          'items',
+          'purchase',
+          'receiving',
+          'sales',
+          'shipping',
+        ].includes(activeMenu) ? (
           <PlaceholderWorkView page={activePage} />
         ) : null}
       </main>
@@ -1198,6 +1295,62 @@ function ReceivingView({ errorMessage, flow, loading, onRefresh, page }) {
         <div className="master-grid-layout">
           <GridSection columns={receivingColumns} data={flow.receivings} title="입고" />
           <GridSection columns={receivingDetailColumns} data={flow.receivingDetails} title="입고 상세" />
+        </div>
+      </WorkPage>
+    </div>
+  )
+}
+
+function SalesOrderView({ errorMessage, flow, loading, onRefresh, page }) {
+  const totalAmount = flow.salesOrderDetails.reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0)
+
+  return (
+    <div className="screen-stack">
+      <section className="metric-grid">
+        <MetricCard label="판매주문" value={flow.salesOrders.length} tone="blue" />
+        <MetricCard label="주문 상세" value={flow.salesOrderDetails.length} tone="teal" />
+        <MetricCard label="주문 금액" value={totalAmount.toLocaleString()} tone="navy" />
+        <MetricCard label="출고 연결" value={flow.shippings.length} tone="amber" />
+      </section>
+
+      <WorkPage
+        description={page.description}
+        eyebrow="판매 흐름"
+        title="판매주문"
+        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+      >
+        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        <div className="master-grid-layout">
+          <GridSection columns={salesOrderColumns} data={flow.salesOrders} title="판매주문" />
+          <GridSection columns={salesOrderDetailColumns} data={flow.salesOrderDetails} title="판매주문 상세" />
+        </div>
+      </WorkPage>
+    </div>
+  )
+}
+
+function ShippingView({ errorMessage, flow, loading, onRefresh, page }) {
+  const totalShipped = flow.shippingDetails.reduce((sum, detail) => sum + Number(detail.shippedQuantity ?? 0), 0)
+
+  return (
+    <div className="screen-stack">
+      <section className="metric-grid">
+        <MetricCard label="출고 건수" value={flow.shippings.length} tone="blue" />
+        <MetricCard label="출고 상세" value={flow.shippingDetails.length} tone="teal" />
+        <MetricCard label="출고 수량" value={totalShipped.toLocaleString()} tone="navy" />
+        <MetricCard label="판매 연결" value={flow.salesOrders.length} tone="amber" />
+      </section>
+
+      <WorkPage
+        description={page.description}
+        eyebrow="출고 흐름"
+        title="출고관리"
+        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+      >
+        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        <div className="master-grid-layout">
+          <GridSection columns={shippingColumns} data={flow.shippings} title="출고" />
+          <GridSection columns={shippingDetailColumns} data={flow.shippingDetails} title="출고 상세" />
         </div>
       </WorkPage>
     </div>
