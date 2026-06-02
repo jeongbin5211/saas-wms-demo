@@ -278,11 +278,44 @@ const itemColumns = [
   { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
 ]
 
+const purchaseOrderColumns = [
+  { header: '구매주문 번호', name: 'purchaseOrderNo', width: 180 },
+  { header: '공급사', name: 'supplierAccountName', width: 180 },
+  { header: '주문 상태', name: 'orderStatusSubCode', width: 120, align: 'center' },
+  { header: '주문일', name: 'orderDate', width: 120, align: 'center' },
+  { header: '비고', name: 'note', width: 280 },
+]
+
+const purchaseOrderDetailColumns = [
+  { header: '구매주문 번호', name: 'purchaseOrderNo', width: 180 },
+  { header: '품목 코드', name: 'itemCode', width: 180 },
+  { header: '품목명', name: 'itemName', width: 210 },
+  { header: '주문 수량', name: 'orderQuantity', width: 110, align: 'right' },
+  { header: '단가', name: 'unitPrice', width: 100, align: 'right' },
+  { header: '금액', name: 'amount', width: 110, align: 'right' },
+]
+
+const receivingColumns = [
+  { header: '입고 번호', name: 'receivingNo', width: 170 },
+  { header: '구매주문 번호', name: 'purchaseOrderNo', width: 180 },
+  { header: '입고 상태', name: 'receivingStatusSubCode', width: 120, align: 'center' },
+  { header: '입고일', name: 'receivingDate', width: 120, align: 'center' },
+]
+
+const receivingDetailColumns = [
+  { header: '입고 번호', name: 'receivingNo', width: 170 },
+  { header: '품목 코드', name: 'itemCode', width: 180 },
+  { header: '품목명', name: 'itemName', width: 210 },
+  { header: '로케이션', name: 'locationCode', width: 130, align: 'center' },
+  { header: '입고 수량', name: 'receivedQuantity', width: 110, align: 'right' },
+]
+
 const rowNumberHeaders = ['rowNum']
 const selectableRowHeaders = ['rowNum', 'checkbox']
 const inventorySummaryColumns = ['quantity', 'allocatedQuantity', 'availableQuantity']
 const emptyLocationCatalog = { warehouses: [], areas: [], zones: [], locations: [] }
 const emptyItemCatalog = { itemMasters: [], itemClasses: [], items: [] }
+const emptyInboundFlow = { purchaseOrders: [], purchaseOrderDetails: [], receivings: [], receivingDetails: [] }
 
 function App() {
   const [route, setRoute] = useState(() => window.location.pathname)
@@ -610,12 +643,15 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
   const [histories, setHistories] = useState([])
   const [locationCatalog, setLocationCatalog] = useState(emptyLocationCatalog)
   const [itemCatalog, setItemCatalog] = useState(emptyItemCatalog)
+  const [inboundFlow, setInboundFlow] = useState(emptyInboundFlow)
   const [keyword, setKeyword] = useState('')
   const [historyKeyword, setHistoryKeyword] = useState('')
   const [loading, setLoading] = useState(false)
   const [masterLoading, setMasterLoading] = useState(false)
+  const [inboundLoading, setInboundLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [masterErrorMessage, setMasterErrorMessage] = useState('')
+  const [inboundErrorMessage, setInboundErrorMessage] = useState('')
   const activeMenu = route.replace(/^\/app\/?/, '') || 'inventory'
   const activePage = internalPages[activeMenu] ?? internalPages.inventory
 
@@ -760,16 +796,54 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
     }
   }, [])
 
+  const loadInboundFlow = useCallback(async () => {
+    setInboundLoading(true)
+    setInboundErrorMessage('')
+
+    try {
+      const [purchaseResponse, purchaseDetailResponse, receivingResponse, receivingDetailResponse] =
+        await Promise.all([
+          fetch('/api/purchase-orders'),
+          fetch('/api/purchase-order-details'),
+          fetch('/api/receivings'),
+          fetch('/api/receiving-details'),
+        ])
+
+      if (
+        !purchaseResponse.ok ||
+        !purchaseDetailResponse.ok ||
+        !receivingResponse.ok ||
+        !receivingDetailResponse.ok
+      ) {
+        throw new Error('API response was not successful.')
+      }
+
+      const [purchaseOrders, purchaseOrderDetails, receivings, receivingDetails] = await Promise.all([
+        purchaseResponse.json(),
+        purchaseDetailResponse.json(),
+        receivingResponse.json(),
+        receivingDetailResponse.json(),
+      ])
+
+      setInboundFlow({ purchaseOrders, purchaseOrderDetails, receivings, receivingDetails })
+    } catch {
+      setInboundErrorMessage('구매/입고 API에 연결할 수 없습니다. 백엔드 서버 상태를 확인하세요.')
+    } finally {
+      setInboundLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     const timerId = window.setTimeout(() => {
       loadWarehouseData()
       loadMasterData()
+      loadInboundFlow()
     }, 0)
 
     return () => {
       window.clearTimeout(timerId)
     }
-  }, [loadMasterData, loadWarehouseData])
+  }, [loadInboundFlow, loadMasterData, loadWarehouseData])
 
   return (
     <div className="app-shell">
@@ -863,7 +937,25 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
             page={activePage}
           />
         ) : null}
-        {!['guide', 'inventory', 'inventory-history', 'locations', 'items'].includes(activeMenu) ? (
+        {activeMenu === 'purchase' ? (
+          <PurchaseOrderView
+            errorMessage={inboundErrorMessage}
+            flow={inboundFlow}
+            loading={inboundLoading}
+            onRefresh={loadInboundFlow}
+            page={activePage}
+          />
+        ) : null}
+        {activeMenu === 'receiving' ? (
+          <ReceivingView
+            errorMessage={inboundErrorMessage}
+            flow={inboundFlow}
+            loading={inboundLoading}
+            onRefresh={loadInboundFlow}
+            page={activePage}
+          />
+        ) : null}
+        {!['guide', 'inventory', 'inventory-history', 'locations', 'items', 'purchase', 'receiving'].includes(activeMenu) ? (
           <PlaceholderWorkView page={activePage} />
         ) : null}
       </main>
@@ -1047,6 +1139,65 @@ function ItemMasterView({ catalog, errorMessage, loading, onRefresh, page }) {
           <GridSection columns={itemMasterColumns} data={catalog.itemMasters} title="품목 마스터" />
           <GridSection columns={itemClassColumns} data={catalog.itemClasses} title="품목 클래스" />
           <GridSection columns={itemColumns} data={catalog.items} title="품목" wide />
+        </div>
+      </WorkPage>
+    </div>
+  )
+}
+
+function PurchaseOrderView({ errorMessage, flow, loading, onRefresh, page }) {
+  const totalAmount = flow.purchaseOrderDetails.reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0)
+
+  return (
+    <div className="screen-stack">
+      <section className="metric-grid">
+        <MetricCard label="구매주문" value={flow.purchaseOrders.length} tone="blue" />
+        <MetricCard label="주문 상세" value={flow.purchaseOrderDetails.length} tone="teal" />
+        <MetricCard label="주문 금액" value={totalAmount.toLocaleString()} tone="navy" />
+        <MetricCard label="입고 연결" value={flow.receivings.length} tone="amber" />
+      </section>
+
+      <WorkPage
+        description={page.description}
+        eyebrow="구매 흐름"
+        title="구매주문"
+        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+      >
+        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        <div className="master-grid-layout">
+          <GridSection columns={purchaseOrderColumns} data={flow.purchaseOrders} title="구매주문" />
+          <GridSection columns={purchaseOrderDetailColumns} data={flow.purchaseOrderDetails} title="구매주문 상세" />
+        </div>
+      </WorkPage>
+    </div>
+  )
+}
+
+function ReceivingView({ errorMessage, flow, loading, onRefresh, page }) {
+  const totalReceived = flow.receivingDetails.reduce(
+    (sum, detail) => sum + Number(detail.receivedQuantity ?? 0),
+    0,
+  )
+
+  return (
+    <div className="screen-stack">
+      <section className="metric-grid">
+        <MetricCard label="입고 건수" value={flow.receivings.length} tone="blue" />
+        <MetricCard label="입고 상세" value={flow.receivingDetails.length} tone="teal" />
+        <MetricCard label="입고 수량" value={totalReceived.toLocaleString()} tone="navy" />
+        <MetricCard label="구매 연결" value={flow.purchaseOrders.length} tone="amber" />
+      </section>
+
+      <WorkPage
+        description={page.description}
+        eyebrow="입고 흐름"
+        title="입고관리"
+        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+      >
+        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        <div className="master-grid-layout">
+          <GridSection columns={receivingColumns} data={flow.receivings} title="입고" />
+          <GridSection columns={receivingDetailColumns} data={flow.receivingDetails} title="입고 상세" />
         </div>
       </WorkPage>
     </div>
