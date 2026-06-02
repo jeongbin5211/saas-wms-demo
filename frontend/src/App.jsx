@@ -171,20 +171,39 @@ const menuGroups = [
   {
     title: '기준정보',
     items: [
-      { id: 'warehouse', label: '위치정보', icon: Warehouse },
+      { id: 'locations', label: '위치정보', icon: Warehouse },
       { id: 'items', label: '품목정보', icon: PackageSearch },
     ],
   },
   {
     title: '운영관리',
     items: [
-      { id: 'inventory', label: '재고관리', icon: Boxes },
-      { id: 'purchase', label: '구매 / 입고', icon: ClipboardList },
-      { id: 'sales', label: '판매 / 출고', icon: Truck },
+      { id: 'inventory', label: '재고 현황', icon: Boxes },
+      { id: 'inventory-history', label: '재고 이력', icon: PackageCheck },
+      { id: 'purchase', label: '구매주문', icon: ClipboardList },
+      { id: 'receiving', label: '입고관리', icon: PackageCheck },
+      { id: 'sales', label: '판매주문', icon: ShoppingCart },
+      { id: 'shipping', label: '출고관리', icon: Truck },
+      { id: 'returns', label: '반품관리', icon: RotateCcw },
       { id: 'billing', label: '청구관리', icon: ShieldCheck },
     ],
   },
 ]
+
+const internalPages = {
+  dashboard: { title: '대시보드', eyebrow: '개요', description: '주요 운영 지표와 진행 상태를 한 화면에서 확인합니다.' },
+  guide: { title: '시연 가이드', eyebrow: '개요', description: '업무 흐름을 순서대로 확인하는 안내 화면입니다.' },
+  locations: { title: '위치정보', eyebrow: '기준정보', description: '창고, Area, Zone, Location 기준정보를 관리합니다.' },
+  items: { title: '품목정보', eyebrow: '기준정보', description: '품목 마스터, 품목 클래스, 품목 기준정보를 관리합니다.' },
+  inventory: { title: '재고 현황', eyebrow: '운영관리', description: '품목과 로케이션 기준의 현재고와 가용 재고를 조회합니다.' },
+  'inventory-history': { title: '재고 이력', eyebrow: '운영관리', description: '입고, 출고, 반품, 조정으로 발생한 수량 변화를 추적합니다.' },
+  purchase: { title: '구매주문', eyebrow: '운영관리', description: '거래처별 구매 요청과 주문 상태를 관리합니다.' },
+  receiving: { title: '입고관리', eyebrow: '운영관리', description: '구매주문을 기준으로 입고 예정과 확정 수량을 처리합니다.' },
+  sales: { title: '판매주문', eyebrow: '운영관리', description: '판매 요청과 출고 대상 주문을 관리합니다.' },
+  shipping: { title: '출고관리', eyebrow: '운영관리', description: '판매주문 기준 출고 지시와 출고 확정을 처리합니다.' },
+  returns: { title: '반품관리', eyebrow: '운영관리', description: '구매반품과 판매반품 흐름을 구분해 관리합니다.' },
+  billing: { title: '청구관리', eyebrow: '운영관리', description: '출고 완료 내역을 기준으로 청구서를 생성하고 상태를 추적합니다.' },
+}
 
 const inventoryColumns = [
   { header: '품목 코드', name: 'itemCode', width: 170 },
@@ -232,10 +251,10 @@ function App() {
   }, [])
 
   if (route.startsWith('/app')) {
-    return <WorkspaceApp onMoveHome={() => navigate('/')} />
+    return <WorkspaceApp onMoveHome={() => navigate('/')} onNavigate={navigate} route={route} />
   }
 
-  return <LandingPage onEnterApp={() => navigate('/app')} onNavigate={navigate} route={route} />
+  return <LandingPage onEnterApp={() => navigate('/app/inventory')} onNavigate={navigate} route={route} />
 }
 
 function LandingPage({ onEnterApp, onNavigate, route }) {
@@ -531,13 +550,15 @@ function FeatureCard({ icon: Icon, title, description }) {
   )
 }
 
-function WorkspaceApp({ onMoveHome }) {
-  const [activeMenu, setActiveMenu] = useState('inventory')
+function WorkspaceApp({ onMoveHome, onNavigate, route }) {
   const [inventories, setInventories] = useState([])
   const [histories, setHistories] = useState([])
   const [keyword, setKeyword] = useState('')
+  const [historyKeyword, setHistoryKeyword] = useState('')
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const activeMenu = route.replace(/^\/app\/?/, '') || 'inventory'
+  const activePage = internalPages[activeMenu] ?? internalPages.inventory
 
   const filteredInventories = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
@@ -554,6 +575,28 @@ function WorkspaceApp({ onMoveHome }) {
       )
     })
   }, [inventories, keyword])
+
+  const filteredHistories = useMemo(() => {
+    const normalizedKeyword = historyKeyword.trim().toLowerCase()
+
+    if (!normalizedKeyword) {
+      return histories
+    }
+
+    return histories.filter((history) => {
+      const historyType = String(history.historyTypeSubCode ?? '').toLowerCase()
+      const itemCode = String(history.itemCode ?? '').toLowerCase()
+      const locationCode = String(history.locationCode ?? '').toLowerCase()
+      const reason = String(history.reason ?? '').toLowerCase()
+
+      return (
+        historyType.includes(normalizedKeyword) ||
+        itemCode.includes(normalizedKeyword) ||
+        locationCode.includes(normalizedKeyword) ||
+        reason.includes(normalizedKeyword)
+      )
+    })
+  }, [histories, historyKeyword])
 
   const dashboardSummary = useMemo(() => {
     let totalStock = 0
@@ -576,6 +619,35 @@ function WorkspaceApp({ onMoveHome }) {
       lowStockCount,
     }
   }, [inventories])
+
+  const historySummary = useMemo(() => {
+    let inboundCount = 0
+    let outboundCount = 0
+    let returnCount = 0
+
+    for (const history of histories) {
+      const historyType = String(history.historyTypeSubCode ?? '').toLowerCase()
+
+      if (historyType.includes('in')) {
+        inboundCount += 1
+      }
+
+      if (historyType.includes('out')) {
+        outboundCount += 1
+      }
+
+      if (historyType.includes('return')) {
+        returnCount += 1
+      }
+    }
+
+    return {
+      totalHistory: histories.length,
+      inboundCount,
+      outboundCount,
+      returnCount,
+    }
+  }, [histories])
 
   const loadWarehouseData = useCallback(async () => {
     setLoading(true)
@@ -638,7 +710,7 @@ function WorkspaceApp({ onMoveHome }) {
                     type="button"
                     className={activeMenu === item.id ? 'active' : ''}
                     key={item.id}
-                    onClick={() => setActiveMenu(item.id)}
+                    onClick={() => onNavigate(`/app/${item.id}`)}
                   >
                     <Icon size={17} />
                     <span>{item.label}</span>
@@ -653,8 +725,8 @@ function WorkspaceApp({ onMoveHome }) {
       <main className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyebrow">운영 관리</p>
-            <h1>{activeMenu === 'guide' ? '시연 가이드' : '재고 관리 센터'}</h1>
+            <p className="eyebrow">{activePage.eyebrow}</p>
+            <h1>{activePage.title}</h1>
           </div>
           <div className="user-chip">
             <span>게스트</span>
@@ -662,34 +734,48 @@ function WorkspaceApp({ onMoveHome }) {
           </div>
         </header>
 
-        {activeMenu === 'guide' ? (
-          <GuideView />
-        ) : (
-          <InventoryView
+        {activeMenu === 'guide' ? <GuideView /> : null}
+        {activeMenu === 'inventory' ? (
+          <InventoryStatusView
             dashboardSummary={dashboardSummary}
             errorMessage={errorMessage}
             filteredInventories={filteredInventories}
-            histories={histories}
             keyword={keyword}
             loading={loading}
             onKeywordChange={setKeyword}
             onRefresh={loadWarehouseData}
+            page={activePage}
           />
-        )}
+        ) : null}
+        {activeMenu === 'inventory-history' ? (
+          <InventoryHistoryView
+            errorMessage={errorMessage}
+            filteredHistories={filteredHistories}
+            historyKeyword={historyKeyword}
+            historySummary={historySummary}
+            loading={loading}
+            onHistoryKeywordChange={setHistoryKeyword}
+            onRefresh={loadWarehouseData}
+            page={activePage}
+          />
+        ) : null}
+        {!['guide', 'inventory', 'inventory-history'].includes(activeMenu) ? (
+          <PlaceholderWorkView page={activePage} />
+        ) : null}
       </main>
     </div>
   )
 }
 
-function InventoryView({
+function InventoryStatusView({
   dashboardSummary,
   errorMessage,
   filteredInventories,
-  histories,
   keyword,
   loading,
   onKeywordChange,
   onRefresh,
+  page,
 }) {
   return (
     <div className="screen-stack">
@@ -700,13 +786,12 @@ function InventoryView({
         <MetricCard label="부족 주의" value={dashboardSummary.lowStockCount} tone="amber" />
       </section>
 
-      <section className="work-panel">
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">재고 관리</p>
-            <h2>재고 현황</h2>
-          </div>
-          <div className="button-row">
+      <WorkPage
+        description={page.description}
+        eyebrow="재고 관리"
+        title="재고 현황"
+        toolbar={
+          <>
             <button type="button" className="icon-button" onClick={onRefresh} title="새로고침">
               <RefreshCw size={16} />
             </button>
@@ -714,9 +799,9 @@ function InventoryView({
               <BarChart3 size={16} />
               조회
             </button>
-          </div>
-        </div>
-
+          </>
+        }
+      >
         <div className="filter-bar">
           <label className="search-field">
             <Search size={16} />
@@ -741,23 +826,99 @@ function InventoryView({
           rowHeaders={selectableRowHeaders}
           summaryColumns={inventorySummaryColumns}
         />
+      </WorkPage>
+    </div>
+  )
+}
+
+function InventoryHistoryView({
+  errorMessage,
+  filteredHistories,
+  historyKeyword,
+  historySummary,
+  loading,
+  onHistoryKeywordChange,
+  onRefresh,
+  page,
+}) {
+  return (
+    <div className="screen-stack">
+      <section className="metric-grid">
+        <MetricCard label="전체 이력" value={historySummary.totalHistory} tone="blue" />
+        <MetricCard label="입고 계열" value={historySummary.inboundCount} tone="teal" />
+        <MetricCard label="출고 계열" value={historySummary.outboundCount} tone="navy" />
+        <MetricCard label="반품 계열" value={historySummary.returnCount} tone="amber" />
       </section>
 
-      <section className="work-panel compact">
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">재고 이동</p>
-            <h2>최근 재고 이력</h2>
+      <WorkPage
+        description={page.description}
+        eyebrow="재고 이동"
+        title="재고 이력"
+        toolbar={
+          <>
+            <button type="button" className="icon-button" onClick={onRefresh} title="새로고침">
+              <RefreshCw size={16} />
+            </button>
+            <button type="button" className="primary-button">
+              <Search size={16} />
+              조회
+            </button>
+          </>
+        }
+      >
+        <div className="filter-bar">
+          <label className="search-field">
+            <Search size={16} />
+            <input
+              type="search"
+              placeholder="이력 유형, 품목코드, 로케이션, 사유 검색"
+              value={historyKeyword}
+              onChange={(event) => onHistoryKeywordChange(event.target.value)}
+            />
+          </label>
+          <div className="status-message">
+            {loading ? '조회 중...' : `${filteredHistories.length}건`}
           </div>
         </div>
+
+        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+
         <WmsGrid
           columns={historyColumns}
-          data={histories}
-          minBodyHeight={220}
+          data={filteredHistories}
+          minBodyHeight={430}
           rowHeaders={rowNumberHeaders}
         />
-      </section>
+      </WorkPage>
     </div>
+  )
+}
+
+function WorkPage({ children, description, eyebrow, title, toolbar }) {
+  return (
+    <section className="work-panel">
+      <div className="panel-header">
+        <div>
+          <p className="eyebrow">{eyebrow}</p>
+          <h2>{title}</h2>
+          {description ? <p className="panel-description">{description}</p> : null}
+        </div>
+        {toolbar ? <div className="button-row">{toolbar}</div> : null}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function PlaceholderWorkView({ page }) {
+  return (
+    <WorkPage description={page.description} eyebrow={page.eyebrow} title={page.title}>
+      <div className="empty-workspace">
+        <FileText size={26} />
+        <strong>화면 설계 대기</strong>
+        <p>이 메뉴는 다음 작업 단위에서 그리드와 API 데이터를 연결합니다.</p>
+      </div>
+    </WorkPage>
   )
 }
 
