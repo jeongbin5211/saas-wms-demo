@@ -1779,6 +1779,7 @@ function WorkspaceApp({ authUser, onLogout, onMoveHome, onNavigate, route }) {
         ) : null}
         {activeMenu === 'locations' ? (
           <LocationMasterView
+            authUser={authUser}
             catalog={displayLocationCatalog}
             errorMessage={masterErrorMessage}
             loading={masterLoading}
@@ -1788,6 +1789,7 @@ function WorkspaceApp({ authUser, onLogout, onMoveHome, onNavigate, route }) {
         ) : null}
         {activeMenu === 'items' ? (
           <ItemMasterView
+            authUser={authUser}
             catalog={itemCatalog}
             errorMessage={masterErrorMessage}
             loading={masterLoading}
@@ -1998,7 +2000,52 @@ function InventoryHistoryView({
   )
 }
 
-function LocationMasterView({ catalog, errorMessage, loading, onRefresh, page }) {
+function LocationMasterView({ authUser, catalog, errorMessage, loading, onRefresh, page }) {
+  const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const processAllowed = canProcessWork(authUser)
+
+  const submitLocation = async (event) => {
+    event.preventDefault()
+
+    if (!processAllowed) {
+      setMessage('게스트 권한은 기준정보를 생성할 수 없습니다.')
+      return
+    }
+
+    const formData = new FormData(event.currentTarget)
+    const body = {
+      zoneId: Number(formData.get('zoneId')),
+      locationCode: String(formData.get('locationCode') ?? '').trim(),
+      locationName: String(formData.get('locationName') ?? '').trim(),
+    }
+
+    setSubmitting(true)
+    setMessage('')
+
+    try {
+      const response = await fetchWithAuth('/api/locations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (!response.ok) {
+        throw new Error('create-location-failed')
+      }
+
+      event.currentTarget.reset()
+      setMessage(`Location ${body.locationCode} 생성이 완료되었습니다.`)
+      onRefresh()
+    } catch {
+      setMessage('Location 생성 중 오류가 발생했습니다. 중복 코드 또는 Zone 값을 확인하세요.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="screen-stack">
       <section className="metric-grid">
@@ -2015,6 +2062,32 @@ function LocationMasterView({ catalog, errorMessage, loading, onRefresh, page })
         toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
       >
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        {!processAllowed ? <div className="info-banner">게스트 권한은 기준정보 조회만 가능합니다.</div> : null}
+        {message ? <div className="info-banner">{message}</div> : null}
+        <form className="quick-create-form" onSubmit={submitLocation}>
+          <label>
+            <span>Zone</span>
+            <select required name="zoneId" disabled={!processAllowed || submitting} defaultValue="">
+              <option value="" disabled />
+              {catalog.zones.map((zone) => (
+                <option key={zone.id} value={zone.id}>
+                  {zone.zoneCode}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Location 코드</span>
+            <input required name="locationCode" disabled={!processAllowed || submitting} placeholder="예: L-PICK-003" />
+          </label>
+          <label>
+            <span>Location명</span>
+            <input required name="locationName" disabled={!processAllowed || submitting} placeholder="예: 피킹 로케이션 3" />
+          </label>
+          <button type="submit" className="primary-button" disabled={!processAllowed || submitting}>
+            {submitting ? '저장 중' : 'Location 생성'}
+          </button>
+        </form>
         <div className="master-grid-layout">
           <GridSection columns={warehouseColumns} data={catalog.warehouses} title="창고" />
           <GridSection columns={areaColumns} data={catalog.areas} title="Area" />
@@ -2026,7 +2099,56 @@ function LocationMasterView({ catalog, errorMessage, loading, onRefresh, page })
   )
 }
 
-function ItemMasterView({ catalog, errorMessage, loading, onRefresh, page }) {
+function ItemMasterView({ authUser, catalog, errorMessage, loading, onRefresh, page }) {
+  const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const processAllowed = canProcessWork(authUser)
+
+  const submitItem = async (event) => {
+    event.preventDefault()
+
+    if (!processAllowed) {
+      setMessage('게스트 권한은 품목을 생성할 수 없습니다.')
+      return
+    }
+
+    const formData = new FormData(event.currentTarget)
+    const body = {
+      itemClassId: Number(formData.get('itemClassId')),
+      itemCode: String(formData.get('itemCode') ?? '').trim(),
+      itemName: String(formData.get('itemName') ?? '').trim(),
+      barcode: String(formData.get('barcode') ?? '').trim(),
+      unit: String(formData.get('unit') ?? '').trim(),
+      purchasePrice: Number(formData.get('purchasePrice')),
+      salesPrice: Number(formData.get('salesPrice')),
+    }
+
+    setSubmitting(true)
+    setMessage('')
+
+    try {
+      const response = await fetchWithAuth('/api/items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (!response.ok) {
+        throw new Error('create-item-failed')
+      }
+
+      event.currentTarget.reset()
+      setMessage(`품목 ${body.itemCode} 생성이 완료되었습니다.`)
+      onRefresh()
+    } catch {
+      setMessage('품목 생성 중 오류가 발생했습니다. 중복 코드 또는 품목 클래스 값을 확인하세요.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="screen-stack">
       <section className="metric-grid">
@@ -2043,6 +2165,48 @@ function ItemMasterView({ catalog, errorMessage, loading, onRefresh, page }) {
         toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
       >
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        {!processAllowed ? <div className="info-banner">게스트 권한은 품목 기준정보 조회만 가능합니다.</div> : null}
+        {message ? <div className="info-banner">{message}</div> : null}
+        <form className="quick-create-form item-create-form" onSubmit={submitItem}>
+          <label>
+            <span>품목 클래스</span>
+            <select required name="itemClassId" disabled={!processAllowed || submitting} defaultValue="">
+              <option value="" disabled />
+              {catalog.itemClasses.map((itemClass) => (
+                <option key={itemClass.id} value={itemClass.id}>
+                  {itemClass.itemClassCode}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>품목 코드</span>
+            <input required name="itemCode" disabled={!processAllowed || submitting} placeholder="예: ITEM-NEW-001" />
+          </label>
+          <label>
+            <span>품목명</span>
+            <input required name="itemName" disabled={!processAllowed || submitting} placeholder="예: 신규 품목" />
+          </label>
+          <label>
+            <span>바코드</span>
+            <input name="barcode" disabled={!processAllowed || submitting} placeholder="선택 입력" />
+          </label>
+          <label>
+            <span>단위</span>
+            <input required name="unit" disabled={!processAllowed || submitting} defaultValue="EA" />
+          </label>
+          <label>
+            <span>매입가</span>
+            <input required min="0" name="purchasePrice" type="number" disabled={!processAllowed || submitting} defaultValue="0" />
+          </label>
+          <label>
+            <span>판매가</span>
+            <input required min="0" name="salesPrice" type="number" disabled={!processAllowed || submitting} defaultValue="0" />
+          </label>
+          <button type="submit" className="primary-button" disabled={!processAllowed || submitting}>
+            {submitting ? '저장 중' : '품목 생성'}
+          </button>
+        </form>
         <div className="master-grid-layout">
           <GridSection columns={itemMasterColumns} data={catalog.itemMasters} title="품목 마스터" />
           <GridSection columns={itemClassColumns} data={catalog.itemClasses} title="품목 클래스" />

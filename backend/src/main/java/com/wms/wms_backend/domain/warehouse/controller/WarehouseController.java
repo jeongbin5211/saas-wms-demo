@@ -8,9 +8,17 @@ import com.wms.wms_backend.domain.warehouse.repository.AreaRepository;
 import com.wms.wms_backend.domain.warehouse.repository.LocationRepository;
 import com.wms.wms_backend.domain.warehouse.repository.WarehouseRepository;
 import com.wms.wms_backend.domain.warehouse.repository.ZoneRepository;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +74,26 @@ public class WarehouseController {
         }
 
         return new WarehouseLocationResponse(warehouseResponses, areaResponses, zoneResponses, locationResponses);
+    }
+
+    @PostMapping("/api/locations")
+    @ResponseStatus(HttpStatus.CREATED)
+    public LocationResponse createLocation(@Valid @RequestBody LocationCreateRequest request) {
+        if (locationRepository.existsByLocationCode(request.locationCode())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 Location 코드입니다.");
+        }
+
+        Zone zone = zoneRepository.findById(request.zoneId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zone 정보를 찾을 수 없습니다."));
+
+        Location location = locationRepository.save(new Location(
+                zone.getAccount(),
+                zone,
+                request.locationCode(),
+                request.locationName()
+        ));
+
+        return LocationResponse.from(location);
     }
 
     public record WarehouseResponse(
@@ -142,6 +170,13 @@ public class WarehouseController {
                     location.getUseYn()
             );
         }
+    }
+
+    public record LocationCreateRequest(
+            @NotNull Long zoneId,
+            @NotBlank String locationCode,
+            @NotBlank String locationName
+    ) {
     }
 
     public record WarehouseLocationResponse(

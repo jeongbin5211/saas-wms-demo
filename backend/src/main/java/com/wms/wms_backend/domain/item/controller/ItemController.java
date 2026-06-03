@@ -6,9 +6,18 @@ import com.wms.wms_backend.domain.item.entity.ItemMaster;
 import com.wms.wms_backend.domain.item.repository.ItemClassRepository;
 import com.wms.wms_backend.domain.item.repository.ItemMasterRepository;
 import com.wms.wms_backend.domain.item.repository.ItemRepository;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -56,6 +65,30 @@ public class ItemController {
         }
 
         return responses;
+    }
+
+    @PostMapping("/api/items")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ItemResponse createItem(@Valid @RequestBody ItemCreateRequest request) {
+        if (itemRepository.existsByItemCode(request.itemCode())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 품목 코드입니다.");
+        }
+
+        ItemClass itemClass = itemClassRepository.findById(request.itemClassId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "품목 클래스를 찾을 수 없습니다."));
+
+        Item item = itemRepository.save(new Item(
+                itemClass.getAccount(),
+                itemClass,
+                request.itemCode(),
+                request.itemName(),
+                request.barcode(),
+                request.unit(),
+                request.purchasePrice(),
+                request.salesPrice()
+        ));
+
+        return ItemResponse.from(item);
     }
 
     @GetMapping("/api/item-catalog")
@@ -129,6 +162,17 @@ public class ItemController {
                     item.getUseYn()
             );
         }
+    }
+
+    public record ItemCreateRequest(
+            @NotNull Long itemClassId,
+            @NotBlank String itemCode,
+            @NotBlank String itemName,
+            String barcode,
+            @NotBlank String unit,
+            @NotNull @PositiveOrZero BigDecimal purchasePrice,
+            @NotNull @PositiveOrZero BigDecimal salesPrice
+    ) {
     }
 
     public record ItemCatalogResponse(

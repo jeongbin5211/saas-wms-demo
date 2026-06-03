@@ -1454,6 +1454,51 @@ button {
   box-shadow: 0 0 0 3px rgb(37 99 235 / 10%);
 }
 
+.quick-create-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+  padding: 14px 16px;
+  background: #fbfcfe;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.quick-create-form.item-create-form {
+  grid-template-columns: 1.1fr 1.2fr 1.2fr 1fr 0.7fr 0.8fr 0.8fr auto;
+}
+
+.quick-create-form label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.quick-create-form span {
+  color: var(--control-navy);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.quick-create-form input,
+.quick-create-form select {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 9px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  outline: 0;
+}
+
+.quick-create-form input:disabled,
+.quick-create-form select:disabled {
+  color: #98a2b3;
+  background: #f2f4f7;
+}
+
 .filter-bar {
   display: flex;
   align-items: center;
