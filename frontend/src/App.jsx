@@ -2088,6 +2088,37 @@ function ReceivingView({ errorMessage, flow, loading, onRefresh, page }) {
     0,
   )
   const [filterOpen, setFilterOpen] = useState(true)
+  const [selectedReceiving, setSelectedReceiving] = useState(null)
+  const [processing, setProcessing] = useState(false)
+  const [processMessage, setProcessMessage] = useState('')
+
+  const confirmSelectedReceiving = async () => {
+    if (!selectedReceiving) {
+      setProcessMessage('입고 그리드에서 확정할 행을 더블클릭하세요.')
+      return
+    }
+
+    setProcessing(true)
+    setProcessMessage('')
+
+    try {
+      const response = await fetchWithAuth(`/api/receivings/${selectedReceiving.id}/confirm`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw new Error('confirm-failed')
+      }
+
+      const result = await response.json()
+      setProcessMessage(`입고 ${result.receivingNo} 확정 및 재고 ${result.totalQuantity.toLocaleString()}개 반영이 완료되었습니다.`)
+      onRefresh()
+    } catch {
+      setProcessMessage('입고 확정 처리 중 오류가 발생했습니다. 입고 상세와 재고 상태를 확인하세요.')
+    } finally {
+      setProcessing(false)
+    }
+  }
 
   return (
     <div className="screen-stack">
@@ -2112,8 +2143,19 @@ function ReceivingView({ errorMessage, flow, loading, onRefresh, page }) {
           <SearchInput label="품목" placeholder="품목 코드 또는 품목명" wide />
         </WorkSearchPanel>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        {processMessage ? <div className="info-banner">{processMessage}</div> : null}
         <div className="master-grid-layout">
-          <GridSection columns={receivingColumns} data={flow.receivings} title="입고" />
+          <GridSection
+            action={
+              <button type="button" className="primary-button compact" disabled={processing} onClick={confirmSelectedReceiving}>
+                {processing ? '처리 중' : '입고 확정/재고 반영'}
+              </button>
+            }
+            columns={receivingColumns}
+            data={flow.receivings}
+            onRowDoubleClick={setSelectedReceiving}
+            title="입고"
+          />
           <GridSection columns={receivingDetailColumns} data={flow.receivingDetails} title="입고 상세" />
         </div>
       </WorkPage>

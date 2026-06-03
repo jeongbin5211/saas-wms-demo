@@ -11,5 +11,8 @@ public interface ReceivingDetailRepository extends JpaRepository<ReceivingDetail
     boolean existsByReceivingIdAndItemIdAndLocationId(Long receivingId, Long itemId, Long locationId);
 
     @EntityGraph(attributePaths = {"receiving", "item", "location"})
+    List<ReceivingDetail> findAllByReceivingIdOrderByIdAsc(Long receivingId);
+
+    @EntityGraph(attributePaths = {"receiving", "item", "location"})
     List<ReceivingDetail> findAllByOrderByIdAsc();
 }
