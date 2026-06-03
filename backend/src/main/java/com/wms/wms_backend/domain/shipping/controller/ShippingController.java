@@ -4,8 +4,11 @@ import com.wms.wms_backend.domain.shipping.entity.Shipping;
 import com.wms.wms_backend.domain.shipping.entity.ShippingDetail;
 import com.wms.wms_backend.domain.shipping.repository.ShippingDetailRepository;
 import com.wms.wms_backend.domain.shipping.repository.ShippingRepository;
+import com.wms.wms_backend.domain.shipping.service.ShippingProcessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
@@ -18,6 +21,7 @@ public class ShippingController {
 
     private final ShippingRepository shippingRepository;
     private final ShippingDetailRepository shippingDetailRepository;
+    private final ShippingProcessService shippingProcessService;
 
     @GetMapping("/api/shippings")
     public List<ShippingResponse> findShippings() {
@@ -41,6 +45,11 @@ public class ShippingController {
         }
 
         return responses;
+    }
+
+    @PostMapping("/api/shippings/{shippingId}/confirm")
+    public ShippingProcessService.ShippingConfirmResult confirmShipping(@PathVariable Long shippingId) {
+        return shippingProcessService.confirmShipping(shippingId);
     }
 
     public record ShippingResponse(

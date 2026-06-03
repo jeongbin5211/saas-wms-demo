@@ -246,6 +246,7 @@ public class DataInitializer implements CommandLineRunner {
 
         saveReceivingDetailAndIncreaseInventory(hq, receiving, detergentItem, pickingLocation1, 50);
         saveReceivingDetailAndIncreaseInventory(hq, receiving, usbCable, pickingLocation2, 100);
+        receiving.confirm();
         purchaseOrder.completeReceiving();
 
         SalesOrder salesOrder = salesOrderRepository.findBySalesOrderNo("SO-20260602-001")
@@ -270,6 +271,7 @@ public class DataInitializer implements CommandLineRunner {
 
         saveShippingDetailAndDecreaseInventory(hq, shipping, detergentItem, pickingLocation1, 20);
         saveShippingDetailAndDecreaseInventory(hq, shipping, keyboard, pickingLocation2, 10);
+        shipping.confirm();
         salesOrder.completeShipping();
 
         BigDecimal billTotalAmount = new BigDecimal("0.00")

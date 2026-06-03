@@ -2159,6 +2159,37 @@ function SalesOrderView({ errorMessage, flow, loading, onRefresh, page }) {
 function ShippingView({ errorMessage, flow, loading, onRefresh, page }) {
   const totalShipped = flow.shippingDetails.reduce((sum, detail) => sum + Number(detail.shippedQuantity ?? 0), 0)
   const [filterOpen, setFilterOpen] = useState(true)
+  const [selectedShipping, setSelectedShipping] = useState(null)
+  const [processing, setProcessing] = useState(false)
+  const [processMessage, setProcessMessage] = useState('')
+
+  const confirmSelectedShipping = async () => {
+    if (!selectedShipping) {
+      setProcessMessage('출고 그리드에서 확정할 행을 더블클릭하세요.')
+      return
+    }
+
+    setProcessing(true)
+    setProcessMessage('')
+
+    try {
+      const response = await fetchWithAuth(`/api/shippings/${selectedShipping.id}/confirm`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw new Error('confirm-failed')
+      }
+
+      const result = await response.json()
+      setProcessMessage(`출고 ${result.shippingNo} 확정 및 청구서 ${result.billNo} 생성이 완료되었습니다.`)
+      onRefresh()
+    } catch {
+      setProcessMessage('출고 확정 처리 중 오류가 발생했습니다. 출고 상세와 청구 상태를 확인하세요.')
+    } finally {
+      setProcessing(false)
+    }
+  }
 
   return (
     <div className="screen-stack">
@@ -2183,8 +2214,19 @@ function ShippingView({ errorMessage, flow, loading, onRefresh, page }) {
           <SearchInput label="품목" placeholder="품목 코드 또는 품목명" wide />
         </WorkSearchPanel>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        {processMessage ? <div className="info-banner">{processMessage}</div> : null}
         <div className="master-grid-layout">
-          <GridSection columns={shippingColumns} data={flow.shippings} title="출고" />
+          <GridSection
+            action={
+              <button type="button" className="primary-button compact" disabled={processing} onClick={confirmSelectedShipping}>
+                {processing ? '처리 중' : '출고 확정/청구 생성'}
+              </button>
+            }
+            columns={shippingColumns}
+            data={flow.shippings}
+            onRowDoubleClick={setSelectedShipping}
+            title="출고"
+          />
           <GridSection columns={shippingDetailColumns} data={flow.shippingDetails} title="출고 상세" />
         </div>
       </WorkPage>
@@ -2273,21 +2315,32 @@ function BillingView({ errorMessage, flow, loading, onRefresh, page }) {
   )
 }
 
-function GridSection({ columns, data, title, wide = false }) {
+function GridSection({ action = null, columns, data, onRowDoubleClick = null, title, wide = false }) {
   const [selectedRow, setSelectedRow] = useState(null)
+
+  const handleRowDoubleClick = (row) => {
+    setSelectedRow(row)
+
+    if (onRowDoubleClick) {
+      onRowDoubleClick(row)
+    }
+  }
 
   return (
     <section className={`grid-section ${wide ? 'wide' : ''}`}>
       <div className="grid-section-header">
         <h3>{title}</h3>
-        <span>{selectedRow ? '선택됨' : `${data.length}건`}</span>
+        <div>
+          <span>{selectedRow ? '선택됨' : `${data.length}건`}</span>
+          {action}
+        </div>
       </div>
       <WmsGrid
         columns={columns}
         data={data}
         minBodyHeight={190}
         rowHeaders={rowNumberHeaders}
-        onRowDoubleClick={setSelectedRow}
+        onRowDoubleClick={handleRowDoubleClick}
       />
       {selectedRow ? <GridRowDetail row={selectedRow} /> : null}
     </section>

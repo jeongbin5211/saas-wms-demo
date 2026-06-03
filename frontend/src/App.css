@@ -1380,6 +1380,12 @@ button {
   font-weight: 700;
 }
 
+.primary-button.compact {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
 .danger-button {
   display: inline-flex;
   align-items: center;
@@ -1479,14 +1485,24 @@ button {
   white-space: nowrap;
 }
 
-.error-banner {
+.error-banner,
+.info-banner {
   margin: 12px 16px 0;
   padding: 10px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+}
+
+.error-banner {
   color: #991b1b;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 7px;
-  font-size: 13px;
+}
+
+.info-banner {
+  color: #0f766e;
+  background: #ecfdf5;
+  border: 1px solid #99f6e4;
 }
 
 .master-grid-layout {
@@ -1522,6 +1538,12 @@ button {
   margin: 0;
   color: var(--control-navy);
   font-size: 14px;
+}
+
+.grid-section-header > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .grid-section-header span {

@@ -11,5 +11,8 @@ public interface ShippingDetailRepository extends JpaRepository<ShippingDetail, 
     boolean existsByShippingIdAndItemIdAndLocationId(Long shippingId, Long itemId, Long locationId);
 
     @EntityGraph(attributePaths = {"shipping", "item", "location"})
+    List<ShippingDetail> findAllByShippingIdOrderByIdAsc(Long shippingId);
+
+    @EntityGraph(attributePaths = {"shipping", "item", "location"})
     List<ShippingDetail> findAllByOrderByIdAsc();
 }

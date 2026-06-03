@@ -11,6 +11,8 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
 
     Optional<Bill> findByBillNo(String billNo);
 
+    Optional<Bill> findBySalesOrderId(Long salesOrderId);
+
     @EntityGraph(attributePaths = {"account", "salesOrder"})
     List<Bill> findAllByOrderByIdAsc();
 }

@@ -49,7 +49,11 @@ public class Shipping extends BaseEntity {
         this.account = account;
         this.salesOrder = salesOrder;
         this.shippingNo = shippingNo;
-        this.shippingStatusSubCode = "CONFIRMED";
+        this.shippingStatusSubCode = "WAITING";
         this.shippingDate = shippingDate;
+    }
+
+    public void confirm() {
+        this.shippingStatusSubCode = "CONFIRMED";
     }
 }

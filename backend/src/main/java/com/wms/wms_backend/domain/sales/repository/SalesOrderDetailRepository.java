@@ -11,5 +11,8 @@ public interface SalesOrderDetailRepository extends JpaRepository<SalesOrderDeta
     boolean existsBySalesOrderIdAndItemId(Long salesOrderId, Long itemId);
 
     @EntityGraph(attributePaths = {"salesOrder", "item"})
+    List<SalesOrderDetail> findAllBySalesOrderIdOrderByIdAsc(Long salesOrderId);
+
+    @EntityGraph(attributePaths = {"salesOrder", "item"})
     List<SalesOrderDetail> findAllByOrderByIdAsc();
 }

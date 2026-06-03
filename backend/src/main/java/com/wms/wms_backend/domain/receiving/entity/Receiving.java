@@ -49,7 +49,11 @@ public class Receiving extends BaseEntity {
         this.account = account;
         this.purchaseOrder = purchaseOrder;
         this.receivingNo = receivingNo;
-        this.receivingStatusSubCode = "CONFIRMED";
+        this.receivingStatusSubCode = "WAITING";
         this.receivingDate = receivingDate;
+    }
+
+    public void confirm() {
+        this.receivingStatusSubCode = "CONFIRMED";
     }
 }
