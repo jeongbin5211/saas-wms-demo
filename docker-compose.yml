@@ -15,5 +15,28 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
+  backend:
+    build:
+      context: ./backend
+    container_name: withworks-demo-backend
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mysql://mysql:3306/withworks_demo?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      DB_USERNAME: wms_user
+      DB_PASSWORD: wms_pass
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: withworks-demo-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
 volumes:
   mysql_data:
