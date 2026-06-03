@@ -61,4 +61,18 @@ public class User extends BaseEntity {
         this.roleSubCode = roleSubCode;
         this.isActive = true;
     }
+
+    public User(Account account, Long topAccountId, String name, String email, String password, String roleSubCode) {
+        this(account, topAccountId, name, email, roleSubCode);
+        this.password = password;
+    }
+
+    public void changePassword(String password) {
+        this.password = password;
+    }
+
+    public void changeProfile(String name, String roleSubCode) {
+        this.name = name;
+        this.roleSubCode = roleSubCode;
+    }
 }

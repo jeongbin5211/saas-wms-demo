@@ -484,6 +484,73 @@ const emptyOutboundFlow = { salesOrders: [], salesOrderDetails: [], shippings: [
 const emptyReturnFlow = { purchaseReturns: [], purchaseReturnDetails: [], salesReturns: [], salesReturnDetails: [] }
 const emptyBillingFlow = { bills: [], billDetails: [] }
 const emptyCodeMaps = {}
+const authTokenKey = 'wmsAuthToken'
+const authUserKey = 'wmsAuthUser'
+const savedEmailKey = 'savedEmail'
+const roleNames = {
+  ADMIN: '관리자',
+  STAFF: '일반 직원',
+  GUEST: '게스트',
+}
+
+function saveAuthSession(auth) {
+  const user = {
+    userId: auth.userId,
+    accountId: auth.accountId,
+    topAccountId: auth.topAccountId,
+    name: auth.name,
+    email: auth.email,
+    roleSubCode: auth.roleSubCode,
+  }
+
+  window.localStorage.setItem(authTokenKey, auth.token)
+  window.localStorage.setItem(authUserKey, JSON.stringify(user))
+
+  return user
+}
+
+function loadAuthUser() {
+  const rawUser = window.localStorage.getItem(authUserKey)
+
+  if (!rawUser) {
+    return null
+  }
+
+  try {
+    return JSON.parse(rawUser)
+  } catch {
+    window.localStorage.removeItem(authUserKey)
+    return null
+  }
+}
+
+function clearAuthSession() {
+  window.localStorage.removeItem(authTokenKey)
+  window.localStorage.removeItem(authUserKey)
+}
+
+function fetchWithAuth(input, options = {}) {
+  const token = window.localStorage.getItem(authTokenKey)
+  const headers = new Headers(options.headers)
+
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+
+  return fetch(input, {
+    ...options,
+    headers,
+  })
+}
+
+function normalizeAccountCode(value) {
+  return value
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
 
 function buildCodeMaps(groupResults) {
   const codeMaps = {}
@@ -523,6 +590,7 @@ function withStatusDisplay(row, codeMaps, groupCode, sourceField, targetField) {
 
 function App() {
   const [route, setRoute] = useState(() => window.location.pathname)
+  const [authUser, setAuthUser] = useState(loadAuthUser)
 
   const navigate = useCallback((path) => {
     window.history.pushState({}, '', path)
@@ -542,16 +610,51 @@ function App() {
     }
   }, [])
 
+  const handleLogin = useCallback((auth) => {
+    const user = saveAuthSession(auth)
+    setAuthUser(user)
+    navigate('/app/inventory')
+  }, [navigate])
+
+  const handleLogout = useCallback(() => {
+    const token = window.localStorage.getItem(authTokenKey)
+
+    if (token) {
+      fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).catch(() => {})
+    }
+
+    clearAuthSession()
+    setAuthUser(null)
+    navigate('/login')
+  }, [navigate])
+
   if (route.startsWith('/app')) {
-    return <WorkspaceApp onMoveHome={() => navigate('/')} onNavigate={navigate} route={route} />
+    if (!authUser) {
+      return <LoginPage onLogin={handleLogin} onNavigate={navigate} />
+    }
+
+    return (
+      <WorkspaceApp
+        authUser={authUser}
+        onLogout={handleLogout}
+        onMoveHome={() => navigate('/')}
+        onNavigate={navigate}
+        route={route}
+      />
+    )
   }
 
   if (route === '/login') {
-    return <LoginPage onLogin={() => navigate('/app/inventory')} onNavigate={navigate} />
+    return <LoginPage onLogin={handleLogin} onNavigate={navigate} />
   }
 
   if (route === '/register') {
-    return <RegisterPage onNavigate={navigate} />
+    return <RegisterPage onLogin={handleLogin} onNavigate={navigate} />
   }
 
   return <LandingPage onEnterApp={() => navigate('/login')} onNavigate={navigate} route={route} />
@@ -864,27 +967,69 @@ function AuthHeader({ onNavigate }) {
 }
 
 function LoginPage({ onLogin, onNavigate }) {
-  const [email, setEmail] = useState(() => window.localStorage.getItem('savedEmail') ?? 'guest@saas-wms-demo.com')
+  const [email, setEmail] = useState(() => window.localStorage.getItem(savedEmailKey) ?? 'guest@saas-wms-demo.com')
   const [password, setPassword] = useState('guest1234')
-  const [saveEmail, setSaveEmail] = useState(() => Boolean(window.localStorage.getItem('savedEmail')))
+  const [saveEmail, setSaveEmail] = useState(() => Boolean(window.localStorage.getItem(savedEmailKey)))
   const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  const submitLogin = (event) => {
-    event.preventDefault()
-
-    if (!email.trim() || !password.trim()) {
+  const requestLogin = async (loginEmail, loginPassword) => {
+    if (!loginEmail.trim() || !loginPassword.trim()) {
       setMessage('사용자 계정과 비밀번호를 입력하세요.')
       return
     }
 
+    setSubmitting(true)
+    setMessage('')
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: loginEmail.trim(),
+          password: loginPassword,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('login-failed')
+      }
+
+      const auth = await response.json()
+
+      if (saveEmail) {
+        window.localStorage.setItem(savedEmailKey, loginEmail.trim())
+      } else {
+        window.localStorage.removeItem(savedEmailKey)
+      }
+
+      onLogin(auth)
+    } catch {
+      setMessage('계정 또는 비밀번호가 올바르지 않습니다.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const submitLogin = (event) => {
+    event.preventDefault()
+    requestLogin(email, password)
+  }
+
+  const submitGuestLogin = () => {
+    const guestEmail = 'guest@saas-wms-demo.com'
+    const guestPassword = 'guest1234'
+    setEmail(guestEmail)
+    setPassword(guestPassword)
+
     if (saveEmail) {
-      window.localStorage.setItem('savedEmail', email)
-    } else {
-      window.localStorage.removeItem('savedEmail')
+      window.localStorage.setItem(savedEmailKey, guestEmail)
     }
 
-    window.localStorage.setItem('wmsDemoUser', JSON.stringify({ email, name: '시연 사용자', role: '게스트' }))
-    onLogin()
+    requestLogin(guestEmail, guestPassword)
   }
 
   return (
@@ -927,12 +1072,12 @@ function LoginPage({ onLogin, onNavigate }) {
               </label>
             </div>
 
-            <button type="submit" className="auth-submit">
-              로그인
+            <button type="submit" className="auth-submit" disabled={submitting}>
+              {submitting ? '로그인 중' : '로그인'}
             </button>
 
             <div className="auth-links">
-              <button type="button" onClick={() => onNavigate('/app/inventory')}>
+              <button type="button" onClick={submitGuestLogin}>
                 게스트 시연
               </button>
               <span>|</span>
@@ -951,19 +1096,65 @@ function LoginPage({ onLogin, onNavigate }) {
   )
 }
 
-function RegisterPage({ onNavigate }) {
+function RegisterPage({ onLogin, onNavigate }) {
   const [agreeAll, setAgreeAll] = useState(false)
   const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  const submitRegister = (event) => {
+  const submitRegister = async (event) => {
     event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+    const accountName = String(formData.get('accountName') ?? '').trim()
+    const accountCode = normalizeAccountCode(String(formData.get('accountCode') ?? ''))
+    const name = String(formData.get('name') ?? '').trim()
+    const email = String(formData.get('email') ?? '').trim()
+    const password = String(formData.get('password') ?? '')
+    const passwordConfirm = String(formData.get('passwordConfirm') ?? '')
 
     if (!agreeAll) {
       setMessage('필수 약관에 동의해야 가입 신청을 진행할 수 있습니다.')
       return
     }
 
-    setMessage('가입 신청이 접수되었습니다. 데모에서는 로그인 화면으로 이동해 시연 계정을 사용하세요.')
+    if (!accountName || !accountCode || !name || !email || !password) {
+      setMessage('회사 정보와 사용자 계정을 모두 입력하세요.')
+      return
+    }
+
+    if (password !== passwordConfirm) {
+      setMessage('비밀번호 확인 값이 일치하지 않습니다.')
+      return
+    }
+
+    setSubmitting(true)
+    setMessage('')
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accountName,
+          accountCode,
+          name,
+          email,
+          password,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('register-failed')
+      }
+
+      const auth = await response.json()
+      onLogin(auth)
+    } catch {
+      setMessage('가입 처리 중 오류가 발생했습니다. 이미 등록된 이메일 또는 회사 코드인지 확인하세요.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -984,6 +1175,14 @@ function RegisterPage({ onNavigate }) {
               <label>
                 <span>회사명</span>
                 <input required name="accountName" placeholder="예: 글로벌 물류" />
+              </label>
+              <label>
+                <span>회사 코드</span>
+                <input required name="accountCode" placeholder="예: GLOBAL-LOGISTICS" />
+              </label>
+              <label>
+                <span>담당자명</span>
+                <input required name="name" placeholder="예: 홍길동" />
               </label>
               <label>
                 <span>이메일</span>
@@ -1029,8 +1228,8 @@ function RegisterPage({ onNavigate }) {
               </div>
             </div>
 
-            <button type="submit" className="auth-submit">
-              가입하기
+            <button type="submit" className="auth-submit" disabled={submitting}>
+              {submitting ? '가입 처리 중' : '가입하기'}
             </button>
             <p className="auth-bottom-link">
               이미 회원이신가요?{' '}
@@ -1045,7 +1244,7 @@ function RegisterPage({ onNavigate }) {
   )
 }
 
-function WorkspaceApp({ onMoveHome, onNavigate, route }) {
+function WorkspaceApp({ authUser, onLogout, onMoveHome, onNavigate, route }) {
   const [inventories, setInventories] = useState([])
   const [histories, setHistories] = useState([])
   const [locationCatalog, setLocationCatalog] = useState(emptyLocationCatalog)
@@ -1274,8 +1473,8 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
 
     try {
       const [inventoryResponse, historyResponse] = await Promise.all([
-        fetch('/api/inventories'),
-        fetch('/api/inventory-histories'),
+        fetchWithAuth('/api/inventories'),
+        fetchWithAuth('/api/inventory-histories'),
       ])
 
       if (!inventoryResponse.ok || !historyResponse.ok) {
@@ -1299,7 +1498,7 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
       const groupResults = []
 
       for (const groupCode of statusCodeGroups) {
-        const response = await fetch(`/api/common-codes/${groupCode}`)
+        const response = await fetchWithAuth(`/api/common-codes/${groupCode}`)
 
         if (!response.ok) {
           throw new Error('API response was not successful.')
@@ -1321,8 +1520,8 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
 
     try {
       const [locationResponse, itemResponse] = await Promise.all([
-        fetch('/api/warehouse-locations'),
-        fetch('/api/item-catalog'),
+        fetchWithAuth('/api/warehouse-locations'),
+        fetchWithAuth('/api/item-catalog'),
       ])
 
       if (!locationResponse.ok || !itemResponse.ok) {
@@ -1348,10 +1547,10 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
     try {
       const [purchaseResponse, purchaseDetailResponse, receivingResponse, receivingDetailResponse] =
         await Promise.all([
-          fetch('/api/purchase-orders'),
-          fetch('/api/purchase-order-details'),
-          fetch('/api/receivings'),
-          fetch('/api/receiving-details'),
+          fetchWithAuth('/api/purchase-orders'),
+          fetchWithAuth('/api/purchase-order-details'),
+          fetchWithAuth('/api/receivings'),
+          fetchWithAuth('/api/receiving-details'),
         ])
 
       if (
@@ -1385,10 +1584,10 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
     try {
       const [salesResponse, salesDetailResponse, shippingResponse, shippingDetailResponse] =
         await Promise.all([
-          fetch('/api/sales-orders'),
-          fetch('/api/sales-order-details'),
-          fetch('/api/shippings'),
-          fetch('/api/shipping-details'),
+          fetchWithAuth('/api/sales-orders'),
+          fetchWithAuth('/api/sales-order-details'),
+          fetchWithAuth('/api/shippings'),
+          fetchWithAuth('/api/shipping-details'),
         ])
 
       if (!salesResponse.ok || !salesDetailResponse.ok || !shippingResponse.ok || !shippingDetailResponse.ok) {
@@ -1417,10 +1616,10 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
     try {
       const [purchaseReturnResponse, purchaseReturnDetailResponse, salesReturnResponse, salesReturnDetailResponse] =
         await Promise.all([
-          fetch('/api/purchase-returns'),
-          fetch('/api/purchase-return-details'),
-          fetch('/api/sales-returns'),
-          fetch('/api/sales-return-details'),
+          fetchWithAuth('/api/purchase-returns'),
+          fetchWithAuth('/api/purchase-return-details'),
+          fetchWithAuth('/api/sales-returns'),
+          fetchWithAuth('/api/sales-return-details'),
         ])
 
       if (
@@ -1453,8 +1652,8 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
 
     try {
       const [billResponse, billDetailResponse] = await Promise.all([
-        fetch('/api/bills'),
-        fetch('/api/bill-details'),
+        fetchWithAuth('/api/bills'),
+        fetchWithAuth('/api/bill-details'),
       ])
 
       if (!billResponse.ok || !billDetailResponse.ok) {
@@ -1538,9 +1737,14 @@ function WorkspaceApp({ onMoveHome, onNavigate, route }) {
             <p className="eyebrow">{activePage.eyebrow}</p>
             <h1>{activePage.title}</h1>
           </div>
-          <div className="user-chip">
-            <span>게스트</span>
-            <strong>시연 사용자</strong>
+          <div className="user-actions">
+            <div className="user-chip">
+              <span>{roleNames[authUser.roleSubCode] ?? authUser.roleSubCode}</span>
+              <strong>{authUser.name}</strong>
+            </div>
+            <button type="button" className="logout-button" onClick={onLogout}>
+              로그아웃
+            </button>
           </div>
         </header>
 

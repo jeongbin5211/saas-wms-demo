@@ -54,6 +54,7 @@ import com.wms.wms_backend.domain.warehouse.repository.WarehouseRepository;
 import com.wms.wms_backend.domain.warehouse.repository.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,6 +68,7 @@ public class DataInitializer implements CommandLineRunner {
     private final CommonCodeRepository commonCodeRepository;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final WarehouseRepository warehouseRepository;
     private final AreaRepository areaRepository;
     private final ZoneRepository zoneRepository;
@@ -167,9 +169,9 @@ public class DataInitializer implements CommandLineRunner {
         Account supplier = accountRepository.findByAccountCode("SMART-SUPPLY")
                 .orElseGet(() -> accountRepository.save(new Account(hq.getId(), "SMART-SUPPLY", "Smart Supplier", "SUPPLIER")));
 
-        saveUser(hq, hq.getId(), "Admin User", "admin@saas-wms-demo.com", "ADMIN");
-        saveUser(customer, hq.getId(), "Staff User", "staff@saas-wms-demo.com", "STAFF");
-        saveUser(supplier, hq.getId(), "Guest User", "guest@saas-wms-demo.com", "GUEST");
+        saveUser(hq, hq.getId(), "관리자", "admin@saas-wms-demo.com", "ADMIN");
+        saveUser(customer, hq.getId(), "일반 직원", "staff@saas-wms-demo.com", "STAFF");
+        saveUser(supplier, hq.getId(), "게스트", "guest@saas-wms-demo.com", "GUEST");
 
         Warehouse mainWarehouse = warehouseRepository.findByWarehouseCode("WH-MAIN")
                 .orElseGet(() -> warehouseRepository.save(new Warehouse(hq, hq.getId(), "WH-MAIN", "Main Warehouse", "MAIN")));
@@ -313,11 +315,14 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void saveUser(Account account, Long topAccountId, String name, String email, String roleSubCode) {
-        if (userRepository.existsByEmail(email)) {
-            return;
-        }
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> userRepository.save(new User(account, topAccountId, name, email, roleSubCode)));
 
-        userRepository.save(new User(account, topAccountId, name, email, roleSubCode));
+        user.changeProfile(name, roleSubCode);
+
+        if (user.getPassword() == null) {
+            user.changePassword(passwordEncoder.encode("guest1234"));
+        }
     }
 
     private void saveLocation(Account account, Zone zone, String locationCode, String locationName) {

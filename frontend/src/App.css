@@ -1235,6 +1235,28 @@ button {
   font-size: 13px;
 }
 
+.user-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logout-button {
+  height: 36px;
+  padding: 0 12px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.logout-button:hover {
+  color: var(--exception-red);
+  border-color: #fecaca;
+}
+
 .screen-stack,
 .guide-layout {
   display: flex;
