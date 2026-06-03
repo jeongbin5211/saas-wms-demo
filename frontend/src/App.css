@@ -1358,6 +1358,67 @@ button {
   font-weight: 700;
 }
 
+.danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 12px;
+  color: #fff;
+  background: var(--exception-red);
+  border: 1px solid var(--exception-red);
+  border-radius: 7px;
+  font-weight: 700;
+}
+
+.work-search-panel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 14px;
+  padding: 14px 16px;
+  background: #fbfcfe;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.work-search-field {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.work-search-field.wide {
+  grid-column: span 2;
+}
+
+.work-search-field span {
+  color: var(--control-navy);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.work-search-field input,
+.work-search-field select {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 9px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  outline: 0;
+}
+
+.work-search-field input:focus,
+.work-search-field select:focus {
+  border-color: var(--process-blue);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 10%);
+}
+
 .filter-bar {
   display: flex;
   align-items: center;
@@ -1716,8 +1777,13 @@ button {
 
   .metric-grid,
   .master-grid-layout,
+  .work-search-panel,
   .color-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .work-search-field.wide {
+    grid-column: span 1;
   }
 }
 
@@ -1805,8 +1871,17 @@ button {
 
   .metric-grid,
   .master-grid-layout,
+  .work-search-panel,
   .grid-row-detail dl,
   .color-grid {
     grid-template-columns: 1fr;
+  }
+
+  .work-search-field {
+    grid-template-columns: 1fr;
+  }
+
+  .work-search-field span {
+    text-align: left;
   }
 }

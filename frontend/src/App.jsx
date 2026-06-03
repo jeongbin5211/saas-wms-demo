@@ -1845,6 +1845,7 @@ function ItemMasterView({ catalog, errorMessage, loading, onRefresh, page }) {
 
 function PurchaseOrderView({ errorMessage, flow, loading, onRefresh, page }) {
   const totalAmount = flow.purchaseOrderDetails.reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0)
+  const [filterOpen, setFilterOpen] = useState(true)
 
   return (
     <div className="screen-stack">
@@ -1859,8 +1860,14 @@ function PurchaseOrderView({ errorMessage, flow, loading, onRefresh, page }) {
         description={page.description}
         eyebrow="구매 흐름"
         title="구매주문"
-        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+        toolbar={<WorkSearchButtons filterOpen={filterOpen} loading={loading} onRefresh={onRefresh} onToggle={() => setFilterOpen(!filterOpen)} />}
       >
+        <WorkSearchPanel open={filterOpen}>
+          <SearchInput label="주문일" type="date" />
+          <SearchInput label="구매주문 번호" placeholder="PO 번호" />
+          <SearchInput label="공급사" placeholder="공급사명" />
+          <SearchSelect label="주문 상태" options={['대기', '입고완료', '마감']} />
+        </WorkSearchPanel>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
         <div className="master-grid-layout">
           <GridSection columns={purchaseOrderColumns} data={flow.purchaseOrders} title="구매주문" />
@@ -1876,6 +1883,7 @@ function ReceivingView({ errorMessage, flow, loading, onRefresh, page }) {
     (sum, detail) => sum + Number(detail.receivedQuantity ?? 0),
     0,
   )
+  const [filterOpen, setFilterOpen] = useState(true)
 
   return (
     <div className="screen-stack">
@@ -1890,8 +1898,15 @@ function ReceivingView({ errorMessage, flow, loading, onRefresh, page }) {
         description={page.description}
         eyebrow="입고 흐름"
         title="입고관리"
-        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+        toolbar={<WorkSearchButtons filterOpen={filterOpen} loading={loading} onRefresh={onRefresh} onToggle={() => setFilterOpen(!filterOpen)} />}
       >
+        <WorkSearchPanel open={filterOpen}>
+          <SearchInput label="입고일" type="date" />
+          <SearchInput label="입고 번호" placeholder="RCV 번호" />
+          <SearchInput label="구매주문 번호" placeholder="PO 번호" />
+          <SearchSelect label="입고 상태" options={['대기', '확정']} />
+          <SearchInput label="품목" placeholder="품목 코드 또는 품목명" wide />
+        </WorkSearchPanel>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
         <div className="master-grid-layout">
           <GridSection columns={receivingColumns} data={flow.receivings} title="입고" />
@@ -1904,6 +1919,7 @@ function ReceivingView({ errorMessage, flow, loading, onRefresh, page }) {
 
 function SalesOrderView({ errorMessage, flow, loading, onRefresh, page }) {
   const totalAmount = flow.salesOrderDetails.reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0)
+  const [filterOpen, setFilterOpen] = useState(true)
 
   return (
     <div className="screen-stack">
@@ -1918,8 +1934,14 @@ function SalesOrderView({ errorMessage, flow, loading, onRefresh, page }) {
         description={page.description}
         eyebrow="판매 흐름"
         title="판매주문"
-        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+        toolbar={<WorkSearchButtons filterOpen={filterOpen} loading={loading} onRefresh={onRefresh} onToggle={() => setFilterOpen(!filterOpen)} />}
       >
+        <WorkSearchPanel open={filterOpen}>
+          <SearchInput label="주문일" type="date" />
+          <SearchInput label="판매주문 번호" placeholder="SO 번호" />
+          <SearchInput label="고객사" placeholder="고객사명" />
+          <SearchSelect label="주문 상태" options={['대기', '출고완료', '청구완료']} />
+        </WorkSearchPanel>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
         <div className="master-grid-layout">
           <GridSection columns={salesOrderColumns} data={flow.salesOrders} title="판매주문" />
@@ -1932,6 +1954,7 @@ function SalesOrderView({ errorMessage, flow, loading, onRefresh, page }) {
 
 function ShippingView({ errorMessage, flow, loading, onRefresh, page }) {
   const totalShipped = flow.shippingDetails.reduce((sum, detail) => sum + Number(detail.shippedQuantity ?? 0), 0)
+  const [filterOpen, setFilterOpen] = useState(true)
 
   return (
     <div className="screen-stack">
@@ -1946,8 +1969,15 @@ function ShippingView({ errorMessage, flow, loading, onRefresh, page }) {
         description={page.description}
         eyebrow="출고 흐름"
         title="출고관리"
-        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+        toolbar={<WorkSearchButtons filterOpen={filterOpen} loading={loading} onRefresh={onRefresh} onToggle={() => setFilterOpen(!filterOpen)} />}
       >
+        <WorkSearchPanel open={filterOpen}>
+          <SearchInput label="출고일" type="date" />
+          <SearchInput label="출고 번호" placeholder="SHP 번호" />
+          <SearchInput label="판매주문 번호" placeholder="SO 번호" />
+          <SearchSelect label="출고 상태" options={['대기', '확정']} />
+          <SearchInput label="품목" placeholder="품목 코드 또는 품목명" wide />
+        </WorkSearchPanel>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
         <div className="master-grid-layout">
           <GridSection columns={shippingColumns} data={flow.shippings} title="출고" />
@@ -1967,6 +1997,7 @@ function ReturnView({ errorMessage, flow, loading, onRefresh, page }) {
     (sum, detail) => sum + Number(detail.returnQuantity ?? 0),
     0,
   )
+  const [filterOpen, setFilterOpen] = useState(true)
 
   return (
     <div className="screen-stack">
@@ -1981,8 +2012,15 @@ function ReturnView({ errorMessage, flow, loading, onRefresh, page }) {
         description={page.description}
         eyebrow="반품 흐름"
         title="반품관리"
-        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+        toolbar={<WorkSearchButtons filterOpen={filterOpen} loading={loading} onRefresh={onRefresh} onToggle={() => setFilterOpen(!filterOpen)} />}
       >
+        <WorkSearchPanel open={filterOpen}>
+          <SearchInput label="반품일" type="date" />
+          <SearchInput label="반품 번호" placeholder="PR 또는 SR 번호" />
+          <SearchSelect label="반품 구분" options={['구매반품', '판매반품']} />
+          <SearchSelect label="반품 상태" options={['대기', '반품출고', '반품입고']} />
+          <SearchInput label="품목" placeholder="품목 코드 또는 품목명" wide />
+        </WorkSearchPanel>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
         <div className="master-grid-layout">
           <GridSection columns={purchaseReturnColumns} data={flow.purchaseReturns} title="구매반품" />
@@ -1998,6 +2036,7 @@ function ReturnView({ errorMessage, flow, loading, onRefresh, page }) {
 function BillingView({ errorMessage, flow, loading, onRefresh, page }) {
   const totalAmount = flow.bills.reduce((sum, bill) => sum + Number(bill.totalAmount ?? 0), 0)
   const detailAmount = flow.billDetails.reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0)
+  const [filterOpen, setFilterOpen] = useState(true)
 
   return (
     <div className="screen-stack">
@@ -2012,8 +2051,14 @@ function BillingView({ errorMessage, flow, loading, onRefresh, page }) {
         description={page.description}
         eyebrow="청구 흐름"
         title="청구관리"
-        toolbar={<RefreshButton loading={loading} onRefresh={onRefresh} />}
+        toolbar={<WorkSearchButtons filterOpen={filterOpen} loading={loading} onRefresh={onRefresh} onToggle={() => setFilterOpen(!filterOpen)} />}
       >
+        <WorkSearchPanel open={filterOpen}>
+          <SearchInput label="청구일" type="date" />
+          <SearchInput label="청구 번호" placeholder="BILL 번호" />
+          <SearchInput label="판매주문 번호" placeholder="SO 번호" />
+          <SearchSelect label="청구 상태" options={['발행', '입금완료']} />
+        </WorkSearchPanel>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
         <div className="master-grid-layout">
           <GridSection columns={billColumns} data={flow.bills} title="청구서" />
@@ -2042,6 +2087,56 @@ function GridSection({ columns, data, title, wide = false }) {
       />
       {selectedRow ? <GridRowDetail row={selectedRow} /> : null}
     </section>
+  )
+}
+
+function WorkSearchButtons({ filterOpen, loading, onRefresh, onToggle }) {
+  return (
+    <>
+      <button type="button" className="primary-button" disabled={loading} onClick={onRefresh}>
+        <Search size={16} />
+        조회
+      </button>
+      <button type="button" className="danger-button" onClick={onRefresh}>
+        초기화
+      </button>
+      <button type="button" className="icon-button" onClick={onToggle} title={filterOpen ? '검색조건 접기' : '검색조건 펼치기'}>
+        {filterOpen ? '접기' : '열기'}
+      </button>
+    </>
+  )
+}
+
+function WorkSearchPanel({ children, open }) {
+  if (!open) {
+    return null
+  }
+
+  return <div className="work-search-panel">{children}</div>
+}
+
+function SearchInput({ label, placeholder = '', type = 'text', wide = false }) {
+  return (
+    <label className={`work-search-field ${wide ? 'wide' : ''}`}>
+      <span>{label}</span>
+      <input placeholder={placeholder} type={type} />
+    </label>
+  )
+}
+
+function SearchSelect({ label, options, wide = false }) {
+  return (
+    <label className={`work-search-field ${wide ? 'wide' : ''}`}>
+      <span>{label}</span>
+      <select defaultValue="">
+        <option value="" />
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }
 
