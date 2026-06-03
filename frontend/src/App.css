@@ -1447,6 +1447,60 @@ button {
   white-space: nowrap;
 }
 
+.grid-row-detail {
+  padding: 12px;
+  background: #fbfcfe;
+  border-top: 1px solid var(--line-soft);
+}
+
+.grid-row-detail-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.grid-row-detail-title strong {
+  color: var(--control-navy);
+  font-size: 13px;
+}
+
+.grid-row-detail-title span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.grid-row-detail dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.grid-row-detail dl div {
+  min-width: 0;
+  padding: 8px 9px;
+  background: #fff;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+}
+
+.grid-row-detail dt {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.grid-row-detail dd {
+  overflow: hidden;
+  margin: 4px 0 0;
+  color: var(--control-navy);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .wms-grid {
   padding: 0;
 }
@@ -1751,6 +1805,7 @@ button {
 
   .metric-grid,
   .master-grid-layout,
+  .grid-row-detail dl,
   .color-grid {
     grid-template-columns: 1fr;
   }

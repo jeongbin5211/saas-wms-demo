@@ -44,12 +44,18 @@ export function WmsGrid({
   columns,
   data,
   minBodyHeight = 300,
+  onRowDoubleClick,
   rowHeaders = ['rowNum'],
   summaryColumns = [],
 }) {
   const containerRef = useRef(null)
   const gridRef = useRef(null)
+  const onRowDoubleClickRef = useRef(onRowDoubleClick)
   const summary = useMemo(() => buildSummary(summaryColumns), [summaryColumns])
+
+  useEffect(() => {
+    onRowDoubleClickRef.current = onRowDoubleClick
+  }, [onRowDoubleClick])
 
   useEffect(() => {
     if (!containerRef.current) {
@@ -71,6 +77,24 @@ export function WmsGrid({
         resizable: true,
       },
       summary,
+    })
+
+    gridRef.current.on('dblclick', () => {
+      if (!onRowDoubleClickRef.current || !gridRef.current) {
+        return
+      }
+
+      const focusedCell = gridRef.current.getFocusedCell()
+
+      if (focusedCell.rowKey == null) {
+        return
+      }
+
+      const row = gridRef.current.getRow(focusedCell.rowKey)
+
+      if (row) {
+        onRowDoubleClickRef.current(row)
+      }
     })
 
     return () => {

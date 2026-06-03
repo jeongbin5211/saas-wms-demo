@@ -2025,15 +2025,65 @@ function BillingView({ errorMessage, flow, loading, onRefresh, page }) {
 }
 
 function GridSection({ columns, data, title, wide = false }) {
+  const [selectedRow, setSelectedRow] = useState(null)
+
   return (
     <section className={`grid-section ${wide ? 'wide' : ''}`}>
       <div className="grid-section-header">
         <h3>{title}</h3>
-        <span>{data.length}건</span>
+        <span>{selectedRow ? '선택됨' : `${data.length}건`}</span>
       </div>
-      <WmsGrid columns={columns} data={data} minBodyHeight={190} rowHeaders={rowNumberHeaders} />
+      <WmsGrid
+        columns={columns}
+        data={data}
+        minBodyHeight={190}
+        rowHeaders={rowNumberHeaders}
+        onRowDoubleClick={setSelectedRow}
+      />
+      {selectedRow ? <GridRowDetail row={selectedRow} /> : null}
     </section>
   )
+}
+
+function GridRowDetail({ row }) {
+  const entries = []
+
+  for (const [key, value] of Object.entries(row)) {
+    if (key === 'rowKey' || key === 'sortKey' || key.endsWith('Display')) {
+      continue
+    }
+
+    entries.push([key, formatDetailValue(value)])
+  }
+
+  return (
+    <div className="grid-row-detail">
+      <div className="grid-row-detail-title">
+        <strong>선택 행 상세</strong>
+        <span>더블클릭한 행의 원본 데이터</span>
+      </div>
+      <dl>
+        {entries.map(([key, value]) => (
+          <div key={key}>
+            <dt>{key}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  )
+}
+
+function formatDetailValue(value) {
+  if (value == null || value === '') {
+    return '-'
+  }
+
+  if (typeof value === 'object') {
+    return value.label ?? JSON.stringify(value)
+  }
+
+  return String(value)
 }
 
 function RefreshButton({ loading, onRefresh }) {
