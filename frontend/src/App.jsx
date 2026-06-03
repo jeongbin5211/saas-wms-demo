@@ -493,6 +493,10 @@ const roleNames = {
   GUEST: '게스트',
 }
 
+function canProcessWork(authUser) {
+  return ['ADMIN', 'STAFF'].includes(authUser?.roleSubCode)
+}
+
 function saveAuthSession(auth) {
   const user = {
     userId: auth.userId,
@@ -1802,6 +1806,7 @@ function WorkspaceApp({ authUser, onLogout, onMoveHome, onNavigate, route }) {
         ) : null}
         {activeMenu === 'receiving' ? (
           <ReceivingView
+            authUser={authUser}
             errorMessage={inboundErrorMessage}
             flow={displayInboundFlow}
             loading={inboundLoading}
@@ -1820,6 +1825,7 @@ function WorkspaceApp({ authUser, onLogout, onMoveHome, onNavigate, route }) {
         ) : null}
         {activeMenu === 'shipping' ? (
           <ShippingView
+            authUser={authUser}
             errorMessage={outboundErrorMessage}
             flow={displayOutboundFlow}
             loading={outboundLoading}
@@ -2082,7 +2088,7 @@ function PurchaseOrderView({ errorMessage, flow, loading, onRefresh, page }) {
   )
 }
 
-function ReceivingView({ errorMessage, flow, loading, onRefresh, page }) {
+function ReceivingView({ authUser, errorMessage, flow, loading, onRefresh, page }) {
   const totalReceived = flow.receivingDetails.reduce(
     (sum, detail) => sum + Number(detail.receivedQuantity ?? 0),
     0,
@@ -2091,10 +2097,16 @@ function ReceivingView({ errorMessage, flow, loading, onRefresh, page }) {
   const [selectedReceiving, setSelectedReceiving] = useState(null)
   const [processing, setProcessing] = useState(false)
   const [processMessage, setProcessMessage] = useState('')
+  const processAllowed = canProcessWork(authUser)
 
   const confirmSelectedReceiving = async () => {
     if (!selectedReceiving) {
       setProcessMessage('입고 그리드에서 확정할 행을 더블클릭하세요.')
+      return
+    }
+
+    if (!processAllowed) {
+      setProcessMessage('게스트 권한은 조회만 가능합니다. 관리자 또는 일반 직원 계정으로 처리하세요.')
       return
     }
 
@@ -2143,11 +2155,17 @@ function ReceivingView({ errorMessage, flow, loading, onRefresh, page }) {
           <SearchInput label="품목" placeholder="품목 코드 또는 품목명" wide />
         </WorkSearchPanel>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        {!processAllowed ? <div className="info-banner">게스트 권한은 입고 조회만 가능합니다.</div> : null}
         {processMessage ? <div className="info-banner">{processMessage}</div> : null}
         <div className="master-grid-layout">
           <GridSection
             action={
-              <button type="button" className="primary-button compact" disabled={processing} onClick={confirmSelectedReceiving}>
+              <button
+                type="button"
+                className="primary-button compact"
+                disabled={processing || !processAllowed}
+                onClick={confirmSelectedReceiving}
+              >
                 {processing ? '처리 중' : '입고 확정/재고 반영'}
               </button>
             }
@@ -2198,16 +2216,22 @@ function SalesOrderView({ errorMessage, flow, loading, onRefresh, page }) {
   )
 }
 
-function ShippingView({ errorMessage, flow, loading, onRefresh, page }) {
+function ShippingView({ authUser, errorMessage, flow, loading, onRefresh, page }) {
   const totalShipped = flow.shippingDetails.reduce((sum, detail) => sum + Number(detail.shippedQuantity ?? 0), 0)
   const [filterOpen, setFilterOpen] = useState(true)
   const [selectedShipping, setSelectedShipping] = useState(null)
   const [processing, setProcessing] = useState(false)
   const [processMessage, setProcessMessage] = useState('')
+  const processAllowed = canProcessWork(authUser)
 
   const confirmSelectedShipping = async () => {
     if (!selectedShipping) {
       setProcessMessage('출고 그리드에서 확정할 행을 더블클릭하세요.')
+      return
+    }
+
+    if (!processAllowed) {
+      setProcessMessage('게스트 권한은 조회만 가능합니다. 관리자 또는 일반 직원 계정으로 처리하세요.')
       return
     }
 
@@ -2256,11 +2280,17 @@ function ShippingView({ errorMessage, flow, loading, onRefresh, page }) {
           <SearchInput label="품목" placeholder="품목 코드 또는 품목명" wide />
         </WorkSearchPanel>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        {!processAllowed ? <div className="info-banner">게스트 권한은 출고 조회만 가능합니다.</div> : null}
         {processMessage ? <div className="info-banner">{processMessage}</div> : null}
         <div className="master-grid-layout">
           <GridSection
             action={
-              <button type="button" className="primary-button compact" disabled={processing} onClick={confirmSelectedShipping}>
+              <button
+                type="button"
+                className="primary-button compact"
+                disabled={processing || !processAllowed}
+                onClick={confirmSelectedShipping}
+              >
                 {processing ? '처리 중' : '출고 확정/청구 생성'}
               </button>
             }
