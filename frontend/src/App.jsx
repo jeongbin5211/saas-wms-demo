@@ -546,7 +546,15 @@ function App() {
     return <WorkspaceApp onMoveHome={() => navigate('/')} onNavigate={navigate} route={route} />
   }
 
-  return <LandingPage onEnterApp={() => navigate('/app/inventory')} onNavigate={navigate} route={route} />
+  if (route === '/login') {
+    return <LoginPage onLogin={() => navigate('/app/inventory')} onNavigate={navigate} />
+  }
+
+  if (route === '/register') {
+    return <RegisterPage onNavigate={navigate} />
+  }
+
+  return <LandingPage onEnterApp={() => navigate('/login')} onNavigate={navigate} route={route} />
 }
 
 function LandingPage({ onEnterApp, onNavigate, route }) {
@@ -839,6 +847,201 @@ function FeatureCard({ icon: Icon, title, description }) {
       <h3>{title}</h3>
       <p>{description}</p>
     </article>
+  )
+}
+
+function AuthHeader({ onNavigate }) {
+  return (
+    <header className="auth-header">
+      <button type="button" className="landing-brand" onClick={() => onNavigate('/')}>
+        <span className="brand-mark light">
+          <LayoutGrid size={21} />
+        </span>
+        <strong>SaaS WMS</strong>
+      </button>
+    </header>
+  )
+}
+
+function LoginPage({ onLogin, onNavigate }) {
+  const [email, setEmail] = useState(() => window.localStorage.getItem('savedEmail') ?? 'guest@saas-wms-demo.com')
+  const [password, setPassword] = useState('guest1234')
+  const [saveEmail, setSaveEmail] = useState(() => Boolean(window.localStorage.getItem('savedEmail')))
+  const [message, setMessage] = useState('')
+
+  const submitLogin = (event) => {
+    event.preventDefault()
+
+    if (!email.trim() || !password.trim()) {
+      setMessage('사용자 계정과 비밀번호를 입력하세요.')
+      return
+    }
+
+    if (saveEmail) {
+      window.localStorage.setItem('savedEmail', email)
+    } else {
+      window.localStorage.removeItem('savedEmail')
+    }
+
+    window.localStorage.setItem('wmsDemoUser', JSON.stringify({ email, name: '시연 사용자', role: '게스트' }))
+    onLogin()
+  }
+
+  return (
+    <div className="auth-page">
+      <AuthHeader onNavigate={onNavigate} />
+      <main className="auth-shell">
+        <div className="auth-bg-box" />
+        <section className="auth-card login-card">
+          <form onSubmit={submitLogin}>
+            <div className="auth-title">
+              <strong>환영합니다</strong>
+              <p>서비스 이용을 위해 로그인이 필요합니다.</p>
+            </div>
+
+            {message ? <p className="auth-error">{message}</p> : null}
+
+            <div className="auth-field-stack">
+              <input
+                id="email-input"
+                name="email"
+                placeholder="사용자 계정"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+              <input
+                name="password"
+                placeholder="비밀번호"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+              <label className="auth-check">
+                <input
+                  checked={saveEmail}
+                  type="checkbox"
+                  onChange={(event) => setSaveEmail(event.target.checked)}
+                />
+                <span>아이디 저장</span>
+              </label>
+            </div>
+
+            <button type="submit" className="auth-submit">
+              로그인
+            </button>
+
+            <div className="auth-links">
+              <button type="button" onClick={() => onNavigate('/app/inventory')}>
+                게스트 시연
+              </button>
+              <span>|</span>
+              <button type="button" onClick={() => setMessage('시연 버전에서는 비밀번호 찾기를 제공하지 않습니다.')}>
+                비밀번호 찾기
+              </button>
+              <span>|</span>
+              <button type="button" onClick={() => onNavigate('/register')}>
+                이메일로 가입하기
+              </button>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+  )
+}
+
+function RegisterPage({ onNavigate }) {
+  const [agreeAll, setAgreeAll] = useState(false)
+  const [message, setMessage] = useState('')
+
+  const submitRegister = (event) => {
+    event.preventDefault()
+
+    if (!agreeAll) {
+      setMessage('필수 약관에 동의해야 가입 신청을 진행할 수 있습니다.')
+      return
+    }
+
+    setMessage('가입 신청이 접수되었습니다. 데모에서는 로그인 화면으로 이동해 시연 계정을 사용하세요.')
+  }
+
+  return (
+    <div className="auth-page">
+      <AuthHeader onNavigate={onNavigate} />
+      <main className="auth-shell register-shell">
+        <div className="auth-bg-box" />
+        <section className="auth-card register-card">
+          <form onSubmit={submitRegister}>
+            <div className="auth-title">
+              <strong>회원가입</strong>
+              <p>회사 정보와 사용자 계정을 입력하세요.</p>
+            </div>
+
+            {message ? <p className="auth-info">{message}</p> : null}
+
+            <div className="register-form-grid">
+              <label>
+                <span>회사명</span>
+                <input required name="accountName" placeholder="예: 글로벌 물류" />
+              </label>
+              <label>
+                <span>이메일</span>
+                <input required name="email" placeholder="abcd@company.co.kr" type="email" />
+              </label>
+              <label>
+                <span>비밀번호</span>
+                <input required name="password" placeholder="영문/숫자/특수문자 8자 이상" type="password" />
+              </label>
+              <label>
+                <span>비밀번호 확인</span>
+                <input required name="passwordConfirm" placeholder="비밀번호 확인" type="password" />
+              </label>
+              <label>
+                <span>업종</span>
+                <select required name="industry" defaultValue="">
+                  <option value="" disabled />
+                  <option value="logistics">물류/창고</option>
+                  <option value="commerce">유통/커머스</option>
+                  <option value="manufacturing">제조</option>
+                </select>
+              </label>
+              <label>
+                <span>사업자등록증</span>
+                <input name="businessFile" type="file" />
+              </label>
+            </div>
+
+            <div className="agree-box">
+              <label className="auth-check strong">
+                <input
+                  checked={agreeAll}
+                  type="checkbox"
+                  onChange={(event) => setAgreeAll(event.target.checked)}
+                />
+                <span>전체 약관에 동의합니다.</span>
+              </label>
+              <div>
+                <p>(필수) 서비스 이용약관</p>
+                <p>(필수) 회원가입 이용약관</p>
+                <p>(필수) 개인정보 처리방침</p>
+                <p>(선택) 마케팅 정보 수신 동의</p>
+              </div>
+            </div>
+
+            <button type="submit" className="auth-submit">
+              가입하기
+            </button>
+            <p className="auth-bottom-link">
+              이미 회원이신가요?{' '}
+              <button type="button" onClick={() => onNavigate('/login')}>
+                로그인하기
+              </button>
+            </p>
+          </form>
+        </section>
+      </main>
+    </div>
   )
 }
 
