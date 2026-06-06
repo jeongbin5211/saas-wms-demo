@@ -1264,6 +1264,186 @@ button {
   gap: 14px;
 }
 
+.standard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tab-work-card {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.card_btn {
+  display: flex;
+  align-items: center;
+  min-height: 43px;
+  padding: 0 14px;
+  background: #fbfcfe;
+  border-bottom: 1px solid var(--line);
+}
+
+.card_btn button {
+  height: 43px;
+  padding: 0 22px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.card_btn button.active {
+  color: var(--process-blue);
+  border-bottom-color: var(--process-blue);
+}
+
+.card_body {
+  min-height: 520px;
+}
+
+.search-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #fbfcfe;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.search-panel-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.search-panel-fields label {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.search-panel-fields label.wide {
+  grid-column: span 2;
+}
+
+.search-panel-fields span {
+  color: var(--control-navy);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.search-panel-fields input,
+.search-panel-fields select {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 9px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  outline: 0;
+}
+
+.search-panel-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-form {
+  padding: 18px;
+}
+
+.detail-form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.detail-form-heading strong {
+  display: block;
+  color: var(--control-navy);
+  font-size: 17px;
+}
+
+.detail-form-heading span {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.detail-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.detail-form-grid label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.detail-form-grid label.wide {
+  grid-column: span 2;
+}
+
+.detail-form-grid span {
+  color: var(--control-navy);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.detail-form-grid input,
+.detail-form-grid select {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  outline: 0;
+}
+
+.detail-form-grid input:disabled,
+.detail-form-grid select:disabled {
+  color: #667085;
+  background: #f2f4f7;
+}
+
+.detail-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.icon-text-button {
+  height: 34px;
+  padding: 0 12px;
+  color: var(--control-navy);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font-weight: 700;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

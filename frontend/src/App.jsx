@@ -23,6 +23,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { WmsGrid } from './components/WmsGrid.jsx'
+import { WorkspaceRouter } from './router/index.jsx'
 
 const pointColors = [
   { name: '관리 네이비', value: '#172033', usage: '사이드바, 핵심 구조, 주요 제목' },
@@ -643,7 +644,7 @@ function App() {
     }
 
     return (
-      <WorkspaceApp
+      <WorkspaceRouter
         authUser={authUser}
         onLogout={handleLogout}
         onMoveHome={() => navigate('/')}
@@ -1248,6 +1249,8 @@ function RegisterPage({ onLogin, onNavigate }) {
   )
 }
 
+// 이전 단일 파일 운영 화면 구현은 새 WorkspaceRouter로 대체됐다.
+// eslint-disable-next-line no-unused-vars
 function WorkspaceApp({ authUser, onLogout, onMoveHome, onNavigate, route }) {
   const [inventories, setInventories] = useState([])
   const [histories, setHistories] = useState([])
