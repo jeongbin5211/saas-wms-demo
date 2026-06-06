@@ -1,6 +1,7 @@
 package com.wms.wms_backend.common.config;
 
-import com.wms.wms_backend.domain.auth.AuthSessionStore;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +22,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final AuthSessionStore authSessionStore;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -30,15 +31,19 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
         if (authorization != null && authorization.startsWith(BEARER_PREFIX)) {
             String token = authorization.substring(BEARER_PREFIX.length());
-            authSessionStore.find(token).ifPresent(session -> {
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        session,
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + session.roleSubCode()))
-                );
+            try {
+                Claims claims = jwtTokenProvider.parse(token);
+                String role = claims.get("role", String.class);
 
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        claims,
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            });
+            } catch (JwtException | IllegalArgumentException ignored) {
+                // 유효하지 않은 토큰 - SecurityContext 비워두고 계속 진행
+            }
         }
 
         filterChain.doFilter(request, response);
