@@ -11,6 +11,10 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
 
     Optional<Warehouse> findByWarehouseCode(String warehouseCode);
 
+    boolean existsByWarehouseCode(String warehouseCode);
+
+    boolean existsByWarehouseCodeAndIdNot(String warehouseCode, Long id);
+
     @EntityGraph(attributePaths = "account")
     List<Warehouse> findAllByUseYnOrderByIdAsc(String useYn);
 

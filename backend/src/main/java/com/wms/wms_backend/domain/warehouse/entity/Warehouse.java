@@ -52,4 +52,14 @@ public class Warehouse extends BaseEntity {
         this.warehouseTypeSubCode = warehouseTypeSubCode;
         this.useYn = "Y";
     }
+
+    public void update(String warehouseCode, String warehouseName, String warehouseTypeSubCode) {
+        this.warehouseCode = warehouseCode;
+        this.warehouseName = warehouseName;
+        this.warehouseTypeSubCode = warehouseTypeSubCode;
+    }
+
+    public void deactivate() {
+        this.useYn = "N";
+    }
 }

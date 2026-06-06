@@ -30,6 +30,10 @@ public class Location extends BaseEntity {
     private Account account;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id")
+    private Warehouse warehouse;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "zone_id", nullable = false)
     private Zone zone;
 
@@ -44,14 +48,20 @@ public class Location extends BaseEntity {
 
     public Location(Account account, Zone zone, String locationCode, String locationName) {
         this.account = account;
+        this.warehouse = zone.getWarehouse();
         this.zone = zone;
         this.locationCode = locationCode;
         this.locationName = locationName;
         this.useYn = "Y";
     }
 
+    public Warehouse getWarehouse() {
+        return warehouse != null ? warehouse : zone.getWarehouse();
+    }
+
     public void update(Zone zone, String locationCode, String locationName) {
         this.account = zone.getAccount();
+        this.warehouse = zone.getWarehouse();
         this.zone = zone;
         this.locationCode = locationCode;
         this.locationName = locationName;

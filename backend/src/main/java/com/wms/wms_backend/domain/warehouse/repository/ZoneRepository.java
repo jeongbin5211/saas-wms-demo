@@ -13,10 +13,14 @@ public interface ZoneRepository extends JpaRepository<Zone, Long> {
 
     Optional<Zone> findByZoneCode(String zoneCode);
 
-    @EntityGraph(attributePaths = "area")
+    boolean existsByZoneCode(String zoneCode);
+
+    boolean existsByZoneCodeAndIdNot(String zoneCode, Long id);
+
+    @EntityGraph(attributePaths = {"account", "warehouse", "area", "area.warehouse"})
     List<Zone> findAllByUseYnOrderByIdAsc(String useYn);
 
-    @EntityGraph(attributePaths = "area")
+    @EntityGraph(attributePaths = {"account", "warehouse", "area", "area.warehouse"})
     @Query("SELECT z FROM Zone z WHERE z.account.topAccountId = :topAccountId AND z.useYn = 'Y' ORDER BY z.id ASC")
     List<Zone> findAllByTopAccountId(@Param("topAccountId") Long topAccountId);
 }

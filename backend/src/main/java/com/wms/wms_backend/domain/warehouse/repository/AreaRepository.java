@@ -13,10 +13,14 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
 
     Optional<Area> findByAreaCode(String areaCode);
 
-    @EntityGraph(attributePaths = "warehouse")
+    boolean existsByAreaCode(String areaCode);
+
+    boolean existsByAreaCodeAndIdNot(String areaCode, Long id);
+
+    @EntityGraph(attributePaths = {"account", "warehouse"})
     List<Area> findAllByUseYnOrderByIdAsc(String useYn);
 
-    @EntityGraph(attributePaths = "warehouse")
+    @EntityGraph(attributePaths = {"account", "warehouse"})
     @Query("SELECT a FROM Area a WHERE a.account.topAccountId = :topAccountId AND a.useYn = 'Y' ORDER BY a.id ASC")
     List<Area> findAllByTopAccountId(@Param("topAccountId") Long topAccountId);
 }

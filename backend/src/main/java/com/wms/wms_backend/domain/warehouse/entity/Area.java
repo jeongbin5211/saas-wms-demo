@@ -49,4 +49,15 @@ public class Area extends BaseEntity {
         this.areaName = areaName;
         this.useYn = "Y";
     }
+
+    public void update(Warehouse warehouse, String areaCode, String areaName) {
+        this.account = warehouse.getAccount();
+        this.warehouse = warehouse;
+        this.areaCode = areaCode;
+        this.areaName = areaName;
+    }
+
+    public void deactivate() {
+        this.useYn = "N";
+    }
 }

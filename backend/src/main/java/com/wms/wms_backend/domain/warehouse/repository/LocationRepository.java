@@ -17,10 +17,10 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
 
     Optional<Location> findByLocationCode(String locationCode);
 
-    @EntityGraph(attributePaths = "zone")
+    @EntityGraph(attributePaths = {"account", "warehouse", "zone", "zone.warehouse", "zone.area", "zone.area.warehouse"})
     List<Location> findAllByUseYnOrderByIdAsc(String useYn);
 
-    @EntityGraph(attributePaths = "zone")
+    @EntityGraph(attributePaths = {"account", "warehouse", "zone", "zone.warehouse", "zone.area", "zone.area.warehouse"})
     @Query("SELECT l FROM Location l WHERE l.account.topAccountId = :topAccountId AND l.useYn = 'Y' ORDER BY l.id ASC")
     List<Location> findAllByTopAccountId(@Param("topAccountId") Long topAccountId);
 }

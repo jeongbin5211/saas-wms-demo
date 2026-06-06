@@ -13,11 +13,9 @@ export function TabLayout({ activeTab, onTabChange, tabs }) {
           </button>
         ))}
       </div>
-      {tabs.map((tab, index) => (
-        <div className="card_body" hidden={activeTab !== index} key={tab.label}>
-          {tab.content}
-        </div>
-      ))}
+      <div className="card_body">
+        {tabs[activeTab]?.content}
+      </div>
     </section>
   )
 }

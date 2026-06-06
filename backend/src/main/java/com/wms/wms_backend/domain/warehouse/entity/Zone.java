@@ -30,6 +30,10 @@ public class Zone extends BaseEntity {
     private Account account;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id")
+    private Warehouse warehouse;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "area_id", nullable = false)
     private Area area;
 
@@ -44,9 +48,26 @@ public class Zone extends BaseEntity {
 
     public Zone(Account account, Area area, String zoneCode, String zoneName) {
         this.account = account;
+        this.warehouse = area.getWarehouse();
         this.area = area;
         this.zoneCode = zoneCode;
         this.zoneName = zoneName;
         this.useYn = "Y";
+    }
+
+    public Warehouse getWarehouse() {
+        return warehouse != null ? warehouse : area.getWarehouse();
+    }
+
+    public void update(Area area, String zoneCode, String zoneName) {
+        this.account = area.getAccount();
+        this.warehouse = area.getWarehouse();
+        this.area = area;
+        this.zoneCode = zoneCode;
+        this.zoneName = zoneName;
+    }
+
+    public void deactivate() {
+        this.useYn = "N";
     }
 }
