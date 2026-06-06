@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Header } from '../components/layout/Header.jsx'
 import { Sidebar } from '../components/layout/Sidebar.jsx'
 import { BillingPage } from '../pages/billing/BillingPage.jsx'
+import { DashboardPage } from '../pages/dashboard/DashboardPage.jsx'
 import { InventoryHistoryPage } from '../pages/inventory/InventoryHistoryPage.jsx'
 import { InventoryPage } from '../pages/inventory/InventoryPage.jsx'
 import { ItemsPage } from '../pages/items/ItemsPage.jsx'
@@ -196,6 +197,7 @@ export function WorkspaceRouter({ authUser, onLogout, onMoveHome, onNavigate, ro
 }
 
 function renderPage(activeMenu, pageProps) {
+  if (activeMenu === 'dashboard') return <DashboardPage {...pageProps} />
   if (activeMenu === 'locations') return <LocationsPage {...pageProps} />
   if (activeMenu === 'items') return <ItemsPage {...pageProps} />
   if (activeMenu === 'inventory') return <InventoryPage {...pageProps} />

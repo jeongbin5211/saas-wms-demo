@@ -97,19 +97,12 @@ export function StandardWorkPage({
   const handleSave = async (event) => {
     event.preventDefault()
 
-    if (!allowSave) {
-      return
-    }
+    if (!allowSave) return
+    if (!canEdit) { setMessage('게스트 권한은 저장할 수 없습니다.'); return }
+    if (!endpoint) { setMessage('이 화면은 아직 저장 API가 연결되지 않았습니다.'); return }
 
-    if (!canEdit) {
-      setMessage('게스트 권한은 저장할 수 없습니다.')
-      return
-    }
-
-    if (!endpoint) {
-      setMessage('이 화면은 아직 저장 API가 연결되지 않았습니다.')
-      return
-    }
+    const validationError = validateRequired(detailFields, draftRow)
+    if (validationError) { setMessage(validationError); return }
 
     const method = selectedRow ? 'PUT' : 'POST'
     const saveUrl = selectedRow ? `${endpoint}/${selectedRow.id}` : endpoint
@@ -118,14 +111,14 @@ export function StandardWorkPage({
     try {
       const response = await fetchWithAuth(saveUrl, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        throw new Error('save-failed')
+        const errorMessage = await parseApiError(response, selectedRow ? '수정에 실패했습니다.' : '등록에 실패했습니다.')
+        setMessage(errorMessage)
+        return
       }
 
       setMessage(selectedRow ? '수정이 완료되었습니다.' : '등록이 완료되었습니다.')
@@ -138,23 +131,16 @@ export function StandardWorkPage({
   }
 
   const handleDelete = async () => {
-    if (!canEdit) {
-      setMessage('게스트 권한은 삭제할 수 없습니다.')
-      return
-    }
-
-    if (!endpoint || !selectedRow) {
-      setMessage('삭제할 행을 선택하세요.')
-      return
-    }
+    if (!canEdit) { setMessage('게스트 권한은 삭제할 수 없습니다.'); return }
+    if (!endpoint || !selectedRow) { setMessage('삭제할 행을 선택하세요.'); return }
 
     try {
-      const response = await fetchWithAuth(`${endpoint}/${selectedRow.id}`, {
-        method: 'DELETE',
-      })
+      const response = await fetchWithAuth(`${endpoint}/${selectedRow.id}`, { method: 'DELETE' })
 
       if (!response.ok) {
-        throw new Error('delete-failed')
+        const errorMessage = await parseApiError(response, '삭제에 실패했습니다.')
+        setMessage(errorMessage)
+        return
       }
 
       setMessage('삭제가 완료되었습니다.')
@@ -246,12 +232,28 @@ export function StandardWorkPage({
 
 function toQueryString(params) {
   const query = new URLSearchParams()
-
   for (const [key, value] of Object.entries(params)) {
-    if (String(value ?? '').trim()) {
-      query.set(key, value)
+    if (String(value ?? '').trim()) query.set(key, value)
+  }
+  return query.toString()
+}
+
+function validateRequired(fields = [], row) {
+  for (const field of fields) {
+    if (!field.required) continue
+    const value = row?.[field.name]
+    if (value === undefined || value === null || String(value).trim() === '') {
+      return `'${field.label}' 항목은 필수입니다.`
     }
   }
+  return null
+}
 
-  return query.toString()
+async function parseApiError(response, fallback) {
+  try {
+    const body = await response.json()
+    return body.message ?? fallback
+  } catch {
+    return fallback
+  }
 }
