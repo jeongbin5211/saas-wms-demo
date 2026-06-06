@@ -13,4 +13,7 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
 
     @EntityGraph(attributePaths = "account")
     List<Warehouse> findAllByUseYnOrderByIdAsc(String useYn);
+
+    @EntityGraph(attributePaths = "account")
+    List<Warehouse> findAllByTopAccountIdAndUseYnOrderByIdAsc(Long topAccountId, String useYn);
 }

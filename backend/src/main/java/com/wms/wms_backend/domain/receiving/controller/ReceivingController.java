@@ -1,5 +1,6 @@
 package com.wms.wms_backend.domain.receiving.controller;
 
+import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.receiving.entity.Receiving;
 import com.wms.wms_backend.domain.receiving.entity.ReceivingDetail;
 import com.wms.wms_backend.domain.receiving.repository.ReceivingDetailRepository;
@@ -28,7 +29,8 @@ public class ReceivingController {
             @RequestParam(required = false) String receivingNo,
             @RequestParam(required = false) String receivingStatusSubCode
     ) {
-        return receivingRepository.findAllByOrderByIdAsc().stream()
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return receivingRepository.findAllByTopAccountId(topAccountId).stream()
                 .filter(r -> receivingNo == null || r.getReceivingNo().contains(receivingNo))
                 .filter(r -> receivingStatusSubCode == null || r.getReceivingStatusSubCode().equals(receivingStatusSubCode))
                 .map(ReceivingResponse::from)
@@ -37,7 +39,8 @@ public class ReceivingController {
 
     @GetMapping("/api/receiving-details")
     public List<ReceivingDetailResponse> findReceivingDetails() {
-        return receivingDetailRepository.findAllByOrderByIdAsc().stream()
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return receivingDetailRepository.findAllByTopAccountId(topAccountId).stream()
                 .map(ReceivingDetailResponse::from)
                 .toList();
     }

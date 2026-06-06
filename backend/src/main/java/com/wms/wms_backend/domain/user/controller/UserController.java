@@ -1,12 +1,12 @@
 package com.wms.wms_backend.domain.user.controller;
 
+import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.user.entity.User;
 import com.wms.wms_backend.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -17,15 +17,10 @@ public class UserController {
 
     @GetMapping("/api/users")
     public List<UserResponse> findAll() {
-        List<User> users = userRepository.findAllByOrderByIdAsc();
-        List<UserResponse> responses = new ArrayList<>();
-
-        for (User user : users) {
-            UserResponse response = UserResponse.from(user);
-            responses.add(response);
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return userRepository.findAllByTopAccountIdOrderByIdAsc(topAccountId).stream()
+                .map(UserResponse::from)
+                .toList();
     }
 
     public record UserResponse(

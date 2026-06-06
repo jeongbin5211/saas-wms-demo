@@ -8,6 +8,7 @@ import com.wms.wms_backend.domain.warehouse.repository.AreaRepository;
 import com.wms.wms_backend.domain.warehouse.repository.LocationRepository;
 import com.wms.wms_backend.domain.warehouse.repository.WarehouseRepository;
 import com.wms.wms_backend.domain.warehouse.repository.ZoneRepository;
+import com.wms.wms_backend.common.security.SecurityUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,7 +25,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -38,44 +38,27 @@ public class WarehouseController {
 
     @GetMapping("/api/warehouses")
     public List<WarehouseResponse> findWarehouses() {
-        List<Warehouse> warehouses = warehouseRepository.findAllByUseYnOrderByIdAsc("Y");
-        List<WarehouseResponse> responses = new ArrayList<>();
-
-        for (Warehouse warehouse : warehouses) {
-            WarehouseResponse response = WarehouseResponse.from(warehouse);
-            responses.add(response);
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return warehouseRepository.findAllByTopAccountIdAndUseYnOrderByIdAsc(topAccountId, "Y").stream()
+                .map(WarehouseResponse::from)
+                .toList();
     }
 
     @GetMapping("/api/warehouse-locations")
     public WarehouseLocationResponse findWarehouseLocations() {
-        List<Warehouse> warehouses = warehouseRepository.findAllByUseYnOrderByIdAsc("Y");
-        List<Area> areas = areaRepository.findAllByUseYnOrderByIdAsc("Y");
-        List<Zone> zones = zoneRepository.findAllByUseYnOrderByIdAsc("Y");
-        List<Location> locations = locationRepository.findAllByUseYnOrderByIdAsc("Y");
-
-        List<WarehouseResponse> warehouseResponses = new ArrayList<>();
-        List<AreaResponse> areaResponses = new ArrayList<>();
-        List<ZoneResponse> zoneResponses = new ArrayList<>();
-        List<LocationResponse> locationResponses = new ArrayList<>();
-
-        for (Warehouse warehouse : warehouses) {
-            warehouseResponses.add(WarehouseResponse.from(warehouse));
-        }
-
-        for (Area area : areas) {
-            areaResponses.add(AreaResponse.from(area));
-        }
-
-        for (Zone zone : zones) {
-            zoneResponses.add(ZoneResponse.from(zone));
-        }
-
-        for (Location location : locations) {
-            locationResponses.add(LocationResponse.from(location));
-        }
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        List<WarehouseResponse> warehouseResponses = warehouseRepository.findAllByTopAccountIdAndUseYnOrderByIdAsc(topAccountId, "Y").stream()
+                .map(WarehouseResponse::from)
+                .toList();
+        List<AreaResponse> areaResponses = areaRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(AreaResponse::from)
+                .toList();
+        List<ZoneResponse> zoneResponses = zoneRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(ZoneResponse::from)
+                .toList();
+        List<LocationResponse> locationResponses = locationRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(LocationResponse::from)
+                .toList();
 
         return new WarehouseLocationResponse(warehouseResponses, areaResponses, zoneResponses, locationResponses);
     }

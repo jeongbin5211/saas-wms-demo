@@ -1,5 +1,6 @@
 package com.wms.wms_backend.domain.billing.controller;
 
+import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.billing.entity.Bill;
 import com.wms.wms_backend.domain.billing.entity.BillDetail;
 import com.wms.wms_backend.domain.billing.repository.BillDetailRepository;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -22,26 +22,18 @@ public class BillController {
 
     @GetMapping("/api/bills")
     public List<BillResponse> findBills() {
-        List<Bill> bills = billRepository.findAllByOrderByIdAsc();
-        List<BillResponse> responses = new ArrayList<>();
-
-        for (Bill bill : bills) {
-            responses.add(BillResponse.from(bill));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return billRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(BillResponse::from)
+                .toList();
     }
 
     @GetMapping("/api/bill-details")
     public List<BillDetailResponse> findBillDetails() {
-        List<BillDetail> details = billDetailRepository.findAllByOrderByIdAsc();
-        List<BillDetailResponse> responses = new ArrayList<>();
-
-        for (BillDetail detail : details) {
-            responses.add(BillDetailResponse.from(detail));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return billDetailRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(BillDetailResponse::from)
+                .toList();
     }
 
     public record BillResponse(

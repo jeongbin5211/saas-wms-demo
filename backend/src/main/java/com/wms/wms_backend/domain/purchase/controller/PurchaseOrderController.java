@@ -1,5 +1,6 @@
 package com.wms.wms_backend.domain.purchase.controller;
 
+import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.purchase.entity.PurchaseOrder;
 import com.wms.wms_backend.domain.purchase.entity.PurchaseOrderDetail;
 import com.wms.wms_backend.domain.purchase.repository.PurchaseOrderDetailRepository;
@@ -24,7 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -42,7 +42,8 @@ public class PurchaseOrderController {
             @RequestParam(required = false) LocalDate orderDateFrom,
             @RequestParam(required = false) LocalDate orderDateTo
     ) {
-        return purchaseOrderRepository.findAllByOrderByIdAsc().stream()
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return purchaseOrderRepository.findAllByTopAccountId(topAccountId).stream()
                 .filter(o -> purchaseOrderNo == null || o.getPurchaseOrderNo().contains(purchaseOrderNo))
                 .filter(o -> orderStatusSubCode == null || o.getOrderStatusSubCode().equals(orderStatusSubCode))
                 .filter(o -> orderDateFrom == null || !o.getOrderDate().isBefore(orderDateFrom))
@@ -98,14 +99,10 @@ public class PurchaseOrderController {
 
     @GetMapping("/api/purchase-order-details")
     public List<PurchaseOrderDetailResponse> findPurchaseOrderDetails() {
-        List<PurchaseOrderDetail> details = purchaseOrderDetailRepository.findAllByOrderByIdAsc();
-        List<PurchaseOrderDetailResponse> responses = new ArrayList<>();
-
-        for (PurchaseOrderDetail detail : details) {
-            responses.add(PurchaseOrderDetailResponse.from(detail));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return purchaseOrderDetailRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(PurchaseOrderDetailResponse::from)
+                .toList();
     }
 
     public record PurchaseOrderResponse(

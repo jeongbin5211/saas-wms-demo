@@ -1,5 +1,6 @@
 package com.wms.wms_backend.domain.sales.controller;
 
+import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.account.entity.Account;
 import com.wms.wms_backend.domain.account.repository.AccountRepository;
 import com.wms.wms_backend.domain.sales.entity.SalesOrder;
@@ -24,7 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -42,7 +42,8 @@ public class SalesOrderController {
             @RequestParam(required = false) LocalDate orderDateFrom,
             @RequestParam(required = false) LocalDate orderDateTo
     ) {
-        return salesOrderRepository.findAllByOrderByIdAsc().stream()
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return salesOrderRepository.findAllByTopAccountId(topAccountId).stream()
                 .filter(o -> salesOrderNo == null || o.getSalesOrderNo().contains(salesOrderNo))
                 .filter(o -> orderStatusSubCode == null || o.getOrderStatusSubCode().equals(orderStatusSubCode))
                 .filter(o -> orderDateFrom == null || !o.getOrderDate().isBefore(orderDateFrom))
@@ -98,14 +99,10 @@ public class SalesOrderController {
 
     @GetMapping("/api/sales-order-details")
     public List<SalesOrderDetailResponse> findSalesOrderDetails() {
-        List<SalesOrderDetail> details = salesOrderDetailRepository.findAllByOrderByIdAsc();
-        List<SalesOrderDetailResponse> responses = new ArrayList<>();
-
-        for (SalesOrderDetail detail : details) {
-            responses.add(SalesOrderDetailResponse.from(detail));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return salesOrderDetailRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(SalesOrderDetailResponse::from)
+                .toList();
     }
 
     public record SalesOrderResponse(

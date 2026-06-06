@@ -16,4 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @EntityGraph(attributePaths = "account")
     List<User> findAllByOrderByIdAsc();
+
+    @EntityGraph(attributePaths = "account")
+    List<User> findAllByTopAccountIdOrderByIdAsc(Long topAccountId);
 }

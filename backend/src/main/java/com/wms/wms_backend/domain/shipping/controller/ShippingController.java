@@ -1,5 +1,6 @@
 package com.wms.wms_backend.domain.shipping.controller;
 
+import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.shipping.entity.Shipping;
 import com.wms.wms_backend.domain.shipping.entity.ShippingDetail;
 import com.wms.wms_backend.domain.shipping.repository.ShippingDetailRepository;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -25,26 +25,18 @@ public class ShippingController {
 
     @GetMapping("/api/shippings")
     public List<ShippingResponse> findShippings() {
-        List<Shipping> shippings = shippingRepository.findAllByOrderByIdAsc();
-        List<ShippingResponse> responses = new ArrayList<>();
-
-        for (Shipping shipping : shippings) {
-            responses.add(ShippingResponse.from(shipping));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return shippingRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(ShippingResponse::from)
+                .toList();
     }
 
     @GetMapping("/api/shipping-details")
     public List<ShippingDetailResponse> findShippingDetails() {
-        List<ShippingDetail> details = shippingDetailRepository.findAllByOrderByIdAsc();
-        List<ShippingDetailResponse> responses = new ArrayList<>();
-
-        for (ShippingDetail detail : details) {
-            responses.add(ShippingDetailResponse.from(detail));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return shippingDetailRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(ShippingDetailResponse::from)
+                .toList();
     }
 
     @PostMapping("/api/shippings/{shippingId}/confirm")

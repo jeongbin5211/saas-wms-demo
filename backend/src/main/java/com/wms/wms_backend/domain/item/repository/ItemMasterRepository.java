@@ -13,4 +13,7 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
 
     @EntityGraph(attributePaths = "account")
     List<ItemMaster> findAllByUseYnOrderByIdAsc(String useYn);
+
+    @EntityGraph(attributePaths = "account")
+    List<ItemMaster> findAllByTopAccountIdAndUseYnOrderByIdAsc(Long topAccountId, String useYn);
 }

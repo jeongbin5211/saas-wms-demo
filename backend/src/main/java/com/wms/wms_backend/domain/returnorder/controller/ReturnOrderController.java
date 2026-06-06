@@ -1,5 +1,6 @@
 package com.wms.wms_backend.domain.returnorder.controller;
 
+import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.returnorder.entity.PurchaseReturn;
 import com.wms.wms_backend.domain.returnorder.entity.PurchaseReturnDetail;
 import com.wms.wms_backend.domain.returnorder.entity.SalesReturn;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -41,50 +41,34 @@ public class ReturnOrderController {
 
     @GetMapping("/api/purchase-returns")
     public List<PurchaseReturnResponse> findPurchaseReturns() {
-        List<PurchaseReturn> purchaseReturns = purchaseReturnRepository.findAllByOrderByIdAsc();
-        List<PurchaseReturnResponse> responses = new ArrayList<>();
-
-        for (PurchaseReturn purchaseReturn : purchaseReturns) {
-            responses.add(PurchaseReturnResponse.from(purchaseReturn));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return purchaseReturnRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(PurchaseReturnResponse::from)
+                .toList();
     }
 
     @GetMapping("/api/purchase-return-details")
     public List<PurchaseReturnDetailResponse> findPurchaseReturnDetails() {
-        List<PurchaseReturnDetail> details = purchaseReturnDetailRepository.findAllByOrderByIdAsc();
-        List<PurchaseReturnDetailResponse> responses = new ArrayList<>();
-
-        for (PurchaseReturnDetail detail : details) {
-            responses.add(PurchaseReturnDetailResponse.from(detail));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return purchaseReturnDetailRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(PurchaseReturnDetailResponse::from)
+                .toList();
     }
 
     @GetMapping("/api/sales-returns")
     public List<SalesReturnResponse> findSalesReturns() {
-        List<SalesReturn> salesReturns = salesReturnRepository.findAllByOrderByIdAsc();
-        List<SalesReturnResponse> responses = new ArrayList<>();
-
-        for (SalesReturn salesReturn : salesReturns) {
-            responses.add(SalesReturnResponse.from(salesReturn));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return salesReturnRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(SalesReturnResponse::from)
+                .toList();
     }
 
     @GetMapping("/api/sales-return-details")
     public List<SalesReturnDetailResponse> findSalesReturnDetails() {
-        List<SalesReturnDetail> details = salesReturnDetailRepository.findAllByOrderByIdAsc();
-        List<SalesReturnDetailResponse> responses = new ArrayList<>();
-
-        for (SalesReturnDetail detail : details) {
-            responses.add(SalesReturnDetailResponse.from(detail));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return salesReturnDetailRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(SalesReturnDetailResponse::from)
+                .toList();
     }
 
     public record PurchaseReturnResponse(

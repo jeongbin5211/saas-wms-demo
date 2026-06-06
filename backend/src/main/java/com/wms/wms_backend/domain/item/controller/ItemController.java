@@ -6,6 +6,7 @@ import com.wms.wms_backend.domain.item.entity.ItemMaster;
 import com.wms.wms_backend.domain.item.repository.ItemClassRepository;
 import com.wms.wms_backend.domain.item.repository.ItemMasterRepository;
 import com.wms.wms_backend.domain.item.repository.ItemRepository;
+import com.wms.wms_backend.common.security.SecurityUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -38,26 +38,18 @@ public class ItemController {
 
     @GetMapping("/api/item-masters")
     public List<ItemMasterResponse> findItemMasters() {
-        List<ItemMaster> itemMasters = itemMasterRepository.findAllByUseYnOrderByIdAsc("Y");
-        List<ItemMasterResponse> responses = new ArrayList<>();
-
-        for (ItemMaster itemMaster : itemMasters) {
-            responses.add(ItemMasterResponse.from(itemMaster));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return itemMasterRepository.findAllByTopAccountIdAndUseYnOrderByIdAsc(topAccountId, "Y").stream()
+                .map(ItemMasterResponse::from)
+                .toList();
     }
 
     @GetMapping("/api/item-classes")
     public List<ItemClassResponse> findItemClasses() {
-        List<ItemClass> itemClasses = itemClassRepository.findAllByUseYnOrderByIdAsc("Y");
-        List<ItemClassResponse> responses = new ArrayList<>();
-
-        for (ItemClass itemClass : itemClasses) {
-            responses.add(ItemClassResponse.from(itemClass));
-        }
-
-        return responses;
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return itemClassRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(ItemClassResponse::from)
+                .toList();
     }
 
     @GetMapping("/api/items")
@@ -65,7 +57,8 @@ public class ItemController {
             @RequestParam(required = false) String itemCode,
             @RequestParam(required = false) String itemName
     ) {
-        return itemRepository.findAllByUseYnOrderByIdAsc("Y").stream()
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return itemRepository.findAllByTopAccountId(topAccountId).stream()
                 .filter(item -> itemCode == null || item.getItemCode().contains(itemCode))
                 .filter(item -> itemName == null || item.getItemName().contains(itemName))
                 .map(ItemResponse::from)
@@ -138,9 +131,16 @@ public class ItemController {
 
     @GetMapping("/api/item-catalog")
     public ItemCatalogResponse findItemCatalog() {
-        List<ItemMasterResponse> itemMasters = findItemMasters();
-        List<ItemClassResponse> itemClasses = findItemClasses();
-        List<ItemResponse> items = findItems(null, null);
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        List<ItemMasterResponse> itemMasters = itemMasterRepository.findAllByTopAccountIdAndUseYnOrderByIdAsc(topAccountId, "Y").stream()
+                .map(ItemMasterResponse::from)
+                .toList();
+        List<ItemClassResponse> itemClasses = itemClassRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(ItemClassResponse::from)
+                .toList();
+        List<ItemResponse> items = itemRepository.findAllByTopAccountId(topAccountId).stream()
+                .map(ItemResponse::from)
+                .toList();
 
         return new ItemCatalogResponse(itemMasters, itemClasses, items);
     }

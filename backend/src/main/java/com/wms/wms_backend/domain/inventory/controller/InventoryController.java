@@ -1,5 +1,6 @@
 package com.wms.wms_backend.domain.inventory.controller;
 
+import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.inventory.entity.Inventory;
 import com.wms.wms_backend.domain.inventory.entity.InventoryHistory;
 import com.wms.wms_backend.domain.inventory.repository.InventoryHistoryRepository;
@@ -33,7 +34,8 @@ public class InventoryController {
             @RequestParam(required = false) String itemName,
             @RequestParam(required = false) String locationCode
     ) {
-        return inventoryRepository.findAllByUseYnOrderByIdAsc("Y").stream()
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return inventoryRepository.findAllByTopAccountId(topAccountId).stream()
                 .filter(i -> itemCode == null || i.getItem().getItemCode().contains(itemCode))
                 .filter(i -> itemName == null || i.getItem().getItemName().contains(itemName))
                 .filter(i -> locationCode == null || i.getLocation().getLocationCode().contains(locationCode))
@@ -46,7 +48,8 @@ public class InventoryController {
             @RequestParam(required = false) String itemCode,
             @RequestParam(required = false) String historyTypeSubCode
     ) {
-        return inventoryHistoryRepository.findAllByOrderByIdAsc().stream()
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        return inventoryHistoryRepository.findAllByTopAccountId(topAccountId).stream()
                 .filter(h -> itemCode == null || h.getItem().getItemCode().contains(itemCode))
                 .filter(h -> historyTypeSubCode == null || h.getHistoryTypeSubCode().equals(historyTypeSubCode))
                 .map(InventoryHistoryResponse::from)
