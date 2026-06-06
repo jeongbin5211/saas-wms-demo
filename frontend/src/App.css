@@ -757,6 +757,12 @@ button {
   color: #cbd6e5;
 }
 
+/* ── 반품 타입 토글 ── */
+.return-type-toggle {
+  display: flex;
+  gap: 8px;
+}
+
 /* ── OAuth2 소셜 로그인 ── */
 .auth-divider {
   display: flex;

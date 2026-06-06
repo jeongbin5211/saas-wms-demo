@@ -20,6 +20,7 @@ export function StandardWorkPage({
   detailAfter,
   detailFields,
   endpoint,
+  hideHeader = false,
   onRefresh,
   page,
   searchFields,
@@ -164,18 +165,20 @@ export function StandardWorkPage({
 
   return (
     <section className="standard-page">
-      <div className="work-page-header">
-        <div>
-          <p className="eyebrow">{page.eyebrow}</p>
-          <h2>{title ?? page.title}</h2>
-          <span>{page.description}</span>
+      {!hideHeader && (
+        <div className="work-page-header">
+          <div>
+            <p className="eyebrow">{page.eyebrow}</p>
+            <h2>{title ?? page.title}</h2>
+            <span>{page.description}</span>
+          </div>
+          {allowNew ? (
+            <button type="button" className="primary-button" onClick={handleNew}>
+              신규등록
+            </button>
+          ) : null}
         </div>
-        {allowNew ? (
-          <button type="button" className="primary-button" onClick={handleNew}>
-            신규등록
-          </button>
-        ) : null}
-      </div>
+      )}
 
       {message ? <div className="info-banner">{message}</div> : null}
 
