@@ -12,4 +12,7 @@ public interface PurchaseReturnDetailRepository extends JpaRepository<PurchaseRe
 
     @EntityGraph(attributePaths = {"purchaseReturn", "item", "location"})
     List<PurchaseReturnDetail> findAllByOrderByIdAsc();
+
+    @EntityGraph(attributePaths = {"item", "location"})
+    List<PurchaseReturnDetail> findAllByPurchaseReturnIdOrderByIdAsc(Long purchaseReturnId);
 }

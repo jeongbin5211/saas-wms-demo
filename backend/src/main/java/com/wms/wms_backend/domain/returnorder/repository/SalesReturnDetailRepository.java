@@ -12,4 +12,7 @@ public interface SalesReturnDetailRepository extends JpaRepository<SalesReturnDe
 
     @EntityGraph(attributePaths = {"salesReturn", "item", "location"})
     List<SalesReturnDetail> findAllByOrderByIdAsc();
+
+    @EntityGraph(attributePaths = {"item", "location"})
+    List<SalesReturnDetail> findAllBySalesReturnIdOrderByIdAsc(Long salesReturnId);
 }

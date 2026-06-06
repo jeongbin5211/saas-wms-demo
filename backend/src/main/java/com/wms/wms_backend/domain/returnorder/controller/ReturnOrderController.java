@@ -8,8 +8,11 @@ import com.wms.wms_backend.domain.returnorder.repository.PurchaseReturnDetailRep
 import com.wms.wms_backend.domain.returnorder.repository.PurchaseReturnRepository;
 import com.wms.wms_backend.domain.returnorder.repository.SalesReturnDetailRepository;
 import com.wms.wms_backend.domain.returnorder.repository.SalesReturnRepository;
+import com.wms.wms_backend.domain.returnorder.service.ReturnProcessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
@@ -24,6 +27,17 @@ public class ReturnOrderController {
     private final PurchaseReturnDetailRepository purchaseReturnDetailRepository;
     private final SalesReturnRepository salesReturnRepository;
     private final SalesReturnDetailRepository salesReturnDetailRepository;
+    private final ReturnProcessService returnProcessService;
+
+    @PostMapping("/api/purchase-returns/{id}/confirm")
+    public ReturnProcessService.ReturnConfirmResult confirmPurchaseReturn(@PathVariable Long id) {
+        return returnProcessService.confirmPurchaseReturn(id);
+    }
+
+    @PostMapping("/api/sales-returns/{id}/confirm")
+    public ReturnProcessService.ReturnConfirmResult confirmSalesReturn(@PathVariable Long id) {
+        return returnProcessService.confirmSalesReturn(id);
+    }
 
     @GetMapping("/api/purchase-returns")
     public List<PurchaseReturnResponse> findPurchaseReturns() {
