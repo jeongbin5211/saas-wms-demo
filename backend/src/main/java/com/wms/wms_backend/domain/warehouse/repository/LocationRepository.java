@@ -11,6 +11,8 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
 
     boolean existsByLocationCode(String locationCode);
 
+    boolean existsByLocationCodeAndIdNot(String locationCode, Long id);
+
     Optional<Location> findByLocationCode(String locationCode);
 
     @EntityGraph(attributePaths = "zone")

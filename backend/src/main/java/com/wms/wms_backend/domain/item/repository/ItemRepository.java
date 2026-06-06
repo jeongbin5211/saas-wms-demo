@@ -11,6 +11,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     boolean existsByItemCode(String itemCode);
 
+    boolean existsByItemCodeAndIdNot(String itemCode, Long id);
+
+    boolean existsByBarcodeAndIdNot(String barcode, Long id);
+
     Optional<Item> findByItemCode(String itemCode);
 
     @EntityGraph(attributePaths = "itemClass")

@@ -49,4 +49,15 @@ public class Location extends BaseEntity {
         this.locationName = locationName;
         this.useYn = "Y";
     }
+
+    public void update(Zone zone, String locationCode, String locationName) {
+        this.account = zone.getAccount();
+        this.zone = zone;
+        this.locationCode = locationCode;
+        this.locationName = locationName;
+    }
+
+    public void deactivate() {
+        this.useYn = "N";
+    }
 }

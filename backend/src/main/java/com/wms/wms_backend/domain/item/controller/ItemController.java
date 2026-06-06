@@ -12,8 +12,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -91,6 +95,46 @@ public class ItemController {
         return ItemResponse.from(item);
     }
 
+    @PutMapping("/api/items/{id}")
+    @Transactional
+    public ItemResponse updateItem(@PathVariable Long id, @Valid @RequestBody ItemUpdateRequest request) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "품목 정보를 찾을 수 없습니다."));
+
+        if (itemRepository.existsByItemCodeAndIdNot(request.itemCode(), id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 품목 코드입니다.");
+        }
+
+        if (request.barcode() != null && !request.barcode().isBlank() && itemRepository.existsByBarcodeAndIdNot(request.barcode(), id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 바코드입니다.");
+        }
+
+        ItemClass itemClass = itemClassRepository.findById(request.itemClassId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "품목 클래스를 찾을 수 없습니다."));
+
+        item.update(
+                itemClass,
+                request.itemCode(),
+                request.itemName(),
+                request.barcode(),
+                request.unit(),
+                request.purchasePrice(),
+                request.salesPrice()
+        );
+
+        return ItemResponse.from(item);
+    }
+
+    @DeleteMapping("/api/items/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
+    public void deleteItem(@PathVariable Long id) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "품목 정보를 찾을 수 없습니다."));
+
+        item.deactivate();
+    }
+
     @GetMapping("/api/item-catalog")
     public ItemCatalogResponse findItemCatalog() {
         List<ItemMasterResponse> itemMasters = findItemMasters();
@@ -165,6 +209,17 @@ public class ItemController {
     }
 
     public record ItemCreateRequest(
+            @NotNull Long itemClassId,
+            @NotBlank String itemCode,
+            @NotBlank String itemName,
+            String barcode,
+            @NotBlank String unit,
+            @NotNull @PositiveOrZero BigDecimal purchasePrice,
+            @NotNull @PositiveOrZero BigDecimal salesPrice
+    ) {
+    }
+
+    public record ItemUpdateRequest(
             @NotNull Long itemClassId,
             @NotBlank String itemCode,
             @NotBlank String itemName,

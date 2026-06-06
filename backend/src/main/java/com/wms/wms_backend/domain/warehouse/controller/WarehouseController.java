@@ -13,8 +13,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -96,6 +100,34 @@ public class WarehouseController {
         return LocationResponse.from(location);
     }
 
+    @PutMapping("/api/locations/{id}")
+    @Transactional
+    public LocationResponse updateLocation(@PathVariable Long id, @Valid @RequestBody LocationUpdateRequest request) {
+        Location location = locationRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Location 정보를 찾을 수 없습니다."));
+
+        if (locationRepository.existsByLocationCodeAndIdNot(request.locationCode(), id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 Location 코드입니다.");
+        }
+
+        Zone zone = zoneRepository.findById(request.zoneId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zone 정보를 찾을 수 없습니다."));
+
+        location.update(zone, request.locationCode(), request.locationName());
+
+        return LocationResponse.from(location);
+    }
+
+    @DeleteMapping("/api/locations/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
+    public void deleteLocation(@PathVariable Long id) {
+        Location location = locationRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Location 정보를 찾을 수 없습니다."));
+
+        location.deactivate();
+    }
+
     public record WarehouseResponse(
             Long id,
             Long accountId,
@@ -173,6 +205,13 @@ public class WarehouseController {
     }
 
     public record LocationCreateRequest(
+            @NotNull Long zoneId,
+            @NotBlank String locationCode,
+            @NotBlank String locationName
+    ) {
+    }
+
+    public record LocationUpdateRequest(
             @NotNull Long zoneId,
             @NotBlank String locationCode,
             @NotBlank String locationName

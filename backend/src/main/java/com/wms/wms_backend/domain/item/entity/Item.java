@@ -76,4 +76,27 @@ public class Item extends BaseEntity {
         this.salesPrice = salesPrice;
         this.useYn = "Y";
     }
+
+    public void update(
+            ItemClass itemClass,
+            String itemCode,
+            String itemName,
+            String barcode,
+            String unit,
+            BigDecimal purchasePrice,
+            BigDecimal salesPrice
+    ) {
+        this.account = itemClass.getAccount();
+        this.itemClass = itemClass;
+        this.itemCode = itemCode;
+        this.itemName = itemName;
+        this.barcode = barcode;
+        this.unit = unit;
+        this.purchasePrice = purchasePrice;
+        this.salesPrice = salesPrice;
+    }
+
+    public void deactivate() {
+        this.useYn = "N";
+    }
 }
