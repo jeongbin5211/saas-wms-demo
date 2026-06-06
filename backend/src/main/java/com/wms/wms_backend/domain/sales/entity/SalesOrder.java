@@ -63,4 +63,12 @@ public class SalesOrder extends BaseEntity {
     public void completeBilling() {
         this.orderStatusSubCode = "BILLED";
     }
+
+    public void update(Account account, Account customerAccount, String salesOrderNo, LocalDate orderDate, String note) {
+        this.account = account;
+        this.customerAccount = customerAccount;
+        this.salesOrderNo = salesOrderNo;
+        this.orderDate = orderDate;
+        this.note = note;
+    }
 }

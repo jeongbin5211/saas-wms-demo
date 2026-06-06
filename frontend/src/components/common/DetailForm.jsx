@@ -57,7 +57,7 @@ export function DetailForm({
         <button type="button" className="icon-text-button" onClick={onCancel}>
           취소
         </button>
-        {!isCreateMode ? (
+        {!isCreateMode && onDelete ? (
           <button type="button" className="danger-button" disabled={readOnly} onClick={onDelete}>
             삭제
           </button>

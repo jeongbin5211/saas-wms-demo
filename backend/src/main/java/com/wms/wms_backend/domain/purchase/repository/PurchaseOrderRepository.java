@@ -9,6 +9,10 @@ import java.util.Optional;
 
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
 
+    boolean existsByPurchaseOrderNo(String purchaseOrderNo);
+
+    boolean existsByPurchaseOrderNoAndIdNot(String purchaseOrderNo, Long id);
+
     Optional<PurchaseOrder> findByPurchaseOrderNo(String purchaseOrderNo);
 
     @EntityGraph(attributePaths = {"account", "supplierAccount"})

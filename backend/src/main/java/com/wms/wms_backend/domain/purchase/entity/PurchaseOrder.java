@@ -59,4 +59,12 @@ public class PurchaseOrder extends BaseEntity {
     public void completeReceiving() {
         this.orderStatusSubCode = "RECEIVED";
     }
+
+    public void update(Account account, Account supplierAccount, String purchaseOrderNo, LocalDate orderDate, String note) {
+        this.account = account;
+        this.supplierAccount = supplierAccount;
+        this.purchaseOrderNo = purchaseOrderNo;
+        this.orderDate = orderDate;
+        this.note = note;
+    }
 }

@@ -8,8 +8,11 @@ import { fetchWithAuth } from '../router/session.js'
 const rowNumberHeaders = ['rowNum']
 
 export function StandardWorkPage({
+  allowDelete = true,
   authUser,
+  buildPayload,
   columns,
+  createDefaults,
   data,
   detailFields,
   endpoint,
@@ -38,7 +41,7 @@ export function StandardWorkPage({
 
   const handleNew = () => {
     setSelectedRow(null)
-    setDraftRow({})
+    setDraftRow(typeof createDefaults === 'function' ? createDefaults() : (createDefaults ?? {}))
     setActiveTab(1)
     setMessage('')
   }
@@ -103,6 +106,7 @@ export function StandardWorkPage({
 
     const method = selectedRow ? 'PUT' : 'POST'
     const saveUrl = selectedRow ? `${endpoint}/${selectedRow.id}` : endpoint
+    const payload = buildPayload ? buildPayload(draftRow ?? {}, selectedRow) : (draftRow ?? {})
 
     try {
       const response = await fetchWithAuth(saveUrl, {
@@ -110,7 +114,7 @@ export function StandardWorkPage({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(draftRow ?? {}),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
@@ -204,7 +208,7 @@ export function StandardWorkPage({
                 readOnly={!canEdit}
                 row={draftRow}
                 onCancel={() => setActiveTab(0)}
-                onDelete={handleDelete}
+                onDelete={allowDelete ? handleDelete : null}
                 onFieldChange={handleFieldChange}
                 onSave={handleSave}
               />

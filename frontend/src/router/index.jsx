@@ -41,6 +41,7 @@ export function WorkspaceRouter({ authUser, onLogout, onMoveHome, onNavigate, ro
   const [data, setData] = useState({
     inventories: [],
     histories: [],
+    accounts: [],
     locationCatalog: emptyLocationCatalog,
     itemCatalog: emptyItemCatalog,
     inboundFlow: emptyInboundFlow,
@@ -59,6 +60,7 @@ export function WorkspaceRouter({ authUser, onLogout, onMoveHome, onNavigate, ro
       const [
         inventoryResponse,
         historyResponse,
+        accountResponse,
         locationResponse,
         itemResponse,
         purchaseResponse,
@@ -78,6 +80,7 @@ export function WorkspaceRouter({ authUser, onLogout, onMoveHome, onNavigate, ro
       ] = await Promise.all([
         fetchWithAuth('/api/inventories'),
         fetchWithAuth('/api/inventory-histories'),
+        fetchWithAuth('/api/accounts'),
         fetchWithAuth('/api/warehouse-locations'),
         fetchWithAuth('/api/item-catalog'),
         fetchWithAuth('/api/purchase-orders'),
@@ -99,6 +102,7 @@ export function WorkspaceRouter({ authUser, onLogout, onMoveHome, onNavigate, ro
       const responses = [
         inventoryResponse,
         historyResponse,
+        accountResponse,
         locationResponse,
         itemResponse,
         purchaseResponse,
@@ -124,6 +128,7 @@ export function WorkspaceRouter({ authUser, onLogout, onMoveHome, onNavigate, ro
       const [
         inventories,
         histories,
+        accounts,
         locationCatalog,
         itemCatalog,
         purchaseOrders,
@@ -145,6 +150,7 @@ export function WorkspaceRouter({ authUser, onLogout, onMoveHome, onNavigate, ro
       setData({
         inventories,
         histories,
+        accounts,
         locationCatalog,
         itemCatalog,
         inboundFlow: { purchaseOrders, purchaseOrderDetails, receivings, receivingDetails },
