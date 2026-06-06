@@ -9,6 +9,7 @@ import com.wms.wms_backend.domain.receiving.entity.ReceivingDetail;
 import com.wms.wms_backend.domain.receiving.repository.ReceivingDetailRepository;
 import com.wms.wms_backend.domain.receiving.repository.ReceivingRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ReceivingProcessService {
@@ -79,6 +81,8 @@ public class ReceivingProcessService {
 
         receiving.confirm();
         receiving.getPurchaseOrder().completeReceiving();
+
+        log.info("입고 확정 완료 | receivingId={} receivingNo={} totalQty={}", receiving.getId(), receiving.getReceivingNo(), totalQuantity);
 
         return new ReceivingConfirmResult(
                 receiving.getId(),

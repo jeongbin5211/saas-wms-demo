@@ -12,6 +12,7 @@ import com.wms.wms_backend.domain.shipping.entity.ShippingDetail;
 import com.wms.wms_backend.domain.shipping.repository.ShippingDetailRepository;
 import com.wms.wms_backend.domain.shipping.repository.ShippingRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ShippingProcessService {
@@ -46,6 +48,9 @@ public class ShippingProcessService {
                 .orElseGet(() -> createBillFromShipping(shipping));
 
         salesOrder.completeBilling();
+
+        log.info("출고 확정 완료 | shippingId={} shippingNo={} billId={} billNo={} amount={}",
+                shipping.getId(), shipping.getShippingNo(), bill.getId(), bill.getBillNo(), bill.getTotalAmount());
 
         return new ShippingConfirmResult(
                 shipping.getId(),

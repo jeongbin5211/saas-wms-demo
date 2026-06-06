@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
@@ -52,6 +54,7 @@ public class AuthController {
         ));
 
         String token = jwtTokenProvider.generate(user);
+        log.info("회원가입 완료 | userId={} email={}", user.getId(), user.getEmail());
         return AuthResponse.from(token, user);
     }
 
@@ -69,6 +72,7 @@ public class AuthController {
         }
 
         String token = jwtTokenProvider.generate(user);
+        log.info("로그인 성공 | userId={} email={} role={}", user.getId(), user.getEmail(), user.getRoleSubCode());
         return AuthResponse.from(token, user);
     }
 

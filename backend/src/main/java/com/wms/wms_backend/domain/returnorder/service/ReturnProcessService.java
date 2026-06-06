@@ -13,6 +13,7 @@ import com.wms.wms_backend.domain.returnorder.repository.PurchaseReturnRepositor
 import com.wms.wms_backend.domain.returnorder.repository.SalesReturnDetailRepository;
 import com.wms.wms_backend.domain.returnorder.repository.SalesReturnRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ReturnProcessService {
@@ -69,6 +71,8 @@ public class ReturnProcessService {
 
         purchaseReturn.completeReturnOutbound();
 
+        log.info("구매반품 확정 완료 | id={} no={} totalQty={}", purchaseReturn.getId(), purchaseReturn.getPurchaseReturnNo(), totalQuantity);
+
         return new ReturnConfirmResult(purchaseReturn.getId(), purchaseReturn.getPurchaseReturnNo(), purchaseReturn.getReturnStatusSubCode(), totalQuantity);
     }
 
@@ -110,6 +114,8 @@ public class ReturnProcessService {
         }
 
         salesReturn.completeReturnInbound();
+
+        log.info("판매반품 확정 완료 | id={} no={} totalQty={}", salesReturn.getId(), salesReturn.getSalesReturnNo(), totalQuantity);
 
         return new ReturnConfirmResult(salesReturn.getId(), salesReturn.getSalesReturnNo(), salesReturn.getReturnStatusSubCode(), totalQuantity);
     }
