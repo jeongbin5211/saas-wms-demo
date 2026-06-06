@@ -75,4 +75,9 @@ public class User extends BaseEntity {
         this.name = name;
         this.roleSubCode = roleSubCode;
     }
+
+    public void linkOAuth(String provider, String oauthId) {
+        this.oauthProvider = provider;
+        this.oauthId = oauthId;
+    }
 }

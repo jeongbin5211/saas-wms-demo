@@ -757,6 +757,65 @@ button {
   color: #cbd6e5;
 }
 
+/* ── OAuth2 소셜 로그인 ── */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.oauth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.oauth-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  transition: background 0.15s;
+}
+
+.oauth-google {
+  background: #fff;
+  color: #333;
+}
+
+.oauth-google:hover {
+  background: #f8faff;
+}
+
+.oauth-kakao {
+  background: #fee500;
+  color: #3c1e1e;
+  border-color: #fee500;
+}
+
+.oauth-kakao:hover {
+  background: #f5dc00;
+}
+
 /* ── 대시보드 ── */
 .dashboard-page {
   display: flex;

@@ -1,5 +1,7 @@
 package com.wms.wms_backend.common.config;
 
+import com.wms.wms_backend.domain.auth.oauth2.CustomOAuth2UserService;
+import com.wms.wms_backend.domain.auth.oauth2.OAuth2SuccessHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,12 +24,16 @@ import java.util.List;
 public class SecurityConfig {
 
     private final AuthTokenFilter authTokenFilter;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Value("${cors.allowed-origins:http://localhost:5173}")
     private String allowedOrigins;
 
-    public SecurityConfig(AuthTokenFilter authTokenFilter) {
+    public SecurityConfig(AuthTokenFilter authTokenFilter, CustomOAuth2UserService customOAuth2UserService, OAuth2SuccessHandler oAuth2SuccessHandler) {
         this.authTokenFilter = authTokenFilter;
+        this.customOAuth2UserService = customOAuth2UserService;
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
     }
 
     @Bean
@@ -65,6 +71,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/purchase-returns/*/confirm").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers(HttpMethod.POST, "/api/sales-returns/*/confirm").hasAnyRole("ADMIN", "STAFF")
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(oAuth2SuccessHandler)
                 )
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
