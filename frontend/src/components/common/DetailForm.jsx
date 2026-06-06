@@ -1,4 +1,5 @@
 export function DetailForm({
+  extraActions,
   fields = [],
   modeLabel,
   onCancel,
@@ -7,6 +8,7 @@ export function DetailForm({
   onSave,
   readOnly = false,
   row,
+  showSave = true,
 }) {
   const values = row ?? {}
   const isCreateMode = row == null
@@ -15,7 +17,7 @@ export function DetailForm({
     <form className="detail-form" onSubmit={onSave}>
       <div className="detail-form-heading">
         <div>
-          <strong>{modeLabel ?? (isCreateMode ? '신규 등록' : '상세 수정')}</strong>
+          <strong>{modeLabel ?? (isCreateMode ? '신규 등록' : '상세')}</strong>
           <span>{isCreateMode ? '새 데이터를 입력합니다.' : '선택한 행의 상세 정보를 확인합니다.'}</span>
         </div>
       </div>
@@ -51,9 +53,12 @@ export function DetailForm({
       </div>
 
       <div className="detail-form-actions">
-        <button type="submit" className="primary-button" disabled={readOnly}>
-          저장
-        </button>
+        {showSave ? (
+          <button type="submit" className="primary-button" disabled={readOnly}>
+            저장
+          </button>
+        ) : null}
+        {extraActions}
         <button type="button" className="icon-text-button" onClick={onCancel}>
           취소
         </button>

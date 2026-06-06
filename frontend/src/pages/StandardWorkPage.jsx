@@ -9,11 +9,15 @@ const rowNumberHeaders = ['rowNum']
 
 export function StandardWorkPage({
   allowDelete = true,
+  allowNew = true,
+  allowSave = true,
   authUser,
   buildPayload,
   columns,
   createDefaults,
   data,
+  detailActions,
+  detailAfter,
   detailFields,
   endpoint,
   onRefresh,
@@ -29,7 +33,6 @@ export function StandardWorkPage({
   const [searchParams, setSearchParams] = useState({})
 
   const canEdit = ['ADMIN', 'STAFF'].includes(authUser?.roleSubCode)
-
   const visibleData = gridData ?? data
 
   const handleDblClick = (rowData) => {
@@ -75,7 +78,7 @@ export function StandardWorkPage({
       return
     }
 
-      setGridData(data.filter((row) => entries.every(([, value]) => JSON.stringify(row).toLowerCase().includes(String(value).toLowerCase()))))
+    setGridData(data.filter((row) => entries.every(([, value]) => JSON.stringify(row).toLowerCase().includes(String(value).toLowerCase()))))
   }
 
   const handleReset = () => {
@@ -93,6 +96,10 @@ export function StandardWorkPage({
 
   const handleSave = async (event) => {
     event.preventDefault()
+
+    if (!allowSave) {
+      return
+    }
 
     if (!canEdit) {
       setMessage('게스트 권한은 저장할 수 없습니다.')
@@ -126,7 +133,7 @@ export function StandardWorkPage({
       setGridData(null)
       setActiveTab(0)
     } catch {
-      setMessage(selectedRow ? '수정 API가 아직 연결되지 않았거나 저장에 실패했습니다.' : '등록에 실패했습니다.')
+      setMessage(selectedRow ? '수정에 실패했습니다.' : '등록에 실패했습니다.')
     }
   }
 
@@ -155,8 +162,18 @@ export function StandardWorkPage({
       setGridData(null)
       setActiveTab(0)
     } catch {
-      setMessage('삭제 API가 아직 연결되지 않았거나 삭제에 실패했습니다.')
+      setMessage('삭제에 실패했습니다.')
     }
+  }
+
+  const actionContext = {
+    canEdit,
+    draftRow,
+    goList: () => setActiveTab(0),
+    refresh: onRefresh,
+    selectedRow,
+    setGridData,
+    setMessage,
   }
 
   return (
@@ -167,9 +184,11 @@ export function StandardWorkPage({
           <h2>{title ?? page.title}</h2>
           <span>{page.description}</span>
         </div>
-        <button type="button" className="primary-button" onClick={handleNew}>
-          신규등록
-        </button>
+        {allowNew ? (
+          <button type="button" className="primary-button" onClick={handleNew}>
+            신규등록
+          </button>
+        ) : null}
       </div>
 
       {message ? <div className="info-banner">{message}</div> : null}
@@ -202,16 +221,21 @@ export function StandardWorkPage({
           {
             label: selectedRow ? '상세' : '상세/등록',
             content: (
-              <DetailForm
-                fields={detailFields}
-                modeLabel={selectedRow ? '상세 수정' : '신규 등록'}
-                readOnly={!canEdit}
-                row={draftRow}
-                onCancel={() => setActiveTab(0)}
-                onDelete={allowDelete ? handleDelete : null}
-                onFieldChange={handleFieldChange}
-                onSave={handleSave}
-              />
+              <>
+                <DetailForm
+                  extraActions={detailActions?.(actionContext)}
+                  fields={detailFields}
+                  modeLabel={selectedRow ? (allowSave ? '상세 수정' : '상세') : '신규 등록'}
+                  readOnly={!canEdit}
+                  row={draftRow}
+                  showSave={allowSave}
+                  onCancel={() => setActiveTab(0)}
+                  onDelete={allowDelete ? handleDelete : null}
+                  onFieldChange={handleFieldChange}
+                  onSave={handleSave}
+                />
+                {detailAfter?.(actionContext)}
+              </>
             ),
           },
         ]}
