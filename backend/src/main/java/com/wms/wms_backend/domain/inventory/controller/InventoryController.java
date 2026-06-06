@@ -4,10 +4,19 @@ import com.wms.wms_backend.domain.inventory.entity.Inventory;
 import com.wms.wms_backend.domain.inventory.entity.InventoryHistory;
 import com.wms.wms_backend.domain.inventory.repository.InventoryHistoryRepository;
 import com.wms.wms_backend.domain.inventory.repository.InventoryRepository;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -75,6 +84,40 @@ public class InventoryController {
             );
         }
     }
+
+    @PostMapping("/api/inventories/{id}/adjust")
+    @Transactional
+    public InventoryResponse adjustInventory(@PathVariable Long id, @Valid @RequestBody AdjustRequest request) {
+        Inventory inventory = inventoryRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "재고 정보를 찾을 수 없습니다."));
+
+        int beforeQuantity = inventory.getQuantity();
+        int delta = request.adjustedQuantity() - beforeQuantity;
+
+        if (delta > 0) {
+            inventory.increaseQuantity(delta);
+        } else if (delta < 0) {
+            inventory.decreaseQuantity(-delta);
+        }
+
+        inventoryHistoryRepository.save(new InventoryHistory(
+                inventory.getAccount(),
+                inventory.getItem(),
+                inventory.getLocation(),
+                "ADJUSTMENT",
+                Math.abs(delta),
+                beforeQuantity,
+                inventory.getQuantity(),
+                request.reason()
+        ));
+
+        return InventoryResponse.from(inventory);
+    }
+
+    public record AdjustRequest(
+            @PositiveOrZero Integer adjustedQuantity,
+            @NotBlank String reason
+    ) {}
 
     public record InventoryHistoryResponse(
             Long id,
