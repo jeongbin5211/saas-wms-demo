@@ -60,20 +60,12 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."));
+        return authenticate(request.email(), request.password());
+    }
 
-        if (!Boolean.TRUE.equals(user.getIsActive()) || user.getPassword() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용할 수 없는 계정입니다.");
-        }
-
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다.");
-        }
-
-        String token = jwtTokenProvider.generate(user);
-        log.info("로그인 성공 | userId={} email={} role={}", user.getId(), user.getEmail(), user.getRoleSubCode());
-        return AuthResponse.from(token, user);
+    @PostMapping("/demo-login")
+    public AuthResponse demoLogin() {
+        return authenticate("guest@saas-wms-demo.com", "guest1234");
     }
 
     @GetMapping("/me")
@@ -144,5 +136,22 @@ public class AuthController {
                     claims.get("role", String.class)
             );
         }
+    }
+
+    private AuthResponse authenticate(String email, String password) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."));
+
+        if (!Boolean.TRUE.equals(user.getIsActive()) || user.getPassword() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용할 수 없는 계정입니다.");
+        }
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다.");
+        }
+
+        String token = jwtTokenProvider.generate(user);
+        log.info("로그인 성공 | userId={} email={} role={}", user.getId(), user.getEmail(), user.getRoleSubCode());
+        return AuthResponse.from(token, user);
     }
 }

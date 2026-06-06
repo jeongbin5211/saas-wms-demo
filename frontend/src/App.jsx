@@ -101,13 +101,6 @@ const serviceCards = [
   },
 ]
 
-const guideSteps = [
-  '게스트 시연으로 내부 업무 화면 진입',
-  '재고 현황과 최근 재고 이력 확인',
-  '구매주문과 입고 흐름 확인',
-  '판매주문, 출고, 반품, 청구 흐름 확인',
-]
-
 const pageContent = {
   '/about': {
     kicker: '서비스 소개',
@@ -558,7 +551,7 @@ function LoginPage({ onLogin, onNavigate }) {
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const requestLogin = async (loginEmail, loginPassword) => {
+  const requestLogin = async (loginEmail, loginPassword, options = {}) => {
     if (!loginEmail.trim() || !loginPassword.trim()) {
       setMessage('사용자 계정과 비밀번호를 입력하세요.')
       return
@@ -567,24 +560,50 @@ function LoginPage({ onLogin, onNavigate }) {
     setSubmitting(true)
     setMessage('')
 
+    let auth
+    const endpoint = options.demo ? '/api/auth/demo-login' : '/api/auth/login'
+    const requestOptions = options.demo
+      ? { method: 'POST' }
+      : {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: loginEmail.trim(),
+            password: loginPassword,
+          }),
+        }
+
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: loginEmail.trim(),
-          password: loginPassword,
-        }),
-      })
+      const response = await fetch(endpoint, requestOptions)
 
       if (!response.ok) {
-        throw new Error('login-failed')
+        let errorMessage = options.demo
+          ? '게스트 시연 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.'
+          : '계정 또는 비밀번호가 올바르지 않습니다.'
+
+        try {
+          const errorBody = await response.json()
+          errorMessage = errorBody.message ?? errorMessage
+        } catch {
+          // 기본 메시지를 사용한다.
+        }
+
+        setMessage(errorMessage)
+        return
       }
 
-      const auth = await response.json()
+      auth = await response.json()
+    } catch (error) {
+      console.error('login request failed', error)
+      setMessage('로그인 요청 중 오류가 발생했습니다.')
+      return
+    } finally {
+      setSubmitting(false)
+    }
 
+    try {
       if (saveEmail) {
         window.localStorage.setItem(savedEmailKey, loginEmail.trim())
       } else {
@@ -592,10 +611,9 @@ function LoginPage({ onLogin, onNavigate }) {
       }
 
       onLogin(auth)
-    } catch {
-      setMessage('계정 또는 비밀번호가 올바르지 않습니다.')
-    } finally {
-      setSubmitting(false)
+    } catch (error) {
+      console.error('login session failed', error)
+      setMessage('로그인 후 화면 전환 중 오류가 발생했습니다.')
     }
   }
 
@@ -614,7 +632,7 @@ function LoginPage({ onLogin, onNavigate }) {
       window.localStorage.setItem(savedEmailKey, guestEmail)
     }
 
-    requestLogin(guestEmail, guestPassword)
+    requestLogin(guestEmail, guestPassword, { demo: true })
   }
 
   return (
@@ -850,14 +868,12 @@ function RegisterPage({ onLogin, onNavigate }) {
 }
 
 function OAuth2CallbackPage({ onLogin, onNavigate }) {
-  const [error, setError] = useState('')
+  const params = new URLSearchParams(window.location.search)
+  const token = params.get('token')
+  const [error, setError] = useState(() => (token ? '' : '소셜 로그인에 실패했습니다. 다시 시도해 주세요.'))
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const token = params.get('token')
-
     if (!token) {
-      setError('소셜 로그인에 실패했습니다. 다시 시도해 주세요.')
       return
     }
 
@@ -874,7 +890,7 @@ function OAuth2CallbackPage({ onLogin, onNavigate }) {
       .catch(() => {
         setError('소셜 로그인 처리 중 오류가 발생했습니다.')
       })
-  }, [onLogin])
+  }, [onLogin, token])
 
   return (
     <div className="auth-page">
