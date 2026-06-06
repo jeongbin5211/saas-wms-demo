@@ -138,19 +138,24 @@ const pageContent = {
   },
   '/demo-guide': {
     kicker: '시연 가이드',
-    title: '게스트 시연은 정해진 업무 흐름대로 확인합니다.',
-    description: '먼저 재고 현황을 보고, 구매주문과 입고, 판매주문과 출고, 반품과 청구 흐름을 순서대로 확인하면 전체 구조가 자연스럽게 보입니다.',
-    cards: guideSteps.map((step, index) => [`${index + 1}단계`, step]),
+    title: '게스트 계정으로 전체 업무 흐름을 체험할 수 있습니다.',
+    description: '로그인 화면에서 "게스트 시연" 버튼을 클릭하면 바로 입장할 수 있습니다. 아래 순서대로 따라가면 OMS + WMS 전체 흐름을 자연스럽게 확인할 수 있습니다.',
+    cards: [
+      ['1단계 — 기준정보', '위치정보(창고·Area·Zone·Location)와 품목정보(대분류·중분류·품목)를 먼저 확인합니다.'],
+      ['2단계 — 구매주문 & 입고', '구매주문을 조회하고 입고관리에서 "입고확정" 버튼을 클릭합니다. 재고가 증가합니다.'],
+      ['3단계 — 판매주문 & 출고', '판매주문을 조회하고 출고관리에서 "출고확정" 버튼을 클릭합니다. 청구서가 자동 생성됩니다.'],
+      ['4단계 — 반품 & 청구', '반품관리에서 구매반품/판매반품 확정을 처리하고 청구관리에서 청구서를 확인합니다.'],
+    ],
   },
   '/tech': {
     kicker: '기술/인프라',
-    title: '자바 백엔드와 리액트 프론트엔드를 3계층 구조로 구성합니다.',
-    description: 'Spring Boot, JPA, MySQL, React, TOAST UI Grid, Docker, GitHub Actions를 기반으로 개발과 검증 흐름을 구성합니다.',
+    title: '실무에서 쓰는 기술 스택으로 3계층 아키텍처를 구성했습니다.',
+    description: 'Java 21 + Spring Boot 3.x + React 19 + MySQL 기반으로 개발하고, Docker + AWS(EC2·RDS·S3·CloudFront) + GitHub Actions로 CI/CD 파이프라인을 구축했습니다.',
     cards: [
-      ['백엔드', 'Java 21, Spring Boot, JPA 기반으로 도메인 모델과 API를 구성합니다.'],
-      ['프론트엔드', 'React, Vite, TOAST UI Grid 기반으로 업무형 화면을 구성합니다.'],
-      ['데이터베이스', 'MySQL을 사용하고 Docker Compose로 로컬 개발 환경을 관리합니다.'],
-      ['배포 설계', 'AWS 3계층 구조와 GitHub Actions 기반 검증 흐름을 설계합니다.'],
+      ['백엔드', 'Java 21 · Spring Boot 3.x · Spring Data JPA · Spring Security · JWT · OAuth2(Google/Kakao) · Swagger'],
+      ['프론트엔드', 'React 19 · Vite · Tailwind CSS · TOAST UI Grid · Recharts · SPA 커스텀 라우팅'],
+      ['인프라', 'AWS EC2(Docker) · RDS MySQL · S3 + CloudFront · GitHub Actions CI/CD · Nginx 리버스 프록시'],
+      ['설계 원칙', 'DDD 도메인 패키지 구조 · 멀티테넌트 · 역할 기반 접근제어(RBAC) · 수평 확장 대비 설계'],
     ],
   },
 }
