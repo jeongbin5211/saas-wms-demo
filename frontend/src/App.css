@@ -1331,10 +1331,91 @@ button {
   font-size: 12px;
 }
 
+.menu-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  margin-top: 16px;
+  padding: 0 10px;
+  color: #91a4bb;
+  background: rgb(255 255 255 / 7%);
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 7px;
+}
+
+.menu-search input {
+  width: 100%;
+  min-width: 0;
+  color: #fff;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font-size: 13px;
+}
+
+.menu-search input::placeholder {
+  color: #91a4bb;
+}
+
+.menu-search-results {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  z-index: 30;
+  width: 100%;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  box-shadow: 0 16px 38px rgb(15 23 42 / 22%);
+}
+
+.menu-search-results button {
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 8px;
+  color: var(--control-navy);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.menu-search-results button:hover,
+.menu-search-results button.selected {
+  color: #fff;
+  background: var(--process-blue);
+}
+
+.menu-search-results button span {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-search-results button small {
+  color: #7b8798;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.menu-search-results button:hover small,
+.menu-search-results button.selected small {
+  color: rgb(255 255 255 / 80%);
+}
+
 .side-nav {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   padding-top: 20px;
 }
 
@@ -1361,11 +1442,42 @@ button {
   text-align: left;
 }
 
+.nav-item-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-chevron {
+  margin-left: auto;
+  color: #91a4bb;
+}
+
+.nav-sub-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 6px 28px;
+  padding-left: 8px;
+  border-left: 1px solid rgb(255 255 255 / 10%);
+}
+
+.nav-sub-items button {
+  height: 30px;
+  padding: 0 8px;
+  color: #9fb0c5;
+  font-size: 13px;
+}
+
 .nav-group button:hover,
 .nav-group button.active {
   color: #fff;
   background: rgb(37 99 235 / 18%);
   border-color: rgb(147 197 253 / 18%);
+}
+
+.nav-sub-items button.child-active {
+  color: #fff;
+  background: rgb(37 99 235 / 24%);
 }
 
 .workspace {
