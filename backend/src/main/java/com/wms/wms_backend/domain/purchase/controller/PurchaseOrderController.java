@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -35,15 +36,19 @@ public class PurchaseOrderController {
     private final AccountRepository accountRepository;
 
     @GetMapping("/api/purchase-orders")
-    public List<PurchaseOrderResponse> findPurchaseOrders() {
-        List<PurchaseOrder> purchaseOrders = purchaseOrderRepository.findAllByOrderByIdAsc();
-        List<PurchaseOrderResponse> responses = new ArrayList<>();
-
-        for (PurchaseOrder purchaseOrder : purchaseOrders) {
-            responses.add(PurchaseOrderResponse.from(purchaseOrder));
-        }
-
-        return responses;
+    public List<PurchaseOrderResponse> findPurchaseOrders(
+            @RequestParam(required = false) String purchaseOrderNo,
+            @RequestParam(required = false) String orderStatusSubCode,
+            @RequestParam(required = false) LocalDate orderDateFrom,
+            @RequestParam(required = false) LocalDate orderDateTo
+    ) {
+        return purchaseOrderRepository.findAllByOrderByIdAsc().stream()
+                .filter(o -> purchaseOrderNo == null || o.getPurchaseOrderNo().contains(purchaseOrderNo))
+                .filter(o -> orderStatusSubCode == null || o.getOrderStatusSubCode().equals(orderStatusSubCode))
+                .filter(o -> orderDateFrom == null || !o.getOrderDate().isBefore(orderDateFrom))
+                .filter(o -> orderDateTo == null || !o.getOrderDate().isAfter(orderDateTo))
+                .map(PurchaseOrderResponse::from)
+                .toList();
     }
 
     @PostMapping("/api/purchase-orders")

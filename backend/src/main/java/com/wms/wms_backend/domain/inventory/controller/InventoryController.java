@@ -6,9 +6,9 @@ import com.wms.wms_backend.domain.inventory.repository.InventoryHistoryRepositor
 import com.wms.wms_backend.domain.inventory.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -19,27 +19,29 @@ public class InventoryController {
     private final InventoryHistoryRepository inventoryHistoryRepository;
 
     @GetMapping("/api/inventories")
-    public List<InventoryResponse> findInventories() {
-        List<Inventory> inventories = inventoryRepository.findAllByUseYnOrderByIdAsc("Y");
-        List<InventoryResponse> responses = new ArrayList<>();
-
-        for (Inventory inventory : inventories) {
-            responses.add(InventoryResponse.from(inventory));
-        }
-
-        return responses;
+    public List<InventoryResponse> findInventories(
+            @RequestParam(required = false) String itemCode,
+            @RequestParam(required = false) String itemName,
+            @RequestParam(required = false) String locationCode
+    ) {
+        return inventoryRepository.findAllByUseYnOrderByIdAsc("Y").stream()
+                .filter(i -> itemCode == null || i.getItem().getItemCode().contains(itemCode))
+                .filter(i -> itemName == null || i.getItem().getItemName().contains(itemName))
+                .filter(i -> locationCode == null || i.getLocation().getLocationCode().contains(locationCode))
+                .map(InventoryResponse::from)
+                .toList();
     }
 
     @GetMapping("/api/inventory-histories")
-    public List<InventoryHistoryResponse> findInventoryHistories() {
-        List<InventoryHistory> histories = inventoryHistoryRepository.findAllByOrderByIdAsc();
-        List<InventoryHistoryResponse> responses = new ArrayList<>();
-
-        for (InventoryHistory history : histories) {
-            responses.add(InventoryHistoryResponse.from(history));
-        }
-
-        return responses;
+    public List<InventoryHistoryResponse> findInventoryHistories(
+            @RequestParam(required = false) String itemCode,
+            @RequestParam(required = false) String historyTypeSubCode
+    ) {
+        return inventoryHistoryRepository.findAllByOrderByIdAsc().stream()
+                .filter(h -> itemCode == null || h.getItem().getItemCode().contains(itemCode))
+                .filter(h -> historyTypeSubCode == null || h.getHistoryTypeSubCode().equals(historyTypeSubCode))
+                .map(InventoryHistoryResponse::from)
+                .toList();
     }
 
     public record InventoryResponse(

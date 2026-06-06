@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -60,15 +61,15 @@ public class ItemController {
     }
 
     @GetMapping("/api/items")
-    public List<ItemResponse> findItems() {
-        List<Item> items = itemRepository.findAllByUseYnOrderByIdAsc("Y");
-        List<ItemResponse> responses = new ArrayList<>();
-
-        for (Item item : items) {
-            responses.add(ItemResponse.from(item));
-        }
-
-        return responses;
+    public List<ItemResponse> findItems(
+            @RequestParam(required = false) String itemCode,
+            @RequestParam(required = false) String itemName
+    ) {
+        return itemRepository.findAllByUseYnOrderByIdAsc("Y").stream()
+                .filter(item -> itemCode == null || item.getItemCode().contains(itemCode))
+                .filter(item -> itemName == null || item.getItemName().contains(itemName))
+                .map(ItemResponse::from)
+                .toList();
     }
 
     @PostMapping("/api/items")
@@ -139,7 +140,7 @@ public class ItemController {
     public ItemCatalogResponse findItemCatalog() {
         List<ItemMasterResponse> itemMasters = findItemMasters();
         List<ItemClassResponse> itemClasses = findItemClasses();
-        List<ItemResponse> items = findItems();
+        List<ItemResponse> items = findItems(null, null);
 
         return new ItemCatalogResponse(itemMasters, itemClasses, items);
     }

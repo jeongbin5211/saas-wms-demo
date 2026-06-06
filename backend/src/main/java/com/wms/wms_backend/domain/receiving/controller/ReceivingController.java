@@ -9,10 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -24,27 +24,22 @@ public class ReceivingController {
     private final ReceivingProcessService receivingProcessService;
 
     @GetMapping("/api/receivings")
-    public List<ReceivingResponse> findReceivings() {
-        List<Receiving> receivings = receivingRepository.findAllByOrderByIdAsc();
-        List<ReceivingResponse> responses = new ArrayList<>();
-
-        for (Receiving receiving : receivings) {
-            responses.add(ReceivingResponse.from(receiving));
-        }
-
-        return responses;
+    public List<ReceivingResponse> findReceivings(
+            @RequestParam(required = false) String receivingNo,
+            @RequestParam(required = false) String receivingStatusSubCode
+    ) {
+        return receivingRepository.findAllByOrderByIdAsc().stream()
+                .filter(r -> receivingNo == null || r.getReceivingNo().contains(receivingNo))
+                .filter(r -> receivingStatusSubCode == null || r.getReceivingStatusSubCode().equals(receivingStatusSubCode))
+                .map(ReceivingResponse::from)
+                .toList();
     }
 
     @GetMapping("/api/receiving-details")
     public List<ReceivingDetailResponse> findReceivingDetails() {
-        List<ReceivingDetail> details = receivingDetailRepository.findAllByOrderByIdAsc();
-        List<ReceivingDetailResponse> responses = new ArrayList<>();
-
-        for (ReceivingDetail detail : details) {
-            responses.add(ReceivingDetailResponse.from(detail));
-        }
-
-        return responses;
+        return receivingDetailRepository.findAllByOrderByIdAsc().stream()
+                .map(ReceivingDetailResponse::from)
+                .toList();
     }
 
     @PostMapping("/api/receivings/{receivingId}/confirm")
