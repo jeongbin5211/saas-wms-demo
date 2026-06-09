@@ -1450,6 +1450,15 @@ button {
 .nav-chevron {
   margin-left: auto;
   color: #91a4bb;
+  transition: transform 0.16s ease;
+}
+
+.nav-group button.parent-menu {
+  justify-content: flex-start;
+}
+
+.nav-group button.parent-menu.expanded .nav-chevron {
+  transform: rotate(180deg);
 }
 
 .nav-sub-items {

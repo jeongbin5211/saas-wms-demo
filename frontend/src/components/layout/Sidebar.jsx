@@ -100,8 +100,23 @@ function isMenuActive(activeMenu, item) {
   return activeMenu === item.id
 }
 
+function getActiveParentIds(activeMenu) {
+  const parentIds = []
+
+  for (const group of menuGroups) {
+    for (const item of group.items) {
+      if (item.children?.some((child) => child.route?.replace('/app/', '') === activeMenu)) {
+        parentIds.push(item.id)
+      }
+    }
+  }
+
+  return parentIds
+}
+
 export function Sidebar({ activeMenu, onMoveHome, onNavigate }) {
   const [keyword, setKeyword] = useState('')
+  const [expandedMenus, setExpandedMenus] = useState(() => new Set(getActiveParentIds(activeMenu)))
 
   const searchResults = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
@@ -115,7 +130,36 @@ export function Sidebar({ activeMenu, onMoveHome, onNavigate }) {
 
   const handleNavigate = (route) => {
     setKeyword('')
+    const targetMenu = route.replace(/^\/app\/?/, '')
+    const activeParentIds = getActiveParentIds(targetMenu)
+
+    if (activeParentIds.length > 0) {
+      setExpandedMenus((previous) => {
+        const next = new Set(previous)
+
+        for (const parentId of activeParentIds) {
+          next.add(parentId)
+        }
+
+        return next
+      })
+    }
+
     onNavigate(route)
+  }
+
+  const toggleMenu = (item) => {
+    setExpandedMenus((previous) => {
+      const next = new Set(previous)
+
+      if (next.has(item.id)) {
+        next.delete(item.id)
+      } else {
+        next.add(item.id)
+      }
+
+      return next
+    })
   }
 
   return (
@@ -167,20 +211,27 @@ export function Sidebar({ activeMenu, onMoveHome, onNavigate }) {
             {group.items.map((item) => {
               const Icon = item.icon
               const active = isMenuActive(activeMenu, item)
+              const hasChildren = Boolean(item.children)
+              const expanded = hasChildren && expandedMenus.has(item.id)
 
               return (
                 <div className="nav-item-block" key={item.id}>
                   <button
                     type="button"
-                    className={active ? 'active' : ''}
-                    onClick={() => handleNavigate(item.children?.[0]?.route ?? `/app/${item.id}`)}
+                    className={[
+                      active ? 'active' : '',
+                      hasChildren ? 'parent-menu' : '',
+                      expanded ? 'expanded' : '',
+                    ].filter(Boolean).join(' ')}
+                    aria-expanded={hasChildren ? expanded : undefined}
+                    onClick={() => (hasChildren ? toggleMenu(item) : handleNavigate(`/app/${item.id}`))}
                   >
                     <Icon size={17} />
                     <span>{item.label}</span>
-                    {item.children ? <ChevronDown className="nav-chevron" size={14} /> : null}
+                    {hasChildren ? <ChevronDown className="nav-chevron" size={14} /> : null}
                   </button>
-                  {item.children ? (
-                    <div className="nav-sub-items">
+                  {hasChildren && expanded ? (
+                    <div className="nav-sub-items" role="group" aria-label={`${item.label} 하위 메뉴`}>
                       {item.children.map((child) => (
                         <button
                           type="button"
