@@ -337,7 +337,7 @@ public class WarehouseController {
     private void requireEditableRole() {
         String role = SecurityUtil.currentClaims().get("role", String.class);
 
-        if (!"ADMIN".equals(role) && !"STAFF".equals(role)) {
+        if (!"ADMIN".equals(role) && !"STAFF".equals(role) && !"GUEST".equals(role)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "기준정보를 변경할 권한이 없습니다.");
         }
     }

@@ -37,7 +37,7 @@ export function StandardWorkPage({
   const [message, setMessage] = useState('')
   const [searchParams, setSearchParams] = useState({})
 
-  const canEdit = ['ADMIN', 'STAFF'].includes(authUser?.roleSubCode)
+  const canEdit = ['ADMIN', 'STAFF', 'GUEST'].includes(authUser?.roleSubCode)
   const visibleData = gridData ?? data
 
   const handleDblClick = (rowData) => {
@@ -117,7 +117,7 @@ export function StandardWorkPage({
     event.preventDefault()
 
     if (!allowSave) return
-    if (!canEdit) { setMessage('게스트 권한은 저장할 수 없습니다.'); return }
+    if (!canEdit) { setMessage('저장할 수 없는 권한입니다.'); return }
     if (!endpoint) { setMessage('이 화면은 아직 저장 API가 연결되지 않았습니다.'); return }
 
     const validationError = validateRequired(detailFields, draftRow)
@@ -150,7 +150,7 @@ export function StandardWorkPage({
   }
 
   const handleDelete = async () => {
-    if (!canEdit) { setMessage('게스트 권한은 삭제할 수 없습니다.'); return }
+    if (!canEdit) { setMessage('삭제할 수 없는 권한입니다.'); return }
     if (!endpoint || !selectedRow) { setMessage('삭제할 행을 선택하세요.'); return }
 
     try {

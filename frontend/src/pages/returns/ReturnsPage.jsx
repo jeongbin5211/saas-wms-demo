@@ -96,7 +96,7 @@ export function ReturnsPage({ authUser, data, onRefresh, page }) {
 
       const handleConfirm = async () => {
         if (!selectedRow) { setMessage('확정할 반품 건을 선택하세요.'); return }
-        if (!canEdit) { setMessage('게스트 권한은 반품 확정을 처리할 수 없습니다.'); return }
+        if (!canEdit) { setMessage('반품 확정을 처리할 수 없는 권한입니다.'); return }
 
         try {
           const response = await fetchWithAuth(`${apiPath}/${selectedRow.id}/confirm`, { method: 'POST' })

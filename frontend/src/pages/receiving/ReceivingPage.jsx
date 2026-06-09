@@ -58,7 +58,7 @@ export function ReceivingPage({ authUser, data, onRefresh, page }) {
       }
 
       if (!canEdit) {
-        setMessage('게스트 권한은 입고 확정을 처리할 수 없습니다.')
+        setMessage('입고 확정을 처리할 수 없는 권한입니다.')
         return
       }
 

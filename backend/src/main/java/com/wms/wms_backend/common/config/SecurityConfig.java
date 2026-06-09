@@ -64,14 +64,14 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/items").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.POST, "/api/warehouses", "/api/areas", "/api/zones", "/api/locations").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.PUT, "/api/warehouses/*", "/api/areas/*", "/api/zones/*", "/api/locations/*").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.DELETE, "/api/warehouses/*", "/api/areas/*", "/api/zones/*", "/api/locations/*").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.POST, "/api/receivings/*/confirm").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.POST, "/api/shippings/*/confirm").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.POST, "/api/purchase-returns/*/confirm").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.POST, "/api/sales-returns/*/confirm").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers(HttpMethod.POST, "/api/items").hasAnyRole("ADMIN", "STAFF", "GUEST")
+                        .requestMatchers(HttpMethod.POST, "/api/warehouses", "/api/areas", "/api/zones", "/api/locations").hasAnyRole("ADMIN", "STAFF", "GUEST")
+                        .requestMatchers(HttpMethod.PUT, "/api/warehouses/*", "/api/areas/*", "/api/zones/*", "/api/locations/*").hasAnyRole("ADMIN", "STAFF", "GUEST")
+                        .requestMatchers(HttpMethod.DELETE, "/api/warehouses/*", "/api/areas/*", "/api/zones/*", "/api/locations/*").hasAnyRole("ADMIN", "STAFF", "GUEST")
+                        .requestMatchers(HttpMethod.POST, "/api/receivings/*/confirm").hasAnyRole("ADMIN", "STAFF", "GUEST")
+                        .requestMatchers(HttpMethod.POST, "/api/shippings/*/confirm").hasAnyRole("ADMIN", "STAFF", "GUEST")
+                        .requestMatchers(HttpMethod.POST, "/api/purchase-returns/*/confirm").hasAnyRole("ADMIN", "STAFF", "GUEST")
+                        .requestMatchers(HttpMethod.POST, "/api/sales-returns/*/confirm").hasAnyRole("ADMIN", "STAFF", "GUEST")
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
