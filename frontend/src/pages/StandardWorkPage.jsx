@@ -20,7 +20,10 @@ export function StandardWorkPage({
   detailAfter,
   detailFields,
   endpoint,
+  headerActions,
   hideHeader = false,
+  listTabLabel,
+  detailTabLabel,
   onRefresh,
   page,
   searchFields,
@@ -181,6 +184,7 @@ export function StandardWorkPage({
             <button type="button" className="icon-text-button" onClick={() => exportGridToCsv(columns, visibleData, title ?? page.title)}>
               Excel
             </button>
+            {headerActions}
           </div>
         </div>
       )}
@@ -192,7 +196,7 @@ export function StandardWorkPage({
         onTabChange={setActiveTab}
         tabs={[
           {
-            label: '목록',
+            label: listTabLabel ?? `${title ?? page.title} 목록`,
             content: (
               <>
                 <SearchPanel
@@ -213,7 +217,7 @@ export function StandardWorkPage({
             ),
           },
           {
-            label: selectedRow ? '상세' : '상세/등록',
+            label: detailTabLabel ?? '상세 목록',
             content: (
               <>
                 <DetailForm

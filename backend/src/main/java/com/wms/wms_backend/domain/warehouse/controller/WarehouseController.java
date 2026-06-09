@@ -373,6 +373,8 @@ public class WarehouseController {
     public record WarehouseResponse(
             Long id,
             Long accountId,
+            String accountCode,
+            String accountName,
             Long topAccountId,
             String warehouseCode,
             String warehouseName,
@@ -387,6 +389,8 @@ public class WarehouseController {
             return new WarehouseResponse(
                     warehouse.getId(),
                     warehouse.getAccount().getId(),
+                    warehouse.getAccount().getAccountCode(),
+                    warehouse.getAccount().getAccountName(),
                     warehouse.getTopAccountId(),
                     warehouse.getWarehouseCode(),
                     warehouse.getWarehouseName(),
@@ -409,6 +413,8 @@ public class WarehouseController {
             String areaName,
             String detailDescription,
             Integer priority,
+            String createdAt,
+            String updatedAt,
             String useYn
     ) {
         public static AreaResponse from(Area area) {
@@ -421,6 +427,8 @@ public class WarehouseController {
                     area.getAreaName(),
                     area.getDetailDescription(),
                     area.getPriority(),
+                    String.valueOf(area.getCreatedAt()),
+                    String.valueOf(area.getUpdatedAt()),
                     area.getUseYn()
             );
         }
@@ -438,6 +446,8 @@ public class WarehouseController {
             String areaName,
             String detailDescription,
             Integer priority,
+            String createdAt,
+            String updatedAt,
             String useYn
     ) {
         public static ZoneResponse from(Zone zone) {
@@ -453,6 +463,8 @@ public class WarehouseController {
                     zone.getArea().getAreaName(),
                     zone.getDetailDescription(),
                     zone.getPriority(),
+                    String.valueOf(zone.getCreatedAt()),
+                    String.valueOf(zone.getUpdatedAt()),
                     zone.getUseYn()
             );
         }
@@ -478,6 +490,8 @@ public class WarehouseController {
             Integer putawayPriority,
             Integer pickingPriority,
             Integer allocPriority,
+            String createdAt,
+            String updatedAt,
             String useYn
     ) {
         public static LocationResponse from(Location location) {
@@ -502,6 +516,8 @@ public class WarehouseController {
                     location.getPutawayPriority(),
                     location.getPickingPriority(),
                     location.getAllocPriority(),
+                    String.valueOf(location.getCreatedAt()),
+                    String.valueOf(location.getUpdatedAt()),
                     location.getUseYn()
             );
         }
