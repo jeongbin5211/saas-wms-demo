@@ -1641,15 +1641,51 @@ button {
 
 .card_body {
   min-height: 520px;
+  background: #fff;
+}
+
+.list-search-section,
+.list-grid-section {
+  background: #fff;
+}
+
+.list-search-section {
+  border-bottom: 1px solid var(--line);
+}
+
+.list-grid-section {
+  border-top: 1px solid #eef1f5;
+}
+
+.list-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 34px;
+  padding: 0 14px;
+  background: #f7f9fc;
+  border-bottom: 1px solid var(--line);
+}
+
+.list-section-header strong {
+  color: var(--control-navy);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.list-section-header span {
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .search-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
-  padding: 14px 16px;
-  background: #fbfcfe;
-  border-bottom: 1px solid var(--line-soft);
+  padding: 12px 14px;
+  background: #fff;
 }
 
 .search-panel-fields {
@@ -2267,6 +2303,7 @@ button {
 
 .wms-grid {
   padding: 0;
+  background: #fff;
 }
 
 .tui-grid-container {

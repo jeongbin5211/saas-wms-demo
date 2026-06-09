@@ -212,13 +212,19 @@ export function StandardWorkPage({
                   onReset={handleReset}
                   onSearch={handleSearch}
                 />
-                <WmsGrid
-                  columns={columns}
-                  data={visibleData}
-                  minBodyHeight={430}
-                  rowHeaders={rowNumberHeaders}
-                  onRowDoubleClick={handleDblClick}
-                />
+                <section className="list-grid-section">
+                  <div className="list-section-header">
+                    <strong>그리드</strong>
+                    <span>행을 더블클릭하면 상세 목록으로 이동합니다.</span>
+                  </div>
+                  <WmsGrid
+                    columns={columns}
+                    data={visibleData}
+                    minBodyHeight={430}
+                    rowHeaders={rowNumberHeaders}
+                    onRowDoubleClick={handleDblClick}
+                  />
+                </section>
               </>
             ),
           },
