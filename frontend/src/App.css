@@ -1573,6 +1573,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  height: calc(100vh - 122px);
+  min-height: 0;
 }
 
 .work-page-header {
@@ -1604,6 +1606,10 @@ button {
 }
 
 .tab-work-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
   overflow: hidden;
   background: #fff;
   border: 1px solid var(--line);
@@ -1649,7 +1655,10 @@ button {
 }
 
 .card_body {
-  min-height: 520px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
   background: #fff;
 }
 
@@ -1663,6 +1672,10 @@ button {
 }
 
 .list-grid-section {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
   border-top: 1px solid #eef1f5;
 }
 
@@ -2311,6 +2324,8 @@ button {
 }
 
 .wms-grid {
+  flex: 1;
+  min-height: 0;
   padding: 0;
   background: #fff;
 }

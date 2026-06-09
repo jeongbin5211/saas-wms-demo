@@ -43,6 +43,7 @@ Grid.applyTheme('clean', {
 export function WmsGrid({
   columns,
   data,
+  fillHeight = false,
   minBodyHeight = 300,
   onRowDoubleClick,
   rowHeaders = ['rowNum'],
@@ -102,6 +103,32 @@ export function WmsGrid({
       gridRef.current = null
     }
   }, [columns, minBodyHeight, rowHeaders, summary])
+
+  useEffect(() => {
+    if (!fillHeight || !containerRef.current) {
+      return undefined
+    }
+
+    const updateBodyHeight = () => {
+      if (!containerRef.current) return
+
+      const availableHeight = containerRef.current.clientHeight
+      const nextBodyHeight = Math.max(minBodyHeight, availableHeight - 40)
+
+      if (gridRef.current?.setBodyHeight) {
+        gridRef.current.setBodyHeight(nextBodyHeight)
+      }
+    }
+
+    updateBodyHeight()
+
+    const observer = new ResizeObserver(updateBodyHeight)
+    observer.observe(containerRef.current)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [fillHeight, minBodyHeight])
 
   useEffect(() => {
     if (!gridRef.current) {

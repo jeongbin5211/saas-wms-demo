@@ -220,7 +220,8 @@ export function StandardWorkPage({
                   <WmsGrid
                     columns={columns}
                     data={visibleData}
-                    minBodyHeight={430}
+                    fillHeight
+                    minBodyHeight={360}
                     rowHeaders={rowNumberHeaders}
                     onRowDoubleClick={handleDblClick}
                   />
