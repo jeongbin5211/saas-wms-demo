@@ -70,7 +70,15 @@ public class WarehouseController {
                 request.warehouseName(),
                 request.warehouseTypeSubCode()
         ));
-        warehouse.updateOptionalFields(request.addressName(), request.priority(), request.phoneNo(), request.faxNo(), request.useYn());
+        warehouse.updateOptionalFields(
+                request.addressName(),
+                request.priority(),
+                request.phoneNo(),
+                request.faxNo(),
+                request.closeTime(),
+                request.contactName(),
+                request.useYn()
+        );
 
         return WarehouseResponse.from(warehouse);
     }
@@ -94,6 +102,8 @@ public class WarehouseController {
                 request.priority(),
                 request.phoneNo(),
                 request.faxNo(),
+                request.closeTime(),
+                request.contactName(),
                 request.useYn()
         );
 
@@ -384,6 +394,8 @@ public class WarehouseController {
             Integer priority,
             String phoneNo,
             String faxNo,
+            String closeTime,
+            String contactName,
             String useYn
     ) {
         public static WarehouseResponse from(Warehouse warehouse) {
@@ -400,6 +412,8 @@ public class WarehouseController {
                     warehouse.getPriority(),
                     warehouse.getPhoneNo(),
                     warehouse.getFaxNo(),
+                    warehouse.getCloseTime(),
+                    warehouse.getContactName(),
                     warehouse.getUseYn()
             );
         }
@@ -532,6 +546,8 @@ public class WarehouseController {
             Integer priority,
             String phoneNo,
             String faxNo,
+            String closeTime,
+            String contactName,
             String useYn
     ) {
     }
@@ -544,6 +560,8 @@ public class WarehouseController {
             Integer priority,
             String phoneNo,
             String faxNo,
+            String closeTime,
+            String contactName,
             String useYn
     ) {
     }

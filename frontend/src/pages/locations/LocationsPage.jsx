@@ -117,22 +117,26 @@ function buildWarehousePage({ authUser, catalog, onRefresh, page }) {
         priority: toOptionalNumber(row.priority),
         phoneNo: row.phoneNo,
         faxNo: row.faxNo,
+        closeTime: row.closeTime,
+        contactName: row.contactName,
         useYn: row.useYn ?? 'Y',
       })}
       columns={warehouseColumns}
       createDefaults={{ priority: 0, useYn: 'Y', warehouseTypeSubCode: 'OWN' }}
       data={catalog.warehouses}
       detailFields={[
-        { name: 'warehouseCode', label: '창고 코드', required: true },
-        { name: 'warehouseName', label: '창고명', required: true },
-        { name: 'warehouseTypeSubCode', label: '유형', type: 'select', options: warehouseTypeOptions, required: true },
-        { name: 'addressName', label: '주소명', required: true, wide: true },
-        { name: 'priority', label: '우선순위', type: 'number' },
-        { name: 'accountCode', label: '거래처', readOnly: true },
-        { name: 'accountName', label: '거래처명', readOnly: true },
-        { name: 'phoneNo', label: '전화번호' },
-        { name: 'faxNo', label: '팩스' },
-        { name: 'useYn', label: '사용 여부', type: 'select', options: useYnOptions, required: true },
+        { name: 'warehouseTypeSubCode', label: '창고 유형', section: '기본 정보', type: 'select', options: warehouseTypeOptions, required: true },
+        { name: 'accountCode', label: '거래처 코드', section: '기본 정보', readOnly: true, actionLabel: '조회' },
+        { name: 'accountName', label: '거래처명', section: '기본 정보', readOnly: true },
+        { name: 'warehouseCode', label: '창고 코드', section: '기본 정보', required: true },
+        { name: 'warehouseName', label: '창고명', section: '기본 정보', required: true },
+        { name: 'addressName', label: '주소명', section: '상세 정보', required: true, wide: true, actionLabel: '조회' },
+        { name: 'priority', label: '우선순위', section: '상세 정보', type: 'number', required: true },
+        { name: 'phoneNo', label: '전화번호', section: '상세 정보' },
+        { name: 'faxNo', label: '팩스', section: '상세 정보' },
+        { name: 'closeTime', label: '마감 시간', section: '상세 정보', type: 'time' },
+        { name: 'contactName', label: '담당자', section: '상세 정보' },
+        { name: 'useYn', label: '사용 여부', section: '상세 정보', type: 'select', options: useYnOptions, required: true },
       ]}
       detailTabLabel="상세 목록"
       endpoint="/api/warehouses"
@@ -140,6 +144,10 @@ function buildWarehousePage({ authUser, catalog, onRefresh, page }) {
       listTabLabel="창고 목록"
       onRefresh={onRefresh}
       page={{ ...page, eyebrow: '로케이션 정보', title: '창고' }}
+      detailFieldAction={(field, values, context) => {
+        const target = field.name === 'addressName' ? '주소 조회 팝업' : '거래처 조회 팝업'
+        context.setMessage(`${target}은 다음 작업에서 실제 선택 팝업으로 연결합니다.`)
+      }}
       searchFields={[
         { name: 'warehouseCode', label: '창고 코드' },
         { name: 'warehouseName', label: '창고명' },

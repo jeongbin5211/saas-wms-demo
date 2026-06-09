@@ -1,3 +1,5 @@
+import { Search } from 'lucide-react'
+
 export function DetailForm({
   actionsDisabled = false,
   extraActions,
@@ -5,6 +7,7 @@ export function DetailForm({
   modeLabel,
   onCancel,
   onDelete,
+  onFieldAction,
   onFieldChange,
   onSave,
   row,
@@ -12,6 +15,7 @@ export function DetailForm({
   showSave = true,
 }) {
   const values = row ?? {}
+  const sections = groupFieldsBySection(fields)
 
   return (
     <form className="detail-form" onSubmit={onSave}>
@@ -22,33 +26,57 @@ export function DetailForm({
         </div>
       </div>
 
-      <div className="detail-form-grid">
-        {fields.map((field) => (
-          <label className={field.wide ? 'wide' : ''} key={field.name}>
-            <span>{field.label}</span>
-            {field.type === 'select' ? (
-              <select
-                disabled={field.readOnly}
-                value={values[field.name] ?? ''}
-                onChange={(event) => onFieldChange(field.name, event.target.value)}
-              >
-                <option value="" />
-                {(field.options ?? []).map((option) => (
-                  <option key={option.value ?? option} value={option.value ?? option}>
-                    {option.label ?? option}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                disabled={field.readOnly}
-                placeholder={field.placeholder ?? ''}
-                type={field.type ?? 'text'}
-                value={values[field.name] ?? ''}
-                onChange={(event) => onFieldChange(field.name, event.target.value)}
-              />
-            )}
-          </label>
+      <div className="detail-form-sections">
+        {sections.map((section) => (
+          <section className="detail-form-section" key={section.title}>
+            <div className="detail-section-title">
+              <strong>{section.title}</strong>
+            </div>
+            <div className="detail-form-grid">
+              {section.fields.map((field) => (
+                <label className={field.wide ? 'wide detail-field' : 'detail-field'} key={field.name}>
+                  <span>
+                    {field.required ? <em>*</em> : null}
+                    {field.label}
+                  </span>
+                  <div className={field.actionLabel ? 'detail-control-row has-action' : 'detail-control-row'}>
+                    {field.type === 'select' ? (
+                      <select
+                        disabled={field.readOnly}
+                        value={values[field.name] ?? ''}
+                        onChange={(event) => onFieldChange(field.name, event.target.value)}
+                      >
+                        <option value="" />
+                        {(field.options ?? []).map((option) => (
+                          <option key={option.value ?? option} value={option.value ?? option}>
+                            {option.label ?? option}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        disabled={field.readOnly}
+                        placeholder={field.placeholder ?? ''}
+                        type={field.type ?? 'text'}
+                        value={values[field.name] ?? ''}
+                        onChange={(event) => onFieldChange(field.name, event.target.value)}
+                      />
+                    )}
+                    {field.actionLabel ? (
+                      <button
+                        type="button"
+                        className="field-lookup-button"
+                        onClick={() => onFieldAction?.(field, values)}
+                      >
+                        <Search size={14} />
+                        <span>{field.actionLabel}</span>
+                      </button>
+                    ) : null}
+                  </div>
+                </label>
+              ))}
+            </div>
+          </section>
         ))}
       </div>
 
@@ -70,4 +98,22 @@ export function DetailForm({
       </div>
     </form>
   )
+}
+
+function groupFieldsBySection(fields) {
+  const sections = []
+
+  for (const field of fields) {
+    const title = field.section ?? '상세 정보'
+    let section = sections.find((candidate) => candidate.title === title)
+
+    if (!section) {
+      section = { title, fields: [] }
+      sections.push(section)
+    }
+
+    section.fields.push(field)
+  }
+
+  return sections
 }

@@ -18,6 +18,7 @@ export function StandardWorkPage({
   data,
   detailActions,
   detailAfter,
+  detailFieldAction,
   detailFields,
   endpoint,
   headerActions,
@@ -234,6 +235,7 @@ export function StandardWorkPage({
                   showSave={allowSave}
                   onCancel={() => setActiveTab(0)}
                   onDelete={allowDelete ? handleDelete : null}
+                  onFieldAction={(field, values) => detailFieldAction?.(field, values, actionContext)}
                   onFieldChange={handleFieldChange}
                   onSave={handleSave}
                 />

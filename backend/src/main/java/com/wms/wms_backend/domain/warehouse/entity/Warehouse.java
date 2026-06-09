@@ -52,6 +52,12 @@ public class Warehouse extends BaseEntity {
     @Column(length = 30)
     private String faxNo;
 
+    @Column(length = 10)
+    private String closeTime;
+
+    @Column(length = 50)
+    private String contactName;
+
     @Column(nullable = false, length = 1)
     private String useYn;
 
@@ -65,7 +71,7 @@ public class Warehouse extends BaseEntity {
         this.useYn = "Y";
     }
 
-    public void update(String warehouseCode, String warehouseName, String warehouseTypeSubCode, String addressName, Integer priority, String phoneNo, String faxNo, String useYn) {
+    public void update(String warehouseCode, String warehouseName, String warehouseTypeSubCode, String addressName, Integer priority, String phoneNo, String faxNo, String closeTime, String contactName, String useYn) {
         this.warehouseCode = warehouseCode;
         this.warehouseName = warehouseName;
         this.warehouseTypeSubCode = warehouseTypeSubCode;
@@ -73,14 +79,18 @@ public class Warehouse extends BaseEntity {
         this.priority = priority;
         this.phoneNo = phoneNo;
         this.faxNo = faxNo;
+        this.closeTime = closeTime;
+        this.contactName = contactName;
         this.useYn = normalizeUseYn(useYn);
     }
 
-    public void updateOptionalFields(String addressName, Integer priority, String phoneNo, String faxNo, String useYn) {
+    public void updateOptionalFields(String addressName, Integer priority, String phoneNo, String faxNo, String closeTime, String contactName, String useYn) {
         this.addressName = addressName;
         this.priority = priority;
         this.phoneNo = phoneNo;
         this.faxNo = faxNo;
+        this.closeTime = closeTime;
+        this.contactName = contactName;
         this.useYn = normalizeUseYn(useYn);
     }
 
