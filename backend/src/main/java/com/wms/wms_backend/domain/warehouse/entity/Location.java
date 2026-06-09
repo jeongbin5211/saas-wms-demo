@@ -43,6 +43,26 @@ public class Location extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String locationName;
 
+    @Column(length = 500)
+    private String detailDescription;
+
+    @Column(length = 50)
+    private String locationTypeSubCode;
+
+    @Column(length = 50)
+    private String logicalTypeSubCode;
+
+    @Column(length = 100)
+    private String mixKey;
+
+    private Integer priority;
+
+    private Integer putawayPriority;
+
+    private Integer pickingPriority;
+
+    private Integer allocPriority;
+
     @Column(nullable = false, length = 1)
     private String useYn;
 
@@ -52,6 +72,10 @@ public class Location extends BaseEntity {
         this.zone = zone;
         this.locationCode = locationCode;
         this.locationName = locationName;
+        this.priority = 0;
+        this.putawayPriority = 0;
+        this.pickingPriority = 0;
+        this.allocPriority = 0;
         this.useYn = "Y";
     }
 
@@ -59,12 +83,52 @@ public class Location extends BaseEntity {
         return warehouse != null ? warehouse : zone.getWarehouse();
     }
 
-    public void update(Zone zone, String locationCode, String locationName) {
+    public void update(
+            Zone zone,
+            String locationCode,
+            String locationName,
+            String detailDescription,
+            String locationTypeSubCode,
+            String logicalTypeSubCode,
+            String mixKey,
+            Integer priority,
+            Integer putawayPriority,
+            Integer pickingPriority,
+            Integer allocPriority
+    ) {
         this.account = zone.getAccount();
         this.warehouse = zone.getWarehouse();
         this.zone = zone;
         this.locationCode = locationCode;
         this.locationName = locationName;
+        this.detailDescription = detailDescription;
+        this.locationTypeSubCode = locationTypeSubCode;
+        this.logicalTypeSubCode = logicalTypeSubCode;
+        this.mixKey = mixKey;
+        this.priority = priority;
+        this.putawayPriority = putawayPriority;
+        this.pickingPriority = pickingPriority;
+        this.allocPriority = allocPriority;
+    }
+
+    public void updateOptionalFields(
+            String detailDescription,
+            String locationTypeSubCode,
+            String logicalTypeSubCode,
+            String mixKey,
+            Integer priority,
+            Integer putawayPriority,
+            Integer pickingPriority,
+            Integer allocPriority
+    ) {
+        this.detailDescription = detailDescription;
+        this.locationTypeSubCode = locationTypeSubCode;
+        this.logicalTypeSubCode = logicalTypeSubCode;
+        this.mixKey = mixKey;
+        this.priority = priority;
+        this.putawayPriority = putawayPriority;
+        this.pickingPriority = pickingPriority;
+        this.allocPriority = allocPriority;
     }
 
     public void deactivate() {

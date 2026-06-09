@@ -70,6 +70,7 @@ public class WarehouseController {
                 request.warehouseName(),
                 request.warehouseTypeSubCode()
         ));
+        warehouse.updateOptionalFields(request.addressName(), request.priority(), request.phoneNo(), request.faxNo());
 
         return WarehouseResponse.from(warehouse);
     }
@@ -85,7 +86,15 @@ public class WarehouseController {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 창고 코드입니다.");
         }
 
-        warehouse.update(request.warehouseCode(), request.warehouseName(), request.warehouseTypeSubCode());
+        warehouse.update(
+                request.warehouseCode(),
+                request.warehouseName(),
+                request.warehouseTypeSubCode(),
+                request.addressName(),
+                request.priority(),
+                request.phoneNo(),
+                request.faxNo()
+        );
 
         return WarehouseResponse.from(warehouse);
     }
@@ -123,6 +132,7 @@ public class WarehouseController {
 
         Warehouse warehouse = findWarehouse(request.warehouseId());
         Area area = areaRepository.save(new Area(warehouse.getAccount(), warehouse, request.areaCode(), request.areaName()));
+        area.updateOptionalFields(request.detailDescription(), request.priority());
 
         return AreaResponse.from(area);
     }
@@ -139,7 +149,7 @@ public class WarehouseController {
         }
 
         Warehouse warehouse = findWarehouse(request.warehouseId());
-        area.update(warehouse, request.areaCode(), request.areaName());
+        area.update(warehouse, request.areaCode(), request.areaName(), request.detailDescription(), request.priority());
 
         return AreaResponse.from(area);
     }
@@ -177,6 +187,7 @@ public class WarehouseController {
 
         Area area = findArea(request.areaId());
         Zone zone = zoneRepository.save(new Zone(area.getAccount(), area, request.zoneCode(), request.zoneName()));
+        zone.updateOptionalFields(request.detailDescription(), request.priority());
 
         return ZoneResponse.from(zone);
     }
@@ -193,7 +204,7 @@ public class WarehouseController {
         }
 
         Area area = findArea(request.areaId());
-        zone.update(area, request.zoneCode(), request.zoneName());
+        zone.update(area, request.zoneCode(), request.zoneName(), request.detailDescription(), request.priority());
 
         return ZoneResponse.from(zone);
     }
@@ -260,6 +271,16 @@ public class WarehouseController {
                 request.locationCode(),
                 request.locationName()
         ));
+        location.updateOptionalFields(
+                request.detailDescription(),
+                request.locationTypeSubCode(),
+                request.logicalTypeSubCode(),
+                request.mixKey(),
+                request.priority(),
+                request.putawayPriority(),
+                request.pickingPriority(),
+                request.allocPriority()
+        );
 
         return LocationResponse.from(location);
     }
@@ -276,7 +297,19 @@ public class WarehouseController {
         }
 
         Zone zone = findZone(request.zoneId());
-        location.update(zone, request.locationCode(), request.locationName());
+        location.update(
+                zone,
+                request.locationCode(),
+                request.locationName(),
+                request.detailDescription(),
+                request.locationTypeSubCode(),
+                request.logicalTypeSubCode(),
+                request.mixKey(),
+                request.priority(),
+                request.putawayPriority(),
+                request.pickingPriority(),
+                request.allocPriority()
+        );
 
         return LocationResponse.from(location);
     }
@@ -344,6 +377,10 @@ public class WarehouseController {
             String warehouseCode,
             String warehouseName,
             String warehouseTypeSubCode,
+            String addressName,
+            Integer priority,
+            String phoneNo,
+            String faxNo,
             String useYn
     ) {
         public static WarehouseResponse from(Warehouse warehouse) {
@@ -354,6 +391,10 @@ public class WarehouseController {
                     warehouse.getWarehouseCode(),
                     warehouse.getWarehouseName(),
                     warehouse.getWarehouseTypeSubCode(),
+                    warehouse.getAddressName(),
+                    warehouse.getPriority(),
+                    warehouse.getPhoneNo(),
+                    warehouse.getFaxNo(),
                     warehouse.getUseYn()
             );
         }
@@ -366,6 +407,8 @@ public class WarehouseController {
             String warehouseCode,
             String areaCode,
             String areaName,
+            String detailDescription,
+            Integer priority,
             String useYn
     ) {
         public static AreaResponse from(Area area) {
@@ -376,6 +419,8 @@ public class WarehouseController {
                     area.getWarehouse().getWarehouseCode(),
                     area.getAreaCode(),
                     area.getAreaName(),
+                    area.getDetailDescription(),
+                    area.getPriority(),
                     area.getUseYn()
             );
         }
@@ -390,6 +435,9 @@ public class WarehouseController {
             String areaCode,
             String zoneCode,
             String zoneName,
+            String areaName,
+            String detailDescription,
+            Integer priority,
             String useYn
     ) {
         public static ZoneResponse from(Zone zone) {
@@ -402,6 +450,9 @@ public class WarehouseController {
                     zone.getArea().getAreaCode(),
                     zone.getZoneCode(),
                     zone.getZoneName(),
+                    zone.getArea().getAreaName(),
+                    zone.getDetailDescription(),
+                    zone.getPriority(),
                     zone.getUseYn()
             );
         }
@@ -418,6 +469,15 @@ public class WarehouseController {
             String zoneCode,
             String locationCode,
             String locationName,
+            String zoneName,
+            String detailDescription,
+            String locationTypeSubCode,
+            String logicalTypeSubCode,
+            String mixKey,
+            Integer priority,
+            Integer putawayPriority,
+            Integer pickingPriority,
+            Integer allocPriority,
             String useYn
     ) {
         public static LocationResponse from(Location location) {
@@ -433,6 +493,15 @@ public class WarehouseController {
                     zone.getZoneCode(),
                     location.getLocationCode(),
                     location.getLocationName(),
+                    zone.getZoneName(),
+                    location.getDetailDescription(),
+                    location.getLocationTypeSubCode(),
+                    location.getLogicalTypeSubCode(),
+                    location.getMixKey(),
+                    location.getPriority(),
+                    location.getPutawayPriority(),
+                    location.getPickingPriority(),
+                    location.getAllocPriority(),
                     location.getUseYn()
             );
         }
@@ -441,56 +510,88 @@ public class WarehouseController {
     public record WarehouseCreateRequest(
             @NotBlank String warehouseCode,
             @NotBlank String warehouseName,
-            @NotBlank String warehouseTypeSubCode
+            @NotBlank String warehouseTypeSubCode,
+            String addressName,
+            Integer priority,
+            String phoneNo,
+            String faxNo
     ) {
     }
 
     public record WarehouseUpdateRequest(
             @NotBlank String warehouseCode,
             @NotBlank String warehouseName,
-            @NotBlank String warehouseTypeSubCode
+            @NotBlank String warehouseTypeSubCode,
+            String addressName,
+            Integer priority,
+            String phoneNo,
+            String faxNo
     ) {
     }
 
     public record AreaCreateRequest(
             @NotNull Long warehouseId,
             @NotBlank String areaCode,
-            @NotBlank String areaName
+            @NotBlank String areaName,
+            String detailDescription,
+            Integer priority
     ) {
     }
 
     public record AreaUpdateRequest(
             @NotNull Long warehouseId,
             @NotBlank String areaCode,
-            @NotBlank String areaName
+            @NotBlank String areaName,
+            String detailDescription,
+            Integer priority
     ) {
     }
 
     public record ZoneCreateRequest(
             @NotNull Long areaId,
             @NotBlank String zoneCode,
-            @NotBlank String zoneName
+            @NotBlank String zoneName,
+            String detailDescription,
+            Integer priority
     ) {
     }
 
     public record ZoneUpdateRequest(
             @NotNull Long areaId,
             @NotBlank String zoneCode,
-            @NotBlank String zoneName
+            @NotBlank String zoneName,
+            String detailDescription,
+            Integer priority
     ) {
     }
 
     public record LocationCreateRequest(
             @NotNull Long zoneId,
             @NotBlank String locationCode,
-            @NotBlank String locationName
+            @NotBlank String locationName,
+            String detailDescription,
+            String locationTypeSubCode,
+            String logicalTypeSubCode,
+            String mixKey,
+            Integer priority,
+            Integer putawayPriority,
+            Integer pickingPriority,
+            Integer allocPriority
     ) {
     }
 
     public record LocationUpdateRequest(
             @NotNull Long zoneId,
             @NotBlank String locationCode,
-            @NotBlank String locationName
+            @NotBlank String locationName,
+            String detailDescription,
+            String locationTypeSubCode,
+            String logicalTypeSubCode,
+            String mixKey,
+            Integer priority,
+            Integer putawayPriority,
+            Integer pickingPriority,
+            Integer allocPriority
     ) {
     }
 

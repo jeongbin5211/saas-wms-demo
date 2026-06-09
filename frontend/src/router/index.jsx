@@ -25,6 +25,10 @@ const internalPages = {
   dashboard: { title: '대시보드', eyebrow: '개요', description: '주요 운영 지표와 진행 상태를 한 화면에서 확인합니다.' },
   guide: { title: '시연 가이드', eyebrow: '개요', description: '업무 흐름을 순서대로 확인하는 안내 화면입니다.' },
   locations: { title: '위치정보', eyebrow: '기준정보', description: '창고, Area, Zone, Location 기준정보를 관리합니다.' },
+  warehouse: { title: '창고', eyebrow: '기준정보', description: '로케이션 정보의 최상위 단위인 창고를 관리합니다.' },
+  area: { title: 'Area', eyebrow: '기준정보', description: '창고 하위 작업 구역인 Area를 관리합니다.' },
+  zone: { title: 'Zone', eyebrow: '기준정보', description: 'Area 하위 보관/작업 구역인 Zone을 관리합니다.' },
+  location: { title: 'Location', eyebrow: '기준정보', description: '재고가 실제로 보관되는 최하위 로케이션을 관리합니다.' },
   items: { title: '품목정보', eyebrow: '기준정보', description: '품목 마스터, 품목 클래스, 품목 기준정보를 관리합니다.' },
   inventory: { title: '재고 현황', eyebrow: '운영관리', description: '품목과 로케이션 기준의 현재고와 가용 재고를 조회합니다.' },
   'inventory-history': { title: '재고 이력', eyebrow: '운영관리', description: '입고, 출고, 반품, 조정으로 발생한 수량 변화를 추적합니다.' },
@@ -199,6 +203,10 @@ export function WorkspaceRouter({ authUser, onLogout, onMoveHome, onNavigate, ro
 function renderPage(activeMenu, pageProps) {
   if (activeMenu === 'dashboard') return <DashboardPage {...pageProps} />
   if (activeMenu === 'locations') return <LocationsPage {...pageProps} />
+  if (activeMenu === 'warehouse') return <LocationsPage key="warehouse" {...pageProps} initialTypeTab={0} />
+  if (activeMenu === 'area') return <LocationsPage key="area" {...pageProps} initialTypeTab={1} />
+  if (activeMenu === 'zone') return <LocationsPage key="zone" {...pageProps} initialTypeTab={2} />
+  if (activeMenu === 'location') return <LocationsPage key="location" {...pageProps} initialTypeTab={3} />
   if (activeMenu === 'items') return <ItemsPage {...pageProps} />
   if (activeMenu === 'inventory') return <InventoryPage {...pageProps} />
   if (activeMenu === 'inventory-history') return <InventoryHistoryPage {...pageProps} />

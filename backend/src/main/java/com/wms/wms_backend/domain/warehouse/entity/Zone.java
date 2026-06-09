@@ -43,6 +43,11 @@ public class Zone extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String zoneName;
 
+    @Column(length = 500)
+    private String detailDescription;
+
+    private Integer priority;
+
     @Column(nullable = false, length = 1)
     private String useYn;
 
@@ -52,6 +57,7 @@ public class Zone extends BaseEntity {
         this.area = area;
         this.zoneCode = zoneCode;
         this.zoneName = zoneName;
+        this.priority = 0;
         this.useYn = "Y";
     }
 
@@ -59,12 +65,19 @@ public class Zone extends BaseEntity {
         return warehouse != null ? warehouse : area.getWarehouse();
     }
 
-    public void update(Area area, String zoneCode, String zoneName) {
+    public void update(Area area, String zoneCode, String zoneName, String detailDescription, Integer priority) {
         this.account = area.getAccount();
         this.warehouse = area.getWarehouse();
         this.area = area;
         this.zoneCode = zoneCode;
         this.zoneName = zoneName;
+        this.detailDescription = detailDescription;
+        this.priority = priority;
+    }
+
+    public void updateOptionalFields(String detailDescription, Integer priority) {
+        this.detailDescription = detailDescription;
+        this.priority = priority;
     }
 
     public void deactivate() {

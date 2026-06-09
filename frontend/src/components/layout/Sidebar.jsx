@@ -32,10 +32,10 @@ const menuGroups = [
         label: '로케이션 정보',
         icon: Warehouse,
         children: [
-          { id: 'warehouse', label: '창고', route: '/app/locations' },
-          { id: 'area', label: 'Area', route: '/app/locations' },
-          { id: 'zone', label: 'Zone', route: '/app/locations' },
-          { id: 'location', label: 'Location', route: '/app/locations' },
+          { id: 'warehouse', label: '창고', route: '/app/warehouse' },
+          { id: 'area', label: 'Area', route: '/app/area' },
+          { id: 'zone', label: 'Zone', route: '/app/zone' },
+          { id: 'location', label: 'Location', route: '/app/location' },
         ],
       },
       {

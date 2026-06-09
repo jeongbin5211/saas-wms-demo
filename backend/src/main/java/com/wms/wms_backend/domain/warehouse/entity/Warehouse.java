@@ -41,6 +41,17 @@ public class Warehouse extends BaseEntity {
     @Column(nullable = false, length = 50)
     private String warehouseTypeSubCode;
 
+    @Column(length = 200)
+    private String addressName;
+
+    private Integer priority;
+
+    @Column(length = 30)
+    private String phoneNo;
+
+    @Column(length = 30)
+    private String faxNo;
+
     @Column(nullable = false, length = 1)
     private String useYn;
 
@@ -50,13 +61,25 @@ public class Warehouse extends BaseEntity {
         this.warehouseCode = warehouseCode;
         this.warehouseName = warehouseName;
         this.warehouseTypeSubCode = warehouseTypeSubCode;
+        this.priority = 0;
         this.useYn = "Y";
     }
 
-    public void update(String warehouseCode, String warehouseName, String warehouseTypeSubCode) {
+    public void update(String warehouseCode, String warehouseName, String warehouseTypeSubCode, String addressName, Integer priority, String phoneNo, String faxNo) {
         this.warehouseCode = warehouseCode;
         this.warehouseName = warehouseName;
         this.warehouseTypeSubCode = warehouseTypeSubCode;
+        this.addressName = addressName;
+        this.priority = priority;
+        this.phoneNo = phoneNo;
+        this.faxNo = faxNo;
+    }
+
+    public void updateOptionalFields(String addressName, Integer priority, String phoneNo, String faxNo) {
+        this.addressName = addressName;
+        this.priority = priority;
+        this.phoneNo = phoneNo;
+        this.faxNo = faxNo;
     }
 
     public void deactivate() {

@@ -37,10 +37,10 @@ export function SearchPanel({ fields = [], onChange, onReset, onSearch, searchPa
       <div className="search-panel-actions">
         <button type="button" className="primary-button" onClick={onSearch}>
           <Search size={16} />
-          조회
+          검색
         </button>
         <button type="button" className="danger-button" onClick={onReset}>
-          초기화
+          조건 초기화
         </button>
       </div>
     </div>

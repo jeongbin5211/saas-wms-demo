@@ -172,11 +172,16 @@ export function StandardWorkPage({
             <h2>{title ?? page.title}</h2>
             <span>{page.description}</span>
           </div>
-          {allowNew ? (
-            <button type="button" className="primary-button" onClick={handleNew}>
-              신규등록
+          <div className="work-page-actions">
+            {allowNew ? (
+              <button type="button" className="primary-button" onClick={handleNew}>
+                신규
+              </button>
+            ) : null}
+            <button type="button" className="icon-text-button" onClick={() => exportGridToCsv(columns, visibleData, title ?? page.title)}>
+              Excel
             </button>
-          ) : null}
+          </div>
         </div>
       )}
 
@@ -231,6 +236,34 @@ export function StandardWorkPage({
       />
     </section>
   )
+}
+
+function exportGridToCsv(columns, rows, title) {
+  const headers = columns.map((column) => column.header)
+  const keys = columns.map((column) => column.name)
+  const csvRows = [
+    headers,
+    ...rows.map((row) => keys.map((key) => row[key] ?? '')),
+  ]
+  const csvText = csvRows.map((row) => row.map(escapeCsvValue).join(',')).join('\n')
+  const blob = new Blob([`\uFEFF${csvText}`], { type: 'text/csv;charset=utf-8;' })
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.download = `${title || 'grid'}-${new Date().toISOString().slice(0, 10)}.csv`
+  link.click()
+  window.URL.revokeObjectURL(url)
+}
+
+function escapeCsvValue(value) {
+  const text = String(value)
+
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`
+  }
+
+  return text
 }
 
 function toQueryString(params) {
