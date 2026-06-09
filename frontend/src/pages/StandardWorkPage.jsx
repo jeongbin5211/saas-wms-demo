@@ -53,6 +53,20 @@ export function StandardWorkPage({
     setMessage('')
   }
 
+  const toolbar = (
+    <>
+      {allowNew ? (
+        <button type="button" className="primary-button" onClick={handleNew}>
+          신규
+        </button>
+      ) : null}
+      <button type="button" className="icon-text-button" onClick={() => exportGridToCsv(columns, visibleData, title ?? page.title)}>
+        Excel
+      </button>
+      {headerActions}
+    </>
+  )
+
   const handleSearch = async () => {
     if (!endpoint) {
       applyClientFilter()
@@ -175,17 +189,7 @@ export function StandardWorkPage({
             <h2>{title ?? page.title}</h2>
             <span>{page.description}</span>
           </div>
-          <div className="work-page-actions">
-            {allowNew ? (
-              <button type="button" className="primary-button" onClick={handleNew}>
-                신규
-              </button>
-            ) : null}
-            <button type="button" className="icon-text-button" onClick={() => exportGridToCsv(columns, visibleData, title ?? page.title)}>
-              Excel
-            </button>
-            {headerActions}
-          </div>
+          <div className="work-page-actions">{toolbar}</div>
         </div>
       )}
 
@@ -194,6 +198,7 @@ export function StandardWorkPage({
       <TabLayout
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        toolbar={hideHeader ? toolbar : null}
         tabs={[
           {
             label: listTabLabel ?? `${title ?? page.title} 목록`,
@@ -223,8 +228,8 @@ export function StandardWorkPage({
                 <DetailForm
                   extraActions={detailActions?.(actionContext)}
                   fields={detailFields}
+                  isCreateMode={!selectedRow}
                   modeLabel={selectedRow ? (allowSave ? '상세 수정' : '상세') : '신규 등록'}
-                  readOnly={!canEdit}
                   row={draftRow}
                   showSave={allowSave}
                   onCancel={() => setActiveTab(0)}

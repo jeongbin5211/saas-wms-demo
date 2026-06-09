@@ -65,7 +65,7 @@ public class Warehouse extends BaseEntity {
         this.useYn = "Y";
     }
 
-    public void update(String warehouseCode, String warehouseName, String warehouseTypeSubCode, String addressName, Integer priority, String phoneNo, String faxNo) {
+    public void update(String warehouseCode, String warehouseName, String warehouseTypeSubCode, String addressName, Integer priority, String phoneNo, String faxNo, String useYn) {
         this.warehouseCode = warehouseCode;
         this.warehouseName = warehouseName;
         this.warehouseTypeSubCode = warehouseTypeSubCode;
@@ -73,16 +73,22 @@ public class Warehouse extends BaseEntity {
         this.priority = priority;
         this.phoneNo = phoneNo;
         this.faxNo = faxNo;
+        this.useYn = normalizeUseYn(useYn);
     }
 
-    public void updateOptionalFields(String addressName, Integer priority, String phoneNo, String faxNo) {
+    public void updateOptionalFields(String addressName, Integer priority, String phoneNo, String faxNo, String useYn) {
         this.addressName = addressName;
         this.priority = priority;
         this.phoneNo = phoneNo;
         this.faxNo = faxNo;
+        this.useYn = normalizeUseYn(useYn);
     }
 
     public void deactivate() {
         this.useYn = "N";
+    }
+
+    private String normalizeUseYn(String useYn) {
+        return "N".equals(useYn) ? "N" : "Y";
     }
 }

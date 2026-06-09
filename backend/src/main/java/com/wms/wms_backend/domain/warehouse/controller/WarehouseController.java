@@ -70,7 +70,7 @@ public class WarehouseController {
                 request.warehouseName(),
                 request.warehouseTypeSubCode()
         ));
-        warehouse.updateOptionalFields(request.addressName(), request.priority(), request.phoneNo(), request.faxNo());
+        warehouse.updateOptionalFields(request.addressName(), request.priority(), request.phoneNo(), request.faxNo(), request.useYn());
 
         return WarehouseResponse.from(warehouse);
     }
@@ -93,7 +93,8 @@ public class WarehouseController {
                 request.addressName(),
                 request.priority(),
                 request.phoneNo(),
-                request.faxNo()
+                request.faxNo(),
+                request.useYn()
         );
 
         return WarehouseResponse.from(warehouse);
@@ -530,7 +531,8 @@ public class WarehouseController {
             String addressName,
             Integer priority,
             String phoneNo,
-            String faxNo
+            String faxNo,
+            String useYn
     ) {
     }
 
@@ -541,7 +543,8 @@ public class WarehouseController {
             String addressName,
             Integer priority,
             String phoneNo,
-            String faxNo
+            String faxNo,
+            String useYn
     ) {
     }
 

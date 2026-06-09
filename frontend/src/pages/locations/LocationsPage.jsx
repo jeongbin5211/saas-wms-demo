@@ -117,24 +117,26 @@ function buildWarehousePage({ authUser, catalog, onRefresh, page }) {
         priority: toOptionalNumber(row.priority),
         phoneNo: row.phoneNo,
         faxNo: row.faxNo,
+        useYn: row.useYn ?? 'Y',
       })}
       columns={warehouseColumns}
-      createDefaults={{ priority: 0, warehouseTypeSubCode: 'OWN' }}
+      createDefaults={{ priority: 0, useYn: 'Y', warehouseTypeSubCode: 'OWN' }}
       data={catalog.warehouses}
       detailFields={[
         { name: 'warehouseCode', label: '창고 코드', required: true },
         { name: 'warehouseName', label: '창고명', required: true },
         { name: 'warehouseTypeSubCode', label: '유형', type: 'select', options: warehouseTypeOptions, required: true },
-        { name: 'addressName', label: '주소명', wide: true },
+        { name: 'addressName', label: '주소명', required: true, wide: true },
         { name: 'priority', label: '우선순위', type: 'number' },
         { name: 'accountCode', label: '거래처', readOnly: true },
         { name: 'accountName', label: '거래처명', readOnly: true },
         { name: 'phoneNo', label: '전화번호' },
         { name: 'faxNo', label: '팩스' },
-        { name: 'useYn', label: '사용 여부', readOnly: true },
+        { name: 'useYn', label: '사용 여부', type: 'select', options: useYnOptions, required: true },
       ]}
       detailTabLabel="상세 목록"
       endpoint="/api/warehouses"
+      hideHeader
       listTabLabel="창고 목록"
       onRefresh={onRefresh}
       page={{ ...page, eyebrow: '로케이션 정보', title: '창고' }}

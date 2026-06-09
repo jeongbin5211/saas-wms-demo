@@ -1,4 +1,5 @@
 export function DetailForm({
+  actionsDisabled = false,
   extraActions,
   fields = [],
   modeLabel,
@@ -6,12 +7,11 @@ export function DetailForm({
   onDelete,
   onFieldChange,
   onSave,
-  readOnly = false,
   row,
+  isCreateMode = row == null,
   showSave = true,
 }) {
   const values = row ?? {}
-  const isCreateMode = row == null
 
   return (
     <form className="detail-form" onSubmit={onSave}>
@@ -28,7 +28,7 @@ export function DetailForm({
             <span>{field.label}</span>
             {field.type === 'select' ? (
               <select
-                disabled={readOnly || field.readOnly}
+                disabled={field.readOnly}
                 value={values[field.name] ?? ''}
                 onChange={(event) => onFieldChange(field.name, event.target.value)}
               >
@@ -41,7 +41,7 @@ export function DetailForm({
               </select>
             ) : (
               <input
-                disabled={readOnly || field.readOnly}
+                disabled={field.readOnly}
                 placeholder={field.placeholder ?? ''}
                 type={field.type ?? 'text'}
                 value={values[field.name] ?? ''}
@@ -54,7 +54,7 @@ export function DetailForm({
 
       <div className="detail-form-actions">
         {showSave ? (
-          <button type="submit" className="primary-button" disabled={readOnly}>
+          <button type="submit" className="primary-button" disabled={actionsDisabled}>
             저장
           </button>
         ) : null}
@@ -63,7 +63,7 @@ export function DetailForm({
           취소
         </button>
         {!isCreateMode && onDelete ? (
-          <button type="button" className="danger-button" disabled={readOnly} onClick={onDelete}>
+          <button type="button" className="danger-button" disabled={actionsDisabled} onClick={onDelete}>
             삭제
           </button>
         ) : null}
