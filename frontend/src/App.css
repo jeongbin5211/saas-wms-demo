@@ -2384,6 +2384,22 @@ button {
   font-family: inherit;
 }
 
+.tui-grid-lside-area,
+.tui-grid-lside-area .tui-grid-header-area,
+.tui-grid-lside-area .tui-grid-body-area {
+  border-right: 1px solid #cfd8e3 !important;
+}
+
+.tui-grid-rside-area,
+.tui-grid-rside-area .tui-grid-header-area,
+.tui-grid-rside-area .tui-grid-body-area {
+  border-right: 1px solid #cfd8e3 !important;
+}
+
+.tui-grid-border-line-right {
+  background-color: #cfd8e3 !important;
+}
+
 .tui-grid-cell {
   border-right: 1px solid #cfd8e3 !important;
   border-bottom: 1px solid #cfd8e3 !important;
