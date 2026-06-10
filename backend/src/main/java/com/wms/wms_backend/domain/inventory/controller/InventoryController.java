@@ -68,7 +68,9 @@ public class InventoryController {
             Integer quantity,
             Integer allocatedQuantity,
             Integer availableQuantity,
-            String useYn
+            String useYn,
+            String createdAt,
+            String updatedAt
     ) {
         public static InventoryResponse from(Inventory inventory) {
             return new InventoryResponse(
@@ -83,7 +85,9 @@ public class InventoryController {
                     inventory.getQuantity(),
                     inventory.getAllocatedQuantity(),
                     inventory.getAvailableQuantity(),
-                    inventory.getUseYn()
+                    inventory.getUseYn(),
+                    String.valueOf(inventory.getCreatedAt()),
+                    String.valueOf(inventory.getUpdatedAt())
             );
         }
     }
@@ -135,7 +139,9 @@ public class InventoryController {
             Integer quantity,
             Integer beforeQuantity,
             Integer afterQuantity,
-            String reason
+            String reason,
+            String createdAt,
+            String updatedAt
     ) {
         public static InventoryHistoryResponse from(InventoryHistory history) {
             return new InventoryHistoryResponse(
@@ -151,7 +157,9 @@ public class InventoryController {
                     history.getQuantity(),
                     history.getBeforeQuantity(),
                     history.getAfterQuantity(),
-                    history.getReason()
+                    history.getReason(),
+                    String.valueOf(history.getCreatedAt()),
+                    String.valueOf(history.getUpdatedAt())
             );
         }
     }

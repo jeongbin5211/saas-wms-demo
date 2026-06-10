@@ -420,7 +420,9 @@ public class WarehouseController {
             String faxNo,
             String closeTime,
             String contactName,
-            String useYn
+            String useYn,
+            String createdAt,
+            String updatedAt
     ) {
         public static WarehouseResponse from(Warehouse warehouse) {
             return new WarehouseResponse(
@@ -438,7 +440,9 @@ public class WarehouseController {
                     warehouse.getFaxNo(),
                     warehouse.getCloseTime(),
                     warehouse.getContactName(),
-                    warehouse.getUseYn()
+                    warehouse.getUseYn(),
+                    String.valueOf(warehouse.getCreatedAt()),
+                    String.valueOf(warehouse.getUpdatedAt())
             );
         }
     }

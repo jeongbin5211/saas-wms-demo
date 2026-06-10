@@ -29,7 +29,9 @@ public class AccountController {
             String accountCode,
             String accountName,
             String accountTypeSubCode,
-            String useYn
+            String useYn,
+            String createdAt,
+            String updatedAt
     ) {
         public static AccountResponse from(Account account) {
             return new AccountResponse(
@@ -38,7 +40,9 @@ public class AccountController {
                     account.getAccountCode(),
                     account.getAccountName(),
                     account.getAccountTypeSubCode(),
-                    account.getUseYn()
+                    account.getUseYn(),
+                    String.valueOf(account.getCreatedAt()),
+                    String.valueOf(account.getUpdatedAt())
             );
         }
     }

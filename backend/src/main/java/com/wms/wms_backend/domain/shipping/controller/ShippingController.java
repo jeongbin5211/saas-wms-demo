@@ -51,7 +51,9 @@ public class ShippingController {
             String salesOrderNo,
             String shippingNo,
             String shippingStatusSubCode,
-            LocalDate shippingDate
+            LocalDate shippingDate,
+            String createdAt,
+            String updatedAt
     ) {
         public static ShippingResponse from(Shipping shipping) {
             return new ShippingResponse(
@@ -61,7 +63,9 @@ public class ShippingController {
                     shipping.getSalesOrder().getSalesOrderNo(),
                     shipping.getShippingNo(),
                     shipping.getShippingStatusSubCode(),
-                    shipping.getShippingDate()
+                    shipping.getShippingDate(),
+                    String.valueOf(shipping.getCreatedAt()),
+                    String.valueOf(shipping.getUpdatedAt())
             );
         }
     }
@@ -75,7 +79,9 @@ public class ShippingController {
             String itemName,
             Long locationId,
             String locationCode,
-            Integer shippedQuantity
+            Integer shippedQuantity,
+            String createdAt,
+            String updatedAt
     ) {
         public static ShippingDetailResponse from(ShippingDetail detail) {
             return new ShippingDetailResponse(
@@ -87,7 +93,9 @@ public class ShippingController {
                     detail.getItem().getItemName(),
                     detail.getLocation().getId(),
                     detail.getLocation().getLocationCode(),
-                    detail.getShippedQuantity()
+                    detail.getShippedQuantity(),
+                    String.valueOf(detail.getCreatedAt()),
+                    String.valueOf(detail.getUpdatedAt())
             );
         }
     }

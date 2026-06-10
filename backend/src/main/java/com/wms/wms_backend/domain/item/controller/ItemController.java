@@ -151,7 +151,9 @@ public class ItemController {
             Long topAccountId,
             String itemMasterCode,
             String itemMasterName,
-            String useYn
+            String useYn,
+            String createdAt,
+            String updatedAt
     ) {
         public static ItemMasterResponse from(ItemMaster itemMaster) {
             return new ItemMasterResponse(
@@ -160,7 +162,9 @@ public class ItemController {
                     itemMaster.getTopAccountId(),
                     itemMaster.getItemMasterCode(),
                     itemMaster.getItemMasterName(),
-                    itemMaster.getUseYn()
+                    itemMaster.getUseYn(),
+                    String.valueOf(itemMaster.getCreatedAt()),
+                    String.valueOf(itemMaster.getUpdatedAt())
             );
         }
     }
@@ -170,7 +174,9 @@ public class ItemController {
             Long itemMasterId,
             String itemClassCode,
             String itemClassName,
-            String useYn
+            String useYn,
+            String createdAt,
+            String updatedAt
     ) {
         public static ItemClassResponse from(ItemClass itemClass) {
             return new ItemClassResponse(
@@ -178,7 +184,9 @@ public class ItemController {
                     itemClass.getItemMaster().getId(),
                     itemClass.getItemClassCode(),
                     itemClass.getItemClassName(),
-                    itemClass.getUseYn()
+                    itemClass.getUseYn(),
+                    String.valueOf(itemClass.getCreatedAt()),
+                    String.valueOf(itemClass.getUpdatedAt())
             );
         }
     }
@@ -192,7 +200,9 @@ public class ItemController {
             String unit,
             BigDecimal purchasePrice,
             BigDecimal salesPrice,
-            String useYn
+            String useYn,
+            String createdAt,
+            String updatedAt
     ) {
         public static ItemResponse from(Item item) {
             return new ItemResponse(
@@ -204,7 +214,9 @@ public class ItemController {
                     item.getUnit(),
                     item.getPurchasePrice(),
                     item.getSalesPrice(),
-                    item.getUseYn()
+                    item.getUseYn(),
+                    String.valueOf(item.getCreatedAt()),
+                    String.valueOf(item.getUpdatedAt())
             );
         }
     }

@@ -113,7 +113,9 @@ public class SalesOrderController {
             String salesOrderNo,
             String orderStatusSubCode,
             LocalDate orderDate,
-            String note
+            String note,
+            String createdAt,
+            String updatedAt
     ) {
         public static SalesOrderResponse from(SalesOrder salesOrder) {
             return new SalesOrderResponse(
@@ -124,7 +126,9 @@ public class SalesOrderController {
                     salesOrder.getSalesOrderNo(),
                     salesOrder.getOrderStatusSubCode(),
                     salesOrder.getOrderDate(),
-                    salesOrder.getNote()
+                    salesOrder.getNote(),
+                    String.valueOf(salesOrder.getCreatedAt()),
+                    String.valueOf(salesOrder.getUpdatedAt())
             );
         }
     }
@@ -138,7 +142,9 @@ public class SalesOrderController {
             String itemName,
             Integer orderQuantity,
             BigDecimal unitPrice,
-            BigDecimal amount
+            BigDecimal amount,
+            String createdAt,
+            String updatedAt
     ) {
         public static SalesOrderDetailResponse from(SalesOrderDetail detail) {
             return new SalesOrderDetailResponse(
@@ -150,7 +156,9 @@ public class SalesOrderController {
                     detail.getItem().getItemName(),
                     detail.getOrderQuantity(),
                     detail.getUnitPrice(),
-                    detail.getAmount()
+                    detail.getAmount(),
+                    String.valueOf(detail.getCreatedAt()),
+                    String.valueOf(detail.getUpdatedAt())
             );
         }
     }

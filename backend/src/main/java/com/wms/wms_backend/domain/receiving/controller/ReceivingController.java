@@ -57,7 +57,9 @@ public class ReceivingController {
             String purchaseOrderNo,
             String receivingNo,
             String receivingStatusSubCode,
-            LocalDate receivingDate
+            LocalDate receivingDate,
+            String createdAt,
+            String updatedAt
     ) {
         public static ReceivingResponse from(Receiving receiving) {
             return new ReceivingResponse(
@@ -67,7 +69,9 @@ public class ReceivingController {
                     receiving.getPurchaseOrder().getPurchaseOrderNo(),
                     receiving.getReceivingNo(),
                     receiving.getReceivingStatusSubCode(),
-                    receiving.getReceivingDate()
+                    receiving.getReceivingDate(),
+                    String.valueOf(receiving.getCreatedAt()),
+                    String.valueOf(receiving.getUpdatedAt())
             );
         }
     }
@@ -81,7 +85,9 @@ public class ReceivingController {
             String itemName,
             Long locationId,
             String locationCode,
-            Integer receivedQuantity
+            Integer receivedQuantity,
+            String createdAt,
+            String updatedAt
     ) {
         public static ReceivingDetailResponse from(ReceivingDetail detail) {
             return new ReceivingDetailResponse(
@@ -93,7 +99,9 @@ public class ReceivingController {
                     detail.getItem().getItemName(),
                     detail.getLocation().getId(),
                     detail.getLocation().getLocationCode(),
-                    detail.getReceivedQuantity()
+                    detail.getReceivedQuantity(),
+                    String.valueOf(detail.getCreatedAt()),
+                    String.valueOf(detail.getUpdatedAt())
             );
         }
     }

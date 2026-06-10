@@ -44,7 +44,9 @@ public class BillController {
             String billNo,
             String billStatusSubCode,
             LocalDate billDate,
-            BigDecimal totalAmount
+            BigDecimal totalAmount,
+            String createdAt,
+            String updatedAt
     ) {
         public static BillResponse from(Bill bill) {
             return new BillResponse(
@@ -55,7 +57,9 @@ public class BillController {
                     bill.getBillNo(),
                     bill.getBillStatusSubCode(),
                     bill.getBillDate(),
-                    bill.getTotalAmount()
+                    bill.getTotalAmount(),
+                    String.valueOf(bill.getCreatedAt()),
+                    String.valueOf(bill.getUpdatedAt())
             );
         }
     }
@@ -69,7 +73,9 @@ public class BillController {
             String itemName,
             Integer billQuantity,
             BigDecimal unitPrice,
-            BigDecimal amount
+            BigDecimal amount,
+            String createdAt,
+            String updatedAt
     ) {
         public static BillDetailResponse from(BillDetail detail) {
             return new BillDetailResponse(
@@ -81,7 +87,9 @@ public class BillController {
                     detail.getItem().getItemName(),
                     detail.getBillQuantity(),
                     detail.getUnitPrice(),
-                    detail.getAmount()
+                    detail.getAmount(),
+                    String.valueOf(detail.getCreatedAt()),
+                    String.valueOf(detail.getUpdatedAt())
             );
         }
     }

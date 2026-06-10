@@ -79,7 +79,9 @@ public class ReturnOrderController {
             String purchaseReturnNo,
             String returnStatusSubCode,
             LocalDate returnDate,
-            String reason
+            String reason,
+            String createdAt,
+            String updatedAt
     ) {
         public static PurchaseReturnResponse from(PurchaseReturn purchaseReturn) {
             return new PurchaseReturnResponse(
@@ -90,7 +92,9 @@ public class ReturnOrderController {
                     purchaseReturn.getPurchaseReturnNo(),
                     purchaseReturn.getReturnStatusSubCode(),
                     purchaseReturn.getReturnDate(),
-                    purchaseReturn.getReason()
+                    purchaseReturn.getReason(),
+                    String.valueOf(purchaseReturn.getCreatedAt()),
+                    String.valueOf(purchaseReturn.getUpdatedAt())
             );
         }
     }
@@ -104,7 +108,9 @@ public class ReturnOrderController {
             String itemName,
             Long locationId,
             String locationCode,
-            Integer returnQuantity
+            Integer returnQuantity,
+            String createdAt,
+            String updatedAt
     ) {
         public static PurchaseReturnDetailResponse from(PurchaseReturnDetail detail) {
             return new PurchaseReturnDetailResponse(
@@ -116,7 +122,9 @@ public class ReturnOrderController {
                     detail.getItem().getItemName(),
                     detail.getLocation().getId(),
                     detail.getLocation().getLocationCode(),
-                    detail.getReturnQuantity()
+                    detail.getReturnQuantity(),
+                    String.valueOf(detail.getCreatedAt()),
+                    String.valueOf(detail.getUpdatedAt())
             );
         }
     }
@@ -129,7 +137,9 @@ public class ReturnOrderController {
             String salesReturnNo,
             String returnStatusSubCode,
             LocalDate returnDate,
-            String reason
+            String reason,
+            String createdAt,
+            String updatedAt
     ) {
         public static SalesReturnResponse from(SalesReturn salesReturn) {
             return new SalesReturnResponse(
@@ -140,7 +150,9 @@ public class ReturnOrderController {
                     salesReturn.getSalesReturnNo(),
                     salesReturn.getReturnStatusSubCode(),
                     salesReturn.getReturnDate(),
-                    salesReturn.getReason()
+                    salesReturn.getReason(),
+                    String.valueOf(salesReturn.getCreatedAt()),
+                    String.valueOf(salesReturn.getUpdatedAt())
             );
         }
     }
@@ -154,7 +166,9 @@ public class ReturnOrderController {
             String itemName,
             Long locationId,
             String locationCode,
-            Integer returnQuantity
+            Integer returnQuantity,
+            String createdAt,
+            String updatedAt
     ) {
         public static SalesReturnDetailResponse from(SalesReturnDetail detail) {
             return new SalesReturnDetailResponse(
@@ -166,7 +180,9 @@ public class ReturnOrderController {
                     detail.getItem().getItemName(),
                     detail.getLocation().getId(),
                     detail.getLocation().getLocationCode(),
-                    detail.getReturnQuantity()
+                    detail.getReturnQuantity(),
+                    String.valueOf(detail.getCreatedAt()),
+                    String.valueOf(detail.getUpdatedAt())
             );
         }
     }
