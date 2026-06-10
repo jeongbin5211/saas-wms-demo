@@ -2384,18 +2384,6 @@ button {
   font-family: inherit;
 }
 
-.tui-grid-lside-area,
-.tui-grid-lside-area .tui-grid-header-area,
-.tui-grid-lside-area .tui-grid-body-area {
-  border-right: 1px solid #cfd8e3 !important;
-}
-
-.tui-grid-rside-area,
-.tui-grid-rside-area .tui-grid-header-area,
-.tui-grid-rside-area .tui-grid-body-area {
-  border-right: 1px solid #cfd8e3 !important;
-}
-
 .tui-grid-border-line-right {
   background-color: #cfd8e3 !important;
 }
@@ -2410,6 +2398,11 @@ button {
   border-right: 1px solid #c7d1de !important;
   border-bottom: 2px solid #9aa9bb !important;
   font-weight: 700;
+}
+
+.tui-grid-rside-area .tui-grid-cell:last-child,
+.tui-grid-cell-row-header {
+  box-shadow: inset -1px 0 0 #cfd8e3;
 }
 
 .status-badge {
