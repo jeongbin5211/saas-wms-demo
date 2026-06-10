@@ -79,6 +79,7 @@ public class WarehouseController {
                 request.contactName(),
                 request.useYn()
         );
+        createDefaultLocationHierarchy(warehouse);
 
         return WarehouseResponse.from(warehouse);
     }
@@ -340,6 +341,29 @@ public class WarehouseController {
         if (!"ADMIN".equals(role) && !"STAFF".equals(role) && !"GUEST".equals(role)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "기준정보를 변경할 권한이 없습니다.");
         }
+    }
+
+    private void createDefaultLocationHierarchy(Warehouse warehouse) {
+        String baseCode = warehouse.getWarehouseCode();
+        String baseName = warehouse.getWarehouseName();
+
+        Area area = areaRepository.save(new Area(warehouse.getAccount(), warehouse, baseCode, baseName));
+        area.updateOptionalFields("창고 생성 시 자동 생성된 기본 Area입니다.", 1);
+
+        Zone zone = zoneRepository.save(new Zone(warehouse.getAccount(), area, baseCode, baseName));
+        zone.updateOptionalFields("창고 생성 시 자동 생성된 기본 Zone입니다.", 1);
+
+        Location location = locationRepository.save(new Location(warehouse.getAccount(), zone, baseCode, baseName));
+        location.updateOptionalFields(
+                "창고 생성 시 자동 생성된 기본 Location입니다.",
+                "STORAGE",
+                "NORMAL",
+                null,
+                1,
+                1,
+                1,
+                1
+        );
     }
 
     private Account currentAccount() {
