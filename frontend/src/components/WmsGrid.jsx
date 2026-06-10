@@ -4,11 +4,11 @@ import { useEffect, useMemo, useRef } from 'react'
 
 Grid.applyTheme('clean', {
   grid: {
-    border: '#dbe2ea',
+    border: '#cfd8e3',
   },
   header: {
     background: '#f3f6fa',
-    border: '#dbe2ea',
+    border: '#cfd8e3',
     text: '#172033',
   },
   row: {
@@ -24,11 +24,11 @@ Grid.applyTheme('clean', {
   },
   cell: {
     normal: {
-      border: '#e5eaf0',
+      border: '#cfd8e3',
       text: '#27364a',
     },
     header: {
-      border: '#dbe2ea',
+      border: '#cfd8e3',
       text: '#172033',
     },
     selectedHeader: {
