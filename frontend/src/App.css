@@ -2392,7 +2392,7 @@ button {
 
 .tui-grid-cell-header {
   border-right: 1px solid #c7d1de !important;
-  border-bottom: 1px solid #c7d1de !important;
+  border-bottom: 2px solid #9aa9bb !important;
   font-weight: 700;
 }
 
