@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
 
-export function SearchPanel({ fields = [], onChange, onReset, onSearch, searchParams }) {
+export function SearchPanel({ fields = [], onChange, onReset, onSearch, searchParams, title }) {
   const updateValue = (name, value) => {
     onChange({
       ...searchParams,
@@ -9,9 +9,20 @@ export function SearchPanel({ fields = [], onChange, onReset, onSearch, searchPa
   }
 
   return (
-    <section className="list-search-section">
-      <div className="list-section-header">
-        <strong>검색 조건</strong>
+    <section className="filter-card">
+      <div className="filter-card-header">
+        <div className="filter-card-title">
+          <strong>{title}</strong>
+        </div>
+        <div className="search-panel-actions">
+          <button type="button" className="primary-button" onClick={onSearch}>
+            <Search size={16} />
+            검색
+          </button>
+          <button type="button" className="danger-button" onClick={onReset}>
+            조건 초기화
+          </button>
+        </div>
       </div>
       <div className="search-panel">
         <div className="search-panel-fields">
@@ -37,15 +48,6 @@ export function SearchPanel({ fields = [], onChange, onReset, onSearch, searchPa
               )}
             </label>
           ))}
-        </div>
-        <div className="search-panel-actions">
-          <button type="button" className="primary-button" onClick={onSearch}>
-            <Search size={16} />
-            검색
-          </button>
-          <button type="button" className="danger-button" onClick={onReset}>
-            조건 초기화
-          </button>
         </div>
       </div>
     </section>

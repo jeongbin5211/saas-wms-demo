@@ -54,20 +54,6 @@ export function StandardWorkPage({
     setMessage('')
   }
 
-  const toolbar = (
-    <>
-      {allowNew ? (
-        <button type="button" className="primary-button" onClick={handleNew}>
-          신규
-        </button>
-      ) : null}
-      <button type="button" className="icon-text-button" onClick={() => exportGridToCsv(columns, visibleData, title ?? page.title)}>
-        Excel
-      </button>
-      {headerActions}
-    </>
-  )
-
   const handleSearch = async () => {
     if (!endpoint) {
       applyClientFilter()
@@ -114,7 +100,7 @@ export function StandardWorkPage({
   }
 
   const handleSave = async (event) => {
-    event.preventDefault()
+    event?.preventDefault()
 
     if (!allowSave) return
     if (!canEdit) { setMessage('저장할 수 없는 권한입니다.'); return }
@@ -181,6 +167,38 @@ export function StandardWorkPage({
     setMessage,
   }
 
+  const listToolbar = (
+    <>
+      {allowNew ? (
+        <button type="button" className="primary-button" onClick={handleNew}>
+          신규
+        </button>
+      ) : null}
+      <button type="button" className="icon-text-button" onClick={() => exportGridToCsv(columns, visibleData, title ?? page.title)}>
+        Excel
+      </button>
+      {headerActions}
+    </>
+  )
+
+  const detailToolbar = (
+    <>
+      {allowSave ? (
+        <button type="button" className="primary-button" onClick={() => handleSave()}>
+          저장
+        </button>
+      ) : null}
+      {detailActions?.(actionContext)}
+      {selectedRow && allowDelete ? (
+        <button type="button" className="danger-button" onClick={handleDelete}>
+          삭제
+        </button>
+      ) : null}
+    </>
+  )
+
+  const toolbar = activeTab === 0 ? listToolbar : detailToolbar
+
   return (
     <section className="standard-page">
       {!hideHeader && (
@@ -196,6 +214,15 @@ export function StandardWorkPage({
 
       {message ? <div className="info-banner">{message}</div> : null}
 
+      <SearchPanel
+        fields={searchFields}
+        searchParams={searchParams}
+        title={title ?? page.title}
+        onChange={setSearchParams}
+        onReset={handleReset}
+        onSearch={handleSearch}
+      />
+
       <TabLayout
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -204,29 +231,16 @@ export function StandardWorkPage({
           {
             label: listTabLabel ?? `${title ?? page.title} 목록`,
             content: (
-              <>
-                <SearchPanel
-                  fields={searchFields}
-                  searchParams={searchParams}
-                  onChange={setSearchParams}
-                  onReset={handleReset}
-                  onSearch={handleSearch}
+              <section className="list-grid-section">
+                <WmsGrid
+                  columns={columns}
+                  data={visibleData}
+                  fillHeight
+                  minBodyHeight={360}
+                  rowHeaders={rowNumberHeaders}
+                  onRowDoubleClick={handleDblClick}
                 />
-                <section className="list-grid-section">
-                  <div className="list-section-header">
-                    <strong>그리드</strong>
-                    <span>행을 더블클릭하면 상세 목록으로 이동합니다.</span>
-                  </div>
-                  <WmsGrid
-                    columns={columns}
-                    data={visibleData}
-                    fillHeight
-                    minBodyHeight={360}
-                    rowHeaders={rowNumberHeaders}
-                    onRowDoubleClick={handleDblClick}
-                  />
-                </section>
-              </>
+              </section>
             ),
           },
           {
@@ -239,6 +253,7 @@ export function StandardWorkPage({
                   isCreateMode={!selectedRow}
                   modeLabel={selectedRow ? (allowSave ? '상세 수정' : '상세') : '신규 등록'}
                   row={draftRow}
+                  showActions={false}
                   showSave={allowSave}
                   onCancel={() => setActiveTab(0)}
                   onDelete={allowDelete ? handleDelete : null}

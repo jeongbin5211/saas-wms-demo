@@ -1614,15 +1614,61 @@ button {
   flex-shrink: 0;
 }
 
-.tab-work-card {
+.filter-card,
+.tab-button-card,
+.tab-content-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.filter-card {
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.filter-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 14px;
+  background: #fff;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.filter-card-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.filter-card-title strong {
+  color: var(--control-navy);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.tab-shell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.tab-button-card {
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.tab-content-card {
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
 }
 
 .card_btn {
@@ -1630,10 +1676,9 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 43px;
-  padding: 0 14px;
-  background: #fbfcfe;
-  border-bottom: 1px solid var(--line);
+  min-height: 48px;
+  padding: 0 12px;
+  background: #fff;
 }
 
 .card-tab-list,
@@ -1671,13 +1716,8 @@ button {
   background: #fff;
 }
 
-.list-search-section,
 .list-grid-section {
   background: #fff;
-}
-
-.list-search-section {
-  border-bottom: 1px solid var(--line);
 }
 
 .list-grid-section {
@@ -1686,7 +1726,6 @@ button {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  border-top: 1px solid #eef1f5;
 }
 
 .list-section-header {
@@ -1713,10 +1752,7 @@ button {
 }
 
 .search-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
-  padding: 12px 14px;
+  padding: 14px;
   background: #fff;
 }
 
@@ -1766,6 +1802,9 @@ button {
 }
 
 .detail-form {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   padding: 14px;
 }
 

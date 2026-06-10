@@ -12,6 +12,7 @@ export function DetailForm({
   onSave,
   row,
   isCreateMode = row == null,
+  showActions = true,
   showSave = true,
 }) {
   const values = row ?? {}
@@ -80,22 +81,24 @@ export function DetailForm({
         ))}
       </div>
 
-      <div className="detail-form-actions">
-        {showSave ? (
-          <button type="submit" className="primary-button" disabled={actionsDisabled}>
-            저장
+      {showActions ? (
+        <div className="detail-form-actions">
+          {showSave ? (
+            <button type="submit" className="primary-button" disabled={actionsDisabled}>
+              저장
+            </button>
+          ) : null}
+          {extraActions}
+          <button type="button" className="icon-text-button" onClick={onCancel}>
+            취소
           </button>
-        ) : null}
-        {extraActions}
-        <button type="button" className="icon-text-button" onClick={onCancel}>
-          취소
-        </button>
-        {!isCreateMode && onDelete ? (
-          <button type="button" className="danger-button" disabled={actionsDisabled} onClick={onDelete}>
-            삭제
-          </button>
-        ) : null}
-      </div>
+          {!isCreateMode && onDelete ? (
+            <button type="button" className="danger-button" disabled={actionsDisabled} onClick={onDelete}>
+              삭제
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </form>
   )
 }
