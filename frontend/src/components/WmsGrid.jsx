@@ -2,6 +2,14 @@ import Grid from 'tui-grid'
 import 'tui-grid/dist/tui-grid.css'
 import { useEffect, useMemo, useRef } from 'react'
 
+const auditColumnNames = ['createdBy', 'createdAt', 'updatedBy', 'updatedAt']
+const auditColumns = [
+  { header: '등록자', name: 'createdBy', width: 110, align: 'center' },
+  { header: '등록일자', name: 'createdAt', width: 160, align: 'center' },
+  { header: '수정자', name: 'updatedBy', width: 110, align: 'center' },
+  { header: '수정일자', name: 'updatedAt', width: 160, align: 'center' },
+]
+
 Grid.applyTheme('clean', {
   grid: {
     border: '#cfd8e3',
@@ -52,6 +60,8 @@ export function WmsGrid({
   const containerRef = useRef(null)
   const gridRef = useRef(null)
   const onRowDoubleClickRef = useRef(onRowDoubleClick)
+  const effectiveColumns = useMemo(() => appendAuditColumns(columns), [columns])
+  const effectiveData = useMemo(() => normalizeAuditRows(data), [data])
   const summary = useMemo(() => buildSummary(summaryColumns), [summaryColumns])
 
   useEffect(() => {
@@ -66,7 +76,7 @@ export function WmsGrid({
     gridRef.current = new Grid({
       el: containerRef.current,
       data: [],
-      columns,
+      columns: effectiveColumns,
       rowHeaders,
       bodyHeight: minBodyHeight,
       minBodyHeight,
@@ -102,7 +112,7 @@ export function WmsGrid({
       gridRef.current.destroy()
       gridRef.current = null
     }
-  }, [columns, minBodyHeight, rowHeaders, summary])
+  }, [effectiveColumns, minBodyHeight, rowHeaders, summary])
 
   useEffect(() => {
     if (!fillHeight || !containerRef.current) {
@@ -135,10 +145,64 @@ export function WmsGrid({
       return
     }
 
-    gridRef.current.resetData(data)
-  }, [data])
+    gridRef.current.resetData(effectiveData)
+  }, [effectiveData])
 
   return <div className="wms-grid" ref={containerRef} />
+}
+
+function appendAuditColumns(columns) {
+  const businessColumns = columns.filter((column) => !auditColumnNames.includes(column.name))
+  return [...businessColumns, ...auditColumns]
+}
+
+function normalizeAuditRows(rows = []) {
+  return rows.map((row) => ({
+    ...row,
+    createdBy: row.createdBy ?? row.createdByName ?? row.createdUserName ?? '시스템',
+    createdAt: formatAuditDate(row.createdAt),
+    updatedBy: row.updatedBy ?? row.updatedByName ?? row.updatedUserName ?? '시스템',
+    updatedAt: formatAuditDate(row.updatedAt),
+  }))
+}
+
+function formatAuditDate(value) {
+  if (!value) {
+    return ''
+  }
+
+  if (Array.isArray(value)) {
+    const [year, month, day, hour = 0, minute = 0, second = 0] = value
+    return `${year}-${pad(month)}-${pad(day)} ${pad(hour)}:${pad(minute)}:${pad(second)}`
+  }
+
+  const text = String(value).trim()
+
+  if (!text) {
+    return ''
+  }
+
+  const normalizedText = text.replace('T', ' ').replace(/\.\d+$/, '')
+
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(normalizedText)) {
+    return normalizedText.slice(0, 19)
+  }
+
+  const date = new Date(text)
+
+  if (Number.isNaN(date.getTime())) {
+    return text
+  }
+
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join('-') + ` ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+function pad(value) {
+  return String(value).padStart(2, '0')
 }
 
 function buildSummary(summaryColumns) {

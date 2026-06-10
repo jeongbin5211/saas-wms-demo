@@ -20,8 +20,6 @@ const areaColumns = [
   { header: '상세 설명', name: 'detailDescription', width: 260 },
   { header: '우선순위', name: 'priority', width: 100, align: 'right' },
   { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
-  { header: '등록 일자', name: 'createdAt', width: 170 },
-  { header: '수정 일자', name: 'updatedAt', width: 170 },
 ]
 
 const zoneColumns = [
@@ -33,8 +31,6 @@ const zoneColumns = [
   { header: '상세 설명', name: 'detailDescription', width: 260 },
   { header: '우선순위', name: 'priority', width: 100, align: 'right' },
   { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
-  { header: '등록 일자', name: 'createdAt', width: 170 },
-  { header: '수정 일자', name: 'updatedAt', width: 170 },
 ]
 
 const locationColumns = [
@@ -50,8 +46,6 @@ const locationColumns = [
   { header: '적치 우선순위', name: 'putawayPriority', width: 120, align: 'right' },
   { header: '피킹 우선순위', name: 'pickingPriority', width: 120, align: 'right' },
   { header: '할당우선순위', name: 'allocPriority', width: 120, align: 'right' },
-  { header: '등록 일자', name: 'createdAt', width: 170 },
-  { header: '수정 일자', name: 'updatedAt', width: 170 },
   { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
 ]
 
