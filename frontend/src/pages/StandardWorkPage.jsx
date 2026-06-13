@@ -36,7 +36,9 @@ export function StandardWorkPage({
   const [gridData, setGridData] = useState(null)
   const [searchParams, setSearchParams] = useState({})
   const [toast, setToast] = useState(null)
+  const [toastShown, setToastShown] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState(null)
+  const [confirmShown, setConfirmShown] = useState(false)
   const [confirmResolver, setConfirmResolver] = useState(null)
 
   const canEdit = ['ADMIN', 'STAFF', 'GUEST'].includes(authUser?.roleSubCode)
@@ -45,18 +47,35 @@ export function StandardWorkPage({
   useEffect(() => {
     if (!toast) return undefined
 
-    const timer = window.setTimeout(() => setToast(null), 3600)
-    return () => window.clearTimeout(timer)
+    const showTimer = window.setTimeout(() => setToastShown(true), 60)
+    const hideTimer = window.setTimeout(() => dismissToast(), 3600)
+    return () => {
+      window.clearTimeout(showTimer)
+      window.clearTimeout(hideTimer)
+    }
   }, [toast])
+
+  useEffect(() => {
+    if (!confirmDialog) return undefined
+
+    const showTimer = window.setTimeout(() => setConfirmShown(true), 40)
+    return () => window.clearTimeout(showTimer)
+  }, [confirmDialog])
 
   const showToast = (nextMessage, type = 'info', title) => {
     if (!nextMessage) return
 
+    setToastShown(false)
     setToast({
       message: nextMessage,
       title: title ?? toastTitle(type),
       type,
     })
+  }
+
+  function dismissToast() {
+    setToastShown(false)
+    window.setTimeout(() => setToast(null), 600)
   }
 
   const notify = (nextMessage, type, title) => {
@@ -75,13 +94,17 @@ export function StandardWorkPage({
     type = 'info',
   } = {}) => new Promise((resolve) => {
     setConfirmResolver(() => resolve)
+    setConfirmShown(false)
     setConfirmDialog({ text, title, type })
   })
 
   const closeConfirm = (confirmed) => {
-    confirmResolver?.(confirmed)
-    setConfirmResolver(null)
-    setConfirmDialog(null)
+    setConfirmShown(false)
+    window.setTimeout(() => {
+      confirmResolver?.(confirmed)
+      setConfirmResolver(null)
+      setConfirmDialog(null)
+    }, 220)
   }
 
   const handleDblClick = (rowData) => {
@@ -273,8 +296,8 @@ export function StandardWorkPage({
         </div>
       )}
 
-      <ToastNotification toast={toast} onClose={() => setToast(null)} />
-      <ConfirmDialog dialog={confirmDialog} onClose={closeConfirm} />
+      <ToastNotification toast={toast} shown={toastShown} onClose={dismissToast} />
+      <ConfirmDialog dialog={confirmDialog} shown={confirmShown} onClose={closeConfirm} />
 
       <SearchPanel
         fields={searchFields}
@@ -333,11 +356,11 @@ export function StandardWorkPage({
   )
 }
 
-function ConfirmDialog({ dialog, onClose }) {
+function ConfirmDialog({ dialog, shown, onClose }) {
   if (!dialog) return null
 
   return (
-    <div className="confirm-dialog-layer" role="presentation">
+    <div className={`confirm-dialog-layer${shown ? ' shown' : ''}`} role="presentation">
       <div className={`confirm-dialog confirm-dialog-${dialog.type}`} role="alertdialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
         <div className="confirm-dialog-body">
           <div className={`confirm-dialog-icon confirm-dialog-icon-${dialog.type}`} aria-hidden="true">
@@ -365,11 +388,11 @@ function confirmIcon(type) {
   return '!'
 }
 
-function ToastNotification({ toast, onClose }) {
+function ToastNotification({ toast, shown, onClose }) {
   if (!toast) return null
 
   return (
-    <div className={`toast-notification toast-notification-${toast.type}`} role="status" aria-live="polite">
+    <div className={`toast-notification toast-notification-${toast.type}${shown ? ' shown' : ''}`} role="status" aria-live="polite">
       <span className="toast-notification-icon" aria-hidden="true">
         {toast.type === 'success' ? '✓' : '!'}
       </span>
