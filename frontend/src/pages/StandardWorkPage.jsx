@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DetailForm } from '../components/common/DetailForm.jsx'
 import { SearchPanel } from '../components/common/SearchPanel.jsx'
 import { TabLayout } from '../components/common/TabLayout.jsx'
@@ -36,9 +36,38 @@ export function StandardWorkPage({
   const [gridData, setGridData] = useState(null)
   const [message, setMessage] = useState('')
   const [searchParams, setSearchParams] = useState({})
+  const [toast, setToast] = useState(null)
 
   const canEdit = ['ADMIN', 'STAFF', 'GUEST'].includes(authUser?.roleSubCode)
   const visibleData = gridData ?? data
+
+  useEffect(() => {
+    if (!toast) return undefined
+
+    const timer = window.setTimeout(() => setToast(null), 3600)
+    return () => window.clearTimeout(timer)
+  }, [toast])
+
+  const showToast = (nextMessage, type = 'info', title) => {
+    if (!nextMessage) return
+
+    setToast({
+      message: nextMessage,
+      title: title ?? toastTitle(type),
+      type,
+    })
+  }
+
+  const notify = (nextMessage, type, title) => {
+    if (!nextMessage) {
+      setMessage('')
+      return
+    }
+
+    const resolvedType = type ?? inferToastType(nextMessage)
+    setMessage(nextMessage)
+    showToast(nextMessage, resolvedType, title)
+  }
 
   const handleDblClick = (rowData) => {
     setSelectedRow(rowData)
@@ -57,6 +86,7 @@ export function StandardWorkPage({
   const handleSearch = async () => {
     if (!endpoint) {
       applyClientFilter()
+      notify('조회가 완료되었습니다.', 'success')
       return
     }
 
@@ -68,10 +98,10 @@ export function StandardWorkPage({
       }
 
       setGridData(await response.json())
-      setMessage('')
+      notify('조회가 완료되었습니다.', 'success')
     } catch {
       applyClientFilter()
-      setMessage('검색 API 조건 조회를 사용할 수 없어 현재 데이터에서 필터링했습니다.')
+      notify('검색 API 조건 조회를 사용할 수 없어 현재 데이터에서 필터링했습니다.', 'warning')
     }
   }
 
@@ -89,7 +119,7 @@ export function StandardWorkPage({
   const handleReset = () => {
     setSearchParams({})
     setGridData(null)
-    setMessage('')
+    notify('검색 조건이 초기화되었습니다.', 'info')
   }
 
   const handleFieldChange = (name, value) => {
@@ -103,11 +133,11 @@ export function StandardWorkPage({
     event?.preventDefault()
 
     if (!allowSave) return
-    if (!canEdit) { setMessage('저장할 수 없는 권한입니다.'); return }
-    if (!endpoint) { setMessage('이 화면은 아직 저장 API가 연결되지 않았습니다.'); return }
+    if (!canEdit) { notify('저장할 수 없는 권한입니다.', 'error'); return }
+    if (!endpoint) { notify('이 화면은 아직 저장 API가 연결되지 않았습니다.', 'warning'); return }
 
     const validationError = validateRequired(detailFields, draftRow)
-    if (validationError) { setMessage(validationError); return }
+    if (validationError) { notify(validationError, 'warning'); return }
 
     const method = selectedRow ? 'PUT' : 'POST'
     const saveUrl = selectedRow ? `${endpoint}/${selectedRow.id}` : endpoint
@@ -122,38 +152,38 @@ export function StandardWorkPage({
 
       if (!response.ok) {
         const errorMessage = await parseApiError(response, selectedRow ? '수정에 실패했습니다.' : '등록에 실패했습니다.')
-        setMessage(errorMessage)
+        notify(errorMessage, 'error')
         return
       }
 
-      setMessage(selectedRow ? '수정이 완료되었습니다.' : '등록이 완료되었습니다.')
+      notify(selectedRow ? '수정이 완료되었습니다.' : '등록이 완료되었습니다.', 'success')
       await onRefresh?.()
       setGridData(null)
       setActiveTab(0)
     } catch {
-      setMessage(selectedRow ? '수정에 실패했습니다.' : '등록에 실패했습니다.')
+      notify(selectedRow ? '수정에 실패했습니다.' : '등록에 실패했습니다.', 'error')
     }
   }
 
   const handleDelete = async () => {
-    if (!canEdit) { setMessage('삭제할 수 없는 권한입니다.'); return }
-    if (!endpoint || !selectedRow) { setMessage('삭제할 행을 선택하세요.'); return }
+    if (!canEdit) { notify('삭제할 수 없는 권한입니다.', 'error'); return }
+    if (!endpoint || !selectedRow) { notify('삭제할 행을 선택하세요.', 'warning'); return }
 
     try {
       const response = await fetchWithAuth(`${endpoint}/${selectedRow.id}`, { method: 'DELETE' })
 
       if (!response.ok) {
         const errorMessage = await parseApiError(response, '삭제에 실패했습니다.')
-        setMessage(errorMessage)
+        notify(errorMessage, 'error')
         return
       }
 
-      setMessage('삭제가 완료되었습니다.')
+      notify('삭제가 완료되었습니다.', 'success')
       await onRefresh?.()
       setGridData(null)
       setActiveTab(0)
     } catch {
-      setMessage('삭제에 실패했습니다.')
+      notify('삭제에 실패했습니다.', 'error')
     }
   }
 
@@ -166,7 +196,8 @@ export function StandardWorkPage({
     selectedRow,
     setDraftRow,
     setGridData,
-    setMessage,
+    setMessage: notify,
+    showToast,
   }
 
   const listToolbar = (
@@ -215,6 +246,7 @@ export function StandardWorkPage({
       )}
 
       {message ? <div className="info-banner">{message}</div> : null}
+      <ToastNotification toast={toast} onClose={() => setToast(null)} />
 
       <SearchPanel
         fields={searchFields}
@@ -271,6 +303,36 @@ export function StandardWorkPage({
       />
     </section>
   )
+}
+
+function ToastNotification({ toast, onClose }) {
+  if (!toast) return null
+
+  return (
+    <div className={`toast-notification toast-notification-${toast.type}`} role="status" aria-live="polite">
+      <div>
+        <strong>{toast.title}</strong>
+        <p>{toast.message}</p>
+      </div>
+      <button type="button" aria-label="알림 닫기" onClick={onClose}>
+        x
+      </button>
+    </div>
+  )
+}
+
+function toastTitle(type) {
+  if (type === 'success') return 'Success!'
+  if (type === 'error') return 'Error!'
+  if (type === 'warning') return 'Warning!'
+  return 'Info'
+}
+
+function inferToastType(message) {
+  if (/완료|성공/.test(message)) return 'success'
+  if (/실패|오류|권한|Error/i.test(message)) return 'error'
+  if (/선택|필수|먼저|없어|않습니다|초기화/.test(message)) return 'warning'
+  return 'info'
 }
 
 function exportGridToCsv(columns, rows, title) {
