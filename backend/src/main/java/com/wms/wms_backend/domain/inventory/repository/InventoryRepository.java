@@ -13,6 +13,15 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
     boolean existsByItemIdAndLocationId(Long itemId, Long locationId);
 
+    @Query("""
+            SELECT CASE WHEN COUNT(i) > 0 THEN true ELSE false END
+            FROM Inventory i
+            WHERE i.location.warehouse.id = :warehouseId
+              AND i.useYn = 'Y'
+              AND (i.quantity > 0 OR i.allocatedQuantity > 0)
+            """)
+    boolean existsActiveStockByWarehouseId(@Param("warehouseId") Long warehouseId);
+
     Optional<Inventory> findByItemIdAndLocationId(Long itemId, Long locationId);
 
     @EntityGraph(attributePaths = {"item", "location"})

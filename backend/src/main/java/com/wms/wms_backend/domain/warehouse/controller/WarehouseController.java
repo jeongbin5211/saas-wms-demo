@@ -3,6 +3,7 @@ package com.wms.wms_backend.domain.warehouse.controller;
 import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.account.entity.Account;
 import com.wms.wms_backend.domain.account.repository.AccountRepository;
+import com.wms.wms_backend.domain.inventory.repository.InventoryRepository;
 import com.wms.wms_backend.domain.warehouse.entity.Area;
 import com.wms.wms_backend.domain.warehouse.entity.Location;
 import com.wms.wms_backend.domain.warehouse.entity.Warehouse;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -37,15 +39,41 @@ public class WarehouseController {
     private final AccountRepository accountRepository;
     private final WarehouseRepository warehouseRepository;
     private final AreaRepository areaRepository;
+    private final InventoryRepository inventoryRepository;
     private final ZoneRepository zoneRepository;
     private final LocationRepository locationRepository;
 
     @GetMapping("/api/warehouses")
-    public List<WarehouseResponse> findWarehouses() {
+    public List<WarehouseResponse> findWarehouses(
+            @RequestParam(required = false) String warehouseCode,
+            @RequestParam(required = false) String warehouseName,
+            @RequestParam(required = false) String warehouseTypeSubCode,
+            @RequestParam(required = false) String accountCode,
+            @RequestParam(required = false) String accountName,
+            @RequestParam(required = false) String useYn
+    ) {
         Long topAccountId = SecurityUtil.currentTopAccountId();
         List<WarehouseResponse> responses = new ArrayList<>();
+        List<Warehouse> warehouses = hasText(useYn)
+                ? warehouseRepository.findAllByTopAccountIdAndUseYnOrderByIdAsc(topAccountId, useYn)
+                : warehouseRepository.findAllByTopAccountIdOrderByIdAsc(topAccountId);
 
-        for (Warehouse warehouse : warehouseRepository.findAllByTopAccountIdAndUseYnOrderByIdAsc(topAccountId, "Y")) {
+        for (Warehouse warehouse : warehouses) {
+            if (!contains(warehouse.getWarehouseCode(), warehouseCode)) {
+                continue;
+            }
+            if (!contains(warehouse.getWarehouseName(), warehouseName)) {
+                continue;
+            }
+            if (!equalsCode(warehouse.getWarehouseTypeSubCode(), warehouseTypeSubCode)) {
+                continue;
+            }
+            if (!contains(warehouse.getAccount().getAccountCode(), accountCode)) {
+                continue;
+            }
+            if (!contains(warehouse.getAccount().getAccountName(), accountName)) {
+                continue;
+            }
             responses.add(WarehouseResponse.from(warehouse));
         }
 
@@ -58,11 +86,12 @@ public class WarehouseController {
     public WarehouseResponse createWarehouse(@Valid @RequestBody WarehouseCreateRequest request) {
         requireEditableRole();
 
-        if (warehouseRepository.existsByWarehouseCode(request.warehouseCode())) {
+        Long topAccountId = SecurityUtil.currentTopAccountId();
+        if (warehouseRepository.existsByTopAccountIdAndWarehouseCode(topAccountId, request.warehouseCode())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 창고 코드입니다.");
         }
 
-        Account account = currentAccount();
+        Account account = writableAccount(request.accountId());
         Warehouse warehouse = warehouseRepository.save(new Warehouse(
                 account,
                 account.getTopAccountId(),
@@ -91,7 +120,7 @@ public class WarehouseController {
 
         Warehouse warehouse = findWarehouse(id);
 
-        if (warehouseRepository.existsByWarehouseCodeAndIdNot(request.warehouseCode(), id)) {
+        if (warehouseRepository.existsByTopAccountIdAndWarehouseCodeAndIdNot(SecurityUtil.currentTopAccountId(), request.warehouseCode(), id)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 창고 코드입니다.");
         }
 
@@ -117,7 +146,12 @@ public class WarehouseController {
     public void deleteWarehouse(@PathVariable Long id) {
         requireEditableRole();
 
-        findWarehouse(id).deactivate();
+        Warehouse warehouse = findWarehouse(id);
+        if (inventoryRepository.existsActiveStockByWarehouseId(warehouse.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "재고가 남아 있는 창고는 삭제할 수 없습니다.");
+        }
+
+        warehouse.deactivate();
     }
 
     @GetMapping("/api/areas")
@@ -353,22 +387,63 @@ public class WarehouseController {
         Zone zone = zoneRepository.save(new Zone(warehouse.getAccount(), area, baseCode, baseName));
         zone.updateOptionalFields("창고 생성 시 자동 생성된 기본 Zone입니다.", 1);
 
-        Location location = locationRepository.save(new Location(warehouse.getAccount(), zone, baseCode, baseName));
+        createDefaultLocation(warehouse, zone, baseCode, "-RCV", "입고대기", "RECEIVING", 1);
+        createDefaultLocation(warehouse, zone, baseCode, "-STG", "보관", "STORAGE", 2);
+        createDefaultLocation(warehouse, zone, baseCode, "-PCK", "피킹", "PICKING", 3);
+        createDefaultLocation(warehouse, zone, baseCode, "-SHP", "출고대기", "SHIPPING", 4);
+        createDefaultLocation(warehouse, zone, baseCode, "-RTN", "반품", "RETURN", 5);
+    }
+
+    private void createDefaultLocation(Warehouse warehouse, Zone zone, String baseCode, String suffix, String name, String type, int priority) {
+        Location location = locationRepository.save(new Location(warehouse.getAccount(), zone, defaultLocationCode(baseCode, suffix), name));
         location.updateOptionalFields(
-                "창고 생성 시 자동 생성된 기본 Location입니다.",
-                "STORAGE",
+                "창고 생성 시 자동 생성된 " + name + " Location입니다.",
+                type,
                 "NORMAL",
                 null,
-                1,
-                1,
-                1,
-                1
+                priority,
+                priority,
+                priority,
+                priority
         );
     }
 
     private Account currentAccount() {
         return accountRepository.findById(SecurityUtil.currentAccountId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래처 정보를 찾을 수 없습니다."));
+    }
+
+    private Account writableAccount(Long accountId) {
+        Long targetAccountId = accountId == null ? SecurityUtil.currentAccountId() : accountId;
+        Account account = accountRepository.findById(targetAccountId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래처 정보를 찾을 수 없습니다."));
+
+        if (!SecurityUtil.currentTopAccountId().equals(account.getTopAccountId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "접근할 수 없는 거래처입니다.");
+        }
+
+        return account;
+    }
+
+    private boolean contains(String source, String keyword) {
+        return !hasText(keyword) || (source != null && source.toLowerCase().contains(keyword.toLowerCase()));
+    }
+
+    private boolean equalsCode(String source, String keyword) {
+        return !hasText(keyword) || keyword.equals(source);
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private String defaultLocationCode(String baseCode, String suffix) {
+        int maxBaseLength = 50 - suffix.length();
+        if (baseCode.length() <= maxBaseLength) {
+            return baseCode + suffix;
+        }
+
+        return baseCode.substring(0, maxBaseLength) + suffix;
     }
 
     private Warehouse findWarehouse(Long id) {
@@ -567,6 +642,7 @@ public class WarehouseController {
     }
 
     public record WarehouseCreateRequest(
+            Long accountId,
             @NotBlank String warehouseCode,
             @NotBlank String warehouseName,
             @NotBlank String warehouseTypeSubCode,
@@ -581,6 +657,7 @@ public class WarehouseController {
     }
 
     public record WarehouseUpdateRequest(
+            Long accountId,
             @NotBlank String warehouseCode,
             @NotBlank String warehouseName,
             @NotBlank String warehouseTypeSubCode,

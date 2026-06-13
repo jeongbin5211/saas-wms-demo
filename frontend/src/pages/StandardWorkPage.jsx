@@ -161,8 +161,10 @@ export function StandardWorkPage({
     canEdit,
     draftRow,
     goList: () => setActiveTab(0),
+    isCreateMode: !selectedRow,
     refresh: onRefresh,
     selectedRow,
+    setDraftRow,
     setGridData,
     setMessage,
   }

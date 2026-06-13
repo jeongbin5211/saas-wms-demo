@@ -1,3 +1,5 @@
+import { Search, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { StandardWorkPage } from '../StandardWorkPage.jsx'
 
 const warehouseColumns = [
@@ -6,8 +8,8 @@ const warehouseColumns = [
   { header: '주소명', name: 'addressName', width: 220 },
   { header: '우선순위', name: 'priority', width: 100, align: 'right' },
   { header: '유형', name: 'warehouseTypeSubCode', width: 120, align: 'center' },
-  { header: '거래처', name: 'accountCode', width: 130 },
-  { header: '거래처명', name: 'accountName', width: 180 },
+  { header: '소속 거래처', name: 'accountCode', width: 130 },
+  { header: '소속 거래처명', name: 'accountName', width: 180 },
   { header: '전화번호', name: 'phoneNo', width: 140 },
   { header: '팩스', name: 'faxNo', width: 140 },
   { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
@@ -67,6 +69,7 @@ const locationTypeOptions = [
   { label: '피킹', value: 'PICKING' },
   { label: '입고', value: 'RECEIVING' },
   { label: '출고', value: 'SHIPPING' },
+  { label: '반품', value: 'RETURN' },
 ]
 
 const logicalTypeOptions = [
@@ -76,6 +79,7 @@ const logicalTypeOptions = [
 ]
 
 export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, page }) {
+  const [accountLookupContext, setAccountLookupContext] = useState(null)
   const catalog = data.locationCatalog
   const warehouseOptions = catalog.warehouses.map((warehouse) => ({
     label: `${warehouse.warehouseCode} / ${warehouse.warehouseName}`,
@@ -90,20 +94,48 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
     value: zone.id,
   }))
   const pages = [
-    buildWarehousePage({ authUser, catalog, onRefresh, page }),
+    buildWarehousePage({
+      accounts: data.accounts,
+      authUser,
+      catalog,
+      onOpenAccountLookup: setAccountLookupContext,
+      onRefresh,
+      page,
+    }),
     buildAreaPage({ areaOptions, authUser, catalog, onRefresh, page, warehouseOptions }),
     buildZonePage({ areaOptions, authUser, catalog, onRefresh, page }),
     buildLocationPage({ authUser, catalog, onRefresh, page, zoneOptions }),
   ]
 
-  return pages[initialTypeTab] ?? pages[0]
+  return (
+    <>
+      {pages[initialTypeTab] ?? pages[0]}
+      <AccountLookupModal
+        accounts={data.accounts}
+        open={Boolean(accountLookupContext)}
+        onClose={() => setAccountLookupContext(null)}
+        onSelect={(account) => {
+          accountLookupContext?.setDraftRow((current) => ({
+            ...(current ?? {}),
+            accountId: account.id,
+            accountCode: account.accountCode,
+            accountName: account.accountName,
+          }))
+          setAccountLookupContext(null)
+        }}
+      />
+    </>
+  )
 }
 
-function buildWarehousePage({ authUser, catalog, onRefresh, page }) {
+function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, onRefresh, page }) {
+  const defaultAccount = accounts[0]
+
   return (
     <StandardWorkPage
       authUser={authUser}
       buildPayload={(row) => ({
+        accountId: Number(row.accountId),
         warehouseCode: row.warehouseCode,
         warehouseName: row.warehouseName,
         warehouseTypeSubCode: row.warehouseTypeSubCode,
@@ -116,15 +148,22 @@ function buildWarehousePage({ authUser, catalog, onRefresh, page }) {
         useYn: row.useYn ?? 'Y',
       })}
       columns={warehouseColumns}
-      createDefaults={{ priority: 0, useYn: 'Y', warehouseTypeSubCode: 'OWN' }}
+      createDefaults={{
+        accountCode: defaultAccount?.accountCode ?? '',
+        accountId: defaultAccount?.id ?? '',
+        accountName: defaultAccount?.accountName ?? '',
+        priority: 0,
+        useYn: 'Y',
+        warehouseTypeSubCode: 'OWN',
+      }}
       data={catalog.warehouses}
       detailFields={[
         { name: 'warehouseTypeSubCode', label: '창고 유형', section: '기본 정보', type: 'select', options: warehouseTypeOptions, required: true },
-        { name: 'accountCode', label: '거래처 코드', section: '기본 정보', readOnly: true, actionLabel: '조회' },
-        { name: 'accountName', label: '거래처명', section: '기본 정보', readOnly: true },
-        { name: 'warehouseCode', label: '창고 코드', section: '기본 정보', required: true },
+        { name: 'accountCode', label: '창고 소속 거래처', section: '기본 정보', readOnly: true, required: true, actionLabel: '조회', actionDisabledOnEdit: true },
+        { name: 'accountName', label: '소속 거래처명', section: '기본 정보', readOnly: true, required: true },
+        { name: 'warehouseCode', label: '창고 코드', section: '기본 정보', required: true, readOnlyOnEdit: true },
         { name: 'warehouseName', label: '창고명', section: '기본 정보', required: true },
-        { name: 'addressName', label: '주소명', section: '상세 정보', required: true, wide: true, actionLabel: '조회' },
+        { name: 'addressName', label: '주소명', section: '상세 정보', required: true, wide: true, placeholder: '예: 서울시 강남구 물류센터 1동' },
         { name: 'priority', label: '우선순위', section: '상세 정보', type: 'number', required: true },
         { name: 'phoneNo', label: '전화번호', section: '상세 정보' },
         { name: 'faxNo', label: '팩스', section: '상세 정보' },
@@ -139,15 +178,100 @@ function buildWarehousePage({ authUser, catalog, onRefresh, page }) {
       onRefresh={onRefresh}
       page={{ ...page, eyebrow: '로케이션 정보', title: '창고' }}
       detailFieldAction={(field, values, context) => {
-        const target = field.name === 'addressName' ? '주소 조회 팝업' : '거래처 조회 팝업'
-        context.setMessage(`${target}은 다음 작업에서 실제 선택 팝업으로 연결합니다.`)
+        if (field.name !== 'accountCode') {
+          return
+        }
+
+        if (!context.isCreateMode) {
+          context.setMessage('수정 중에는 창고 소속 거래처를 변경할 수 없습니다.')
+          return
+        }
+
+        onOpenAccountLookup(context)
       }}
       searchFields={[
         { name: 'warehouseCode', label: '창고 코드' },
         { name: 'warehouseName', label: '창고명' },
         { name: 'warehouseTypeSubCode', label: '창고 유형', type: 'select', options: warehouseTypeOptions },
+        { name: 'accountCode', label: '소속 거래처 코드' },
+        { name: 'accountName', label: '소속 거래처명' },
+        { name: 'useYn', label: '사용 여부', type: 'select', options: useYnOptions },
       ]}
     />
+  )
+}
+
+function AccountLookupModal({ accounts, open, onClose, onSelect }) {
+  const [keyword, setKeyword] = useState('')
+  const filteredAccounts = useMemo(() => {
+    const normalizedKeyword = keyword.trim().toLowerCase()
+
+    if (!normalizedKeyword) {
+      return accounts
+    }
+
+    return accounts.filter((account) => (
+      account.accountCode.toLowerCase().includes(normalizedKeyword)
+      || account.accountName.toLowerCase().includes(normalizedKeyword)
+      || account.accountTypeSubCode.toLowerCase().includes(normalizedKeyword)
+    ))
+  }, [accounts, keyword])
+
+  if (!open) {
+    return null
+  }
+
+  return (
+    <div className="lookup-modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <section className="lookup-modal" role="dialog" aria-modal="true" aria-label="창고 소속 거래처 조회" onMouseDown={(event) => event.stopPropagation()}>
+        <header className="lookup-modal-header">
+          <strong>창고 소속 거래처 조회</strong>
+          <button type="button" className="icon-only-button" aria-label="닫기" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </header>
+        <div className="lookup-modal-filter">
+          <Search size={16} />
+          <input
+            autoFocus
+            placeholder="거래처 코드 또는 거래처명"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+          />
+        </div>
+        <div className="lookup-modal-grid">
+          <table>
+            <thead>
+              <tr>
+                <th>거래처 코드</th>
+                <th>거래처명</th>
+                <th>구분</th>
+                <th>선택</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAccounts.map((account) => (
+                <tr key={account.id} onDoubleClick={() => onSelect(account)}>
+                  <td>{account.accountCode}</td>
+                  <td>{account.accountName}</td>
+                  <td>{account.accountTypeSubCode}</td>
+                  <td>
+                    <button type="button" className="primary-button compact" onClick={() => onSelect(account)}>
+                      선택
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {filteredAccounts.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="lookup-empty-cell">조회된 거래처가 없습니다.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   )
 }
 

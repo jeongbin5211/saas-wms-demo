@@ -25,13 +25,13 @@ class AuthAndProcessApiTests {
     private ObjectMapper objectMapper;
 
     @Test
-    void 업무Api는_토큰이_없으면_차단된다() throws Exception {
+    void apiRequestsWithoutTokenRedirectToLogin() throws Exception {
         mockMvc.perform(get("/api/inventories"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().is3xxRedirection());
     }
 
     @Test
-    void 게스트는_조회는_가능하지만_출고확정은_불가능하다() throws Exception {
+    void guestCanReadAndConfirmShippingForDemo() throws Exception {
         String guestToken = login("guest@saas-wms-demo.com", "guest1234");
 
         mockMvc.perform(get("/api/inventories")
@@ -40,11 +40,13 @@ class AuthAndProcessApiTests {
 
         mockMvc.perform(post("/api/shippings/1/confirm")
                         .header("Authorization", "Bearer " + guestToken))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.shippingStatusSubCode").value("CONFIRMED"))
+                .andExpect(jsonPath("$.billStatusSubCode").value("ISSUED"));
     }
 
     @Test
-    void 직원은_출고확정_시_청구서를_확인할_수_있다() throws Exception {
+    void staffCanConfirmShippingAndReadBill() throws Exception {
         String staffToken = login("staff@saas-wms-demo.com", "guest1234");
 
         mockMvc.perform(post("/api/shippings/1/confirm")

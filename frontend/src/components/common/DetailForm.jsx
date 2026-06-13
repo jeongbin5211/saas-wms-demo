@@ -43,7 +43,7 @@ export function DetailForm({
                   <div className={field.actionLabel ? 'detail-control-row has-action' : 'detail-control-row'}>
                     {field.type === 'select' ? (
                       <select
-                        disabled={field.readOnly}
+                        disabled={isFieldReadOnly(field, isCreateMode, values)}
                         value={values[field.name] ?? ''}
                         onChange={(event) => onFieldChange(field.name, event.target.value)}
                       >
@@ -56,7 +56,7 @@ export function DetailForm({
                       </select>
                     ) : (
                       <input
-                        disabled={field.readOnly}
+                        disabled={isFieldReadOnly(field, isCreateMode, values)}
                         placeholder={field.placeholder ?? ''}
                         type={field.type ?? 'text'}
                         value={values[field.name] ?? ''}
@@ -67,6 +67,7 @@ export function DetailForm({
                       <button
                         type="button"
                         className="field-lookup-button"
+                        disabled={isFieldActionDisabled(field, isCreateMode, values)}
                         onClick={() => onFieldAction?.(field, values)}
                       >
                         <Search size={14} />
@@ -119,4 +120,20 @@ function groupFieldsBySection(fields) {
   }
 
   return sections
+}
+
+function isFieldReadOnly(field, isCreateMode, values) {
+  if (typeof field.readOnly === 'function') {
+    return field.readOnly({ isCreateMode, values })
+  }
+
+  return Boolean(field.readOnly || (field.readOnlyOnEdit && !isCreateMode))
+}
+
+function isFieldActionDisabled(field, isCreateMode, values) {
+  if (typeof field.actionDisabled === 'function') {
+    return field.actionDisabled({ isCreateMode, values })
+  }
+
+  return Boolean(field.actionDisabled || (field.actionDisabledOnEdit && !isCreateMode))
 }

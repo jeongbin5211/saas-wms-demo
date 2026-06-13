@@ -15,9 +15,16 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
 
     boolean existsByWarehouseCodeAndIdNot(String warehouseCode, Long id);
 
+    boolean existsByTopAccountIdAndWarehouseCode(Long topAccountId, String warehouseCode);
+
+    boolean existsByTopAccountIdAndWarehouseCodeAndIdNot(Long topAccountId, String warehouseCode, Long id);
+
     @EntityGraph(attributePaths = "account")
     List<Warehouse> findAllByUseYnOrderByIdAsc(String useYn);
 
     @EntityGraph(attributePaths = "account")
     List<Warehouse> findAllByTopAccountIdAndUseYnOrderByIdAsc(Long topAccountId, String useYn);
+
+    @EntityGraph(attributePaths = "account")
+    List<Warehouse> findAllByTopAccountIdOrderByIdAsc(Long topAccountId);
 }
