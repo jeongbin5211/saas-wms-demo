@@ -15,7 +15,11 @@ export function StandardWorkPage({
   buildPayload,
   columns,
   createDefaults,
+  createSuccessMessage,
   data,
+  deleteConfirmTitle = '삭제하시겠습니까?',
+  deleteLabel = '삭제',
+  deleteSuccessMessage = '삭제가 완료되었습니다.',
   detailActions,
   detailAfter,
   detailFieldAction,
@@ -28,7 +32,9 @@ export function StandardWorkPage({
   onRefresh,
   page,
   searchFields,
+  saveConfirmTitle = '저장하시겠습니까?',
   title,
+  updateSuccessMessage = '수정이 완료되었습니다.',
 }) {
   const [activeTab, setActiveTab] = useState(0)
   const [selectedRow, setSelectedRow] = useState(null)
@@ -178,7 +184,7 @@ export function StandardWorkPage({
     if (validationError) { notify(validationError, 'warning'); return }
 
     const confirmed = await requestConfirm({
-      title: '저장하시겠습니까?',
+      title: saveConfirmTitle,
       type: 'save',
     })
     if (!confirmed) return
@@ -200,7 +206,7 @@ export function StandardWorkPage({
         return
       }
 
-      notify(selectedRow ? '수정이 완료되었습니다.' : '등록이 완료되었습니다.', 'success')
+      notify(selectedRow ? updateSuccessMessage : (createSuccessMessage ?? '등록이 완료되었습니다.'), 'success')
       await onRefresh?.()
       setGridData(null)
       setActiveTab(0)
@@ -214,7 +220,7 @@ export function StandardWorkPage({
     if (!endpoint || !selectedRow) { notify('삭제할 행을 선택하세요.', 'warning'); return }
 
     const confirmed = await requestConfirm({
-      title: '삭제하시겠습니까?',
+      title: deleteConfirmTitle,
       type: 'delete',
     })
     if (!confirmed) return
@@ -228,7 +234,7 @@ export function StandardWorkPage({
         return
       }
 
-      notify('삭제가 완료되었습니다.', 'success')
+      notify(deleteSuccessMessage, 'success')
       await onRefresh?.()
       setGridData(null)
       setActiveTab(0)
@@ -275,7 +281,7 @@ export function StandardWorkPage({
       {detailActions?.(actionContext)}
       {selectedRow && allowDelete ? (
         <button type="button" className="danger-button" onClick={handleDelete}>
-          <span>삭제</span>
+          <span>{deleteLabel}</span>
         </button>
       ) : null}
     </>
@@ -471,7 +477,7 @@ function validateRequired(fields = [], row) {
 async function parseApiError(response, fallback) {
   try {
     const body = await response.json()
-    return body.message ?? fallback
+    return body.message ?? body.detail ?? body.error ?? fallback
   } catch {
     return fallback
   }

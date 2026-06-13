@@ -182,6 +182,7 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
         useYn: row.useYn ?? 'Y',
       })}
       columns={warehouseColumns}
+      createSuccessMessage="등록이 완료되었습니다. 기본 Area, Zone, Location이 자동 생성되었습니다."
       createDefaults={{
         accountCode: defaultAccount?.accountCode ?? '',
         accountId: defaultAccount?.id ?? '',
@@ -206,6 +207,9 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
         { name: 'useYn', label: '사용 여부', section: '상세 정보', type: 'select', options: useYnOptions, required: true },
       ]}
       detailTabLabel="상세 목록"
+      deleteConfirmTitle="미사용 처리하시겠습니까?"
+      deleteLabel="미사용 처리"
+      deleteSuccessMessage="미사용 처리되었습니다."
       endpoint="/api/warehouses"
       hideHeader
       listTabLabel="창고 목록"
