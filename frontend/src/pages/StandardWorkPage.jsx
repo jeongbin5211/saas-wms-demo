@@ -1,4 +1,3 @@
-import { Download, Plus, Save, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { DetailForm } from '../components/common/DetailForm.jsx'
 import { SearchPanel } from '../components/common/SearchPanel.jsx'
@@ -174,12 +173,10 @@ export function StandardWorkPage({
     <>
       {allowNew ? (
         <button type="button" className="primary-button" onClick={handleNew}>
-          <Plus size={15} />
           <span>신규</span>
         </button>
       ) : null}
       <button type="button" className="icon-text-button" onClick={() => exportGridToCsv(columns, visibleData, title ?? page.title)}>
-        <Download size={15} />
         <span>Excel</span>
       </button>
       {headerActions}
@@ -190,14 +187,12 @@ export function StandardWorkPage({
     <>
       {allowSave ? (
         <button type="button" className="primary-button" onClick={() => handleSave()}>
-          <Save size={15} />
           <span>저장</span>
         </button>
       ) : null}
       {detailActions?.(actionContext)}
       {selectedRow && allowDelete ? (
         <button type="button" className="danger-button" onClick={handleDelete}>
-          <Trash2 size={15} />
           <span>삭제</span>
         </button>
       ) : null}
