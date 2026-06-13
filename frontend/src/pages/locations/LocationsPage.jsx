@@ -220,10 +220,6 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
       searchFields={[
         { name: 'warehouseCode', label: '창고 코드' },
         { name: 'warehouseName', label: '창고명' },
-        { name: 'warehouseTypeSubCode', label: '창고 유형', type: 'select', options: warehouseTypeOptions },
-        { name: 'accountCode', label: '소속 거래처 코드' },
-        { name: 'accountName', label: '소속 거래처명' },
-        { name: 'useYn', label: '사용 여부', type: 'select', options: useYnOptions },
       ]}
     />
   )

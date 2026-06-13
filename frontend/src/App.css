@@ -1692,7 +1692,7 @@ button {
   margin-left: auto;
 }
 
-.card_btn button {
+.card-tab-list button {
   height: 43px;
   padding: 0 22px;
   color: var(--text-muted);
@@ -1703,7 +1703,7 @@ button {
   font-weight: 800;
 }
 
-.card_btn button.active {
+.card-tab-list button.active {
   color: var(--process-blue);
   border-bottom-color: var(--process-blue);
 }
@@ -2101,13 +2101,25 @@ button {
 }
 
 .icon-text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   height: 34px;
-  padding: 0 12px;
+  padding: 0 14px;
   color: var(--control-navy);
-  background: #fff;
-  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #cbd5e1;
   border-radius: 7px;
-  font-weight: 700;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 8%);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.icon-text-button:hover {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #93c5fd;
 }
 
 .metric-grid {
@@ -2219,11 +2231,18 @@ button {
 
 .primary-button {
   gap: 7px;
-  padding: 0 13px;
+  padding: 0 15px;
   color: #fff;
-  background: var(--process-blue);
-  border: 1px solid var(--process-blue);
-  font-weight: 700;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  border: 1px solid #1d4ed8;
+  box-shadow: 0 2px 5px rgb(37 99 235 / 24%);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.primary-button:hover {
+  background: #1d4ed8;
+  border-color: #1e40af;
 }
 
 .primary-button.compact {
@@ -2243,13 +2262,21 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 7px;
   height: 34px;
-  padding: 0 12px;
+  padding: 0 15px;
   color: #fff;
-  background: var(--exception-red);
-  border: 1px solid var(--exception-red);
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+  border: 1px solid #b91c1c;
   border-radius: 7px;
-  font-weight: 700;
+  box-shadow: 0 2px 5px rgb(220 38 38 / 20%);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.danger-button:hover {
+  background: #b91c1c;
+  border-color: #991b1b;
 }
 
 .work-search-panel {
