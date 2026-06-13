@@ -1964,6 +1964,10 @@ button {
   overflow: hidden;
 }
 
+.lookup-modal.wide {
+  width: min(1040px, calc(100vw - 48px));
+}
+
 .lookup-modal-header {
   display: flex;
   align-items: center;
@@ -2030,8 +2034,14 @@ button {
 .lookup-modal-grid td {
   height: 40px;
   padding: 0 12px;
+  border-right: 1px solid var(--line-soft);
   border-bottom: 1px solid var(--line-soft);
   text-align: left;
+}
+
+.lookup-modal-grid th:last-child,
+.lookup-modal-grid td:last-child {
+  border-right: 0;
 }
 
 .lookup-modal-grid th {
@@ -2510,10 +2520,32 @@ button {
   background-color: #cfd8e3 !important;
 }
 
+.tui-grid-border-line-top,
+.tui-grid-border-line-bottom,
+.tui-grid-border-line-left {
+  background-color: #cfd8e3 !important;
+}
+
+.wms-grid .tui-grid-lside-area,
+.wms-grid .tui-grid-rside-area,
+.wms-grid .tui-grid-body-area,
+.wms-grid .tui-grid-header-area {
+  border-color: #cfd8e3 !important;
+}
+
 .tui-grid-cell {
   border-right: 1px solid #cfd8e3 !important;
   border-bottom: 1px solid #cfd8e3 !important;
   font-size: 12px;
+}
+
+.wms-grid .tui-grid-table {
+  border-collapse: separate !important;
+}
+
+.wms-grid .tui-grid-lside-area .tui-grid-cell,
+.wms-grid .tui-grid-rside-area .tui-grid-cell {
+  box-shadow: inset -1px 0 0 #cfd8e3;
 }
 
 .tui-grid-cell-header {

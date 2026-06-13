@@ -80,7 +80,9 @@ const logicalTypeOptions = [
 
 export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, page }) {
   const [accountLookupContext, setAccountLookupContext] = useState(null)
+  const [addressLookupContext, setAddressLookupContext] = useState(null)
   const catalog = data.locationCatalog
+  const addressCandidates = useMemo(() => buildAddressCandidates(data.accounts, catalog.warehouses), [data.accounts, catalog.warehouses])
   const warehouseOptions = catalog.warehouses.map((warehouse) => ({
     label: `${warehouse.warehouseCode} / ${warehouse.warehouseName}`,
     value: warehouse.id,
@@ -99,6 +101,7 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
       authUser,
       catalog,
       onOpenAccountLookup: setAccountLookupContext,
+      onOpenAddressLookup: setAddressLookupContext,
       onRefresh,
       page,
     }),
@@ -124,11 +127,26 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
           setAccountLookupContext(null)
         }}
       />
+      <AddressLookupModal
+        addresses={addressCandidates}
+        accountCode={addressLookupContext?.values?.accountCode}
+        open={Boolean(addressLookupContext)}
+        onClose={() => setAddressLookupContext(null)}
+        onSelect={(address) => {
+          addressLookupContext?.setDraftRow((current) => ({
+            ...(current ?? {}),
+            addressName: address.addressName,
+            phoneNo: current?.phoneNo || address.phoneNo,
+            contactName: current?.contactName || address.contactName,
+          }))
+          setAddressLookupContext(null)
+        }}
+      />
     </>
   )
 }
 
-function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, onRefresh, page }) {
+function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, onOpenAddressLookup, onRefresh, page }) {
   const defaultAccount = accounts[0]
 
   return (
@@ -163,7 +181,7 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
         { name: 'accountName', label: '소속 거래처명', section: '기본 정보', readOnly: true, required: true },
         { name: 'warehouseCode', label: '창고 코드', section: '기본 정보', required: true, readOnlyOnEdit: true },
         { name: 'warehouseName', label: '창고명', section: '기본 정보', required: true },
-        { name: 'addressName', label: '주소명', section: '상세 정보', required: true, wide: true, placeholder: '예: 서울시 강남구 물류센터 1동' },
+        { name: 'addressName', label: '주소명', section: '상세 정보', required: true, wide: true, placeholder: '예: 서울시 강남구 물류센터 1동', actionLabel: '조회' },
         { name: 'priority', label: '우선순위', section: '상세 정보', type: 'number', required: true },
         { name: 'phoneNo', label: '전화번호', section: '상세 정보' },
         { name: 'faxNo', label: '팩스', section: '상세 정보' },
@@ -178,6 +196,16 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
       onRefresh={onRefresh}
       page={{ ...page, eyebrow: '로케이션 정보', title: '창고' }}
       detailFieldAction={(field, values, context) => {
+        if (field.name === 'addressName') {
+          if (!values.accountCode) {
+            context.setMessage('창고 소속 거래처를 먼저 선택해 주세요.')
+            return
+          }
+
+          onOpenAddressLookup({ ...context, values })
+          return
+        }
+
         if (field.name !== 'accountCode') {
           return
         }
@@ -199,6 +227,56 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
       ]}
     />
   )
+}
+
+function buildAddressCandidates(accounts, warehouses) {
+  const candidates = []
+  const seen = new Set()
+
+  for (const account of accounts) {
+    addAddressCandidate(candidates, seen, {
+      id: `account-${account.id}`,
+      accountCode: account.accountCode,
+      accountName: account.accountName,
+      addressCode: `${account.accountCode}-MAIN`,
+      addressName: `${account.accountName} 기본 주소`,
+      addressLine: `${account.accountName} 기본 물류 주소`,
+      contactName: account.accountName,
+      phoneNo: '',
+      source: '거래처',
+    })
+  }
+
+  for (const warehouse of warehouses) {
+    if (!warehouse.addressName) {
+      continue
+    }
+
+    addAddressCandidate(candidates, seen, {
+      id: `warehouse-${warehouse.id}`,
+      accountCode: warehouse.accountCode,
+      accountName: warehouse.accountName,
+      addressCode: `${warehouse.warehouseCode}-ADDR`,
+      addressName: warehouse.addressName,
+      addressLine: warehouse.addressName,
+      contactName: warehouse.contactName ?? '',
+      phoneNo: warehouse.phoneNo ?? '',
+      source: '창고',
+    })
+  }
+
+  return candidates
+}
+
+function addAddressCandidate(candidates, seen, candidate) {
+  const key = `${candidate.accountCode}-${candidate.addressName}-${candidate.addressLine}`
+
+  if (seen.has(key)) {
+    return
+  }
+
+  seen.add(key)
+  candidates.push(candidate)
 }
 
 function AccountLookupModal({ accounts, open, onClose, onSelect }) {
@@ -265,6 +343,88 @@ function AccountLookupModal({ accounts, open, onClose, onSelect }) {
               {filteredAccounts.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="lookup-empty-cell">조회된 거래처가 없습니다.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function AddressLookupModal({ accountCode, addresses, open, onClose, onSelect }) {
+  const [keyword, setKeyword] = useState('')
+  const filteredAddresses = useMemo(() => {
+    const normalizedKeyword = keyword.trim().toLowerCase()
+    const scopedAddresses = accountCode
+      ? addresses.filter((address) => address.accountCode === accountCode)
+      : addresses
+
+    if (!normalizedKeyword) {
+      return scopedAddresses
+    }
+
+    return scopedAddresses.filter((address) => (
+      address.addressCode.toLowerCase().includes(normalizedKeyword)
+      || address.addressName.toLowerCase().includes(normalizedKeyword)
+      || address.addressLine.toLowerCase().includes(normalizedKeyword)
+      || address.accountName.toLowerCase().includes(normalizedKeyword)
+    ))
+  }, [accountCode, addresses, keyword])
+
+  if (!open) {
+    return null
+  }
+
+  return (
+    <div className="lookup-modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <section className="lookup-modal wide" role="dialog" aria-modal="true" aria-label="주소 조회" onMouseDown={(event) => event.stopPropagation()}>
+        <header className="lookup-modal-header">
+          <strong>주소 조회</strong>
+          <button type="button" className="icon-only-button" aria-label="닫기" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </header>
+        <div className="lookup-modal-filter">
+          <Search size={16} />
+          <input
+            autoFocus
+            placeholder="주소 코드, 주소명, 주소"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+          />
+        </div>
+        <div className="lookup-modal-grid">
+          <table>
+            <thead>
+              <tr>
+                <th>주소 코드</th>
+                <th>주소명</th>
+                <th>거래처</th>
+                <th>주소</th>
+                <th>출처</th>
+                <th>선택</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAddresses.map((address) => (
+                <tr key={address.id} onDoubleClick={() => onSelect(address)}>
+                  <td>{address.addressCode}</td>
+                  <td>{address.addressName}</td>
+                  <td>{address.accountName}</td>
+                  <td>{address.addressLine}</td>
+                  <td>{address.source}</td>
+                  <td>
+                    <button type="button" className="primary-button compact" onClick={() => onSelect(address)}>
+                      선택
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {filteredAddresses.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="lookup-empty-cell">조회된 주소가 없습니다.</td>
                 </tr>
               ) : null}
             </tbody>
