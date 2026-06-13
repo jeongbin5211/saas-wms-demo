@@ -52,6 +52,7 @@ export function WmsGrid({
   columns,
   data,
   fillHeight = false,
+  includeAuditColumns = true,
   minBodyHeight = 300,
   onRowDoubleClick,
   rowHeaders = ['rowNum'],
@@ -60,8 +61,12 @@ export function WmsGrid({
   const containerRef = useRef(null)
   const gridRef = useRef(null)
   const onRowDoubleClickRef = useRef(onRowDoubleClick)
-  const effectiveColumns = useMemo(() => appendAuditColumns(columns), [columns])
-  const effectiveData = useMemo(() => normalizeAuditRows(data), [data])
+  const effectiveColumns = useMemo(() => (
+    includeAuditColumns ? appendAuditColumns(columns) : columns
+  ), [columns, includeAuditColumns])
+  const effectiveData = useMemo(() => (
+    includeAuditColumns ? normalizeAuditRows(data) : data
+  ), [data, includeAuditColumns])
   const summary = useMemo(() => buildSummary(summaryColumns), [summaryColumns])
 
   useEffect(() => {

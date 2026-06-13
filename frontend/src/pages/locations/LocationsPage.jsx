@@ -1,5 +1,6 @@
 import { Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { WmsGrid } from '../../components/common/WmsGrid.jsx'
 import { StandardWorkPage } from '../StandardWorkPage.jsx'
 
 const warehouseColumns = [
@@ -76,6 +77,20 @@ const logicalTypeOptions = [
   { label: '일반', value: 'NORMAL' },
   { label: '보류', value: 'HOLD' },
   { label: '불량', value: 'DEFECT' },
+]
+
+const accountLookupColumns = [
+  { header: '거래처 코드', name: 'accountCode', width: 160 },
+  { header: '거래처명', name: 'accountName', width: 240 },
+  { header: '구분', name: 'accountTypeSubCode', width: 120, align: 'center' },
+]
+
+const addressLookupColumns = [
+  { header: '주소 코드', name: 'addressCode', width: 170 },
+  { header: '주소명', name: 'addressName', width: 220 },
+  { header: '거래처', name: 'accountName', width: 180 },
+  { header: '주소', name: 'addressLine', width: 360 },
+  { header: '출처', name: 'source', width: 120, align: 'center' },
 ]
 
 export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, page }) {
@@ -267,98 +282,66 @@ function addAddressCandidate(candidates, seen, candidate) {
 }
 
 function AccountLookupModal({ accounts, open, onClose, onSelect }) {
-  const [keyword, setKeyword] = useState('')
-  const filteredAccounts = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase()
-
-    if (!normalizedKeyword) {
-      return accounts
-    }
-
-    return accounts.filter((account) => (
-      account.accountCode.toLowerCase().includes(normalizedKeyword)
-      || account.accountName.toLowerCase().includes(normalizedKeyword)
-      || account.accountTypeSubCode.toLowerCase().includes(normalizedKeyword)
-    ))
-  }, [accounts, keyword])
-
-  if (!open) {
-    return null
-  }
-
   return (
-    <div className="lookup-modal-backdrop" role="presentation" onMouseDown={onClose}>
-      <section className="lookup-modal" role="dialog" aria-modal="true" aria-label="창고 소속 거래처 조회" onMouseDown={(event) => event.stopPropagation()}>
-        <header className="lookup-modal-header">
-          <strong>창고 소속 거래처 조회</strong>
-          <button type="button" className="icon-only-button" aria-label="닫기" onClick={onClose}>
-            <X size={18} />
-          </button>
-        </header>
-        <div className="lookup-modal-filter">
-          <Search size={16} />
-          <input
-            autoFocus
-            placeholder="거래처 코드 또는 거래처명"
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-          />
-        </div>
-        <div className="lookup-modal-grid">
-          <table>
-            <thead>
-              <tr>
-                <th>거래처 코드</th>
-                <th>거래처명</th>
-                <th>구분</th>
-                <th>선택</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAccounts.map((account) => (
-                <tr key={account.id} onDoubleClick={() => onSelect(account)}>
-                  <td>{account.accountCode}</td>
-                  <td>{account.accountName}</td>
-                  <td>{account.accountTypeSubCode}</td>
-                  <td>
-                    <button type="button" className="primary-button compact" onClick={() => onSelect(account)}>
-                      선택
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredAccounts.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="lookup-empty-cell">조회된 거래처가 없습니다.</td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
+    <LookupGridModal
+      columns={accountLookupColumns}
+      data={accounts}
+      emptyMessage="조회된 거래처가 없습니다."
+      open={open}
+      placeholder="거래처 코드 또는 거래처명"
+      searchKeys={['accountCode', 'accountName', 'accountTypeSubCode']}
+      title="창고 소속 거래처 조회"
+      onClose={onClose}
+      onSelect={onSelect}
+    />
   )
 }
 
 function AddressLookupModal({ accountCode, addresses, open, onClose, onSelect }) {
+  const scopedAddresses = useMemo(() => (
+    accountCode ? addresses.filter((address) => address.accountCode === accountCode) : addresses
+  ), [accountCode, addresses])
+
+  return (
+    <LookupGridModal
+      columns={addressLookupColumns}
+      data={scopedAddresses}
+      emptyMessage="조회된 주소가 없습니다."
+      open={open}
+      placeholder="주소 코드, 주소명, 주소"
+      searchKeys={['addressCode', 'addressName', 'addressLine', 'accountName']}
+      title="주소 조회"
+      wide
+      onClose={onClose}
+      onSelect={onSelect}
+    />
+  )
+}
+
+function LookupGridModal({
+  columns,
+  data,
+  emptyMessage,
+  open,
+  placeholder,
+  searchKeys,
+  title,
+  wide = false,
+  onClose,
+  onSelect,
+}) {
   const [keyword, setKeyword] = useState('')
-  const filteredAddresses = useMemo(() => {
+  const filteredData = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
-    const scopedAddresses = accountCode
-      ? addresses.filter((address) => address.accountCode === accountCode)
-      : addresses
 
     if (!normalizedKeyword) {
-      return scopedAddresses
+      return data
     }
 
-    return scopedAddresses.filter((address) => (
-      address.addressCode.toLowerCase().includes(normalizedKeyword)
-      || address.addressName.toLowerCase().includes(normalizedKeyword)
-      || address.addressLine.toLowerCase().includes(normalizedKeyword)
-      || address.accountName.toLowerCase().includes(normalizedKeyword)
-    ))
-  }, [accountCode, addresses, keyword])
+    return data.filter((row) => searchKeys.some((key) => (
+      String(row[key] ?? '').toLowerCase().includes(normalizedKeyword)
+    )))
+  }, [data, keyword, searchKeys])
 
   if (!open) {
     return null
@@ -366,9 +349,9 @@ function AddressLookupModal({ accountCode, addresses, open, onClose, onSelect })
 
   return (
     <div className="lookup-modal-backdrop" role="presentation" onMouseDown={onClose}>
-      <section className="lookup-modal wide" role="dialog" aria-modal="true" aria-label="주소 조회" onMouseDown={(event) => event.stopPropagation()}>
+      <section className={`lookup-modal${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} onMouseDown={(event) => event.stopPropagation()}>
         <header className="lookup-modal-header">
-          <strong>주소 조회</strong>
+          <strong>{title}</strong>
           <button type="button" className="icon-only-button" aria-label="닫기" onClick={onClose}>
             <X size={18} />
           </button>
@@ -377,45 +360,24 @@ function AddressLookupModal({ accountCode, addresses, open, onClose, onSelect })
           <Search size={16} />
           <input
             autoFocus
-            placeholder="주소 코드, 주소명, 주소"
+            placeholder={placeholder}
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
           />
         </div>
         <div className="lookup-modal-grid">
-          <table>
-            <thead>
-              <tr>
-                <th>주소 코드</th>
-                <th>주소명</th>
-                <th>거래처</th>
-                <th>주소</th>
-                <th>출처</th>
-                <th>선택</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAddresses.map((address) => (
-                <tr key={address.id} onDoubleClick={() => onSelect(address)}>
-                  <td>{address.addressCode}</td>
-                  <td>{address.addressName}</td>
-                  <td>{address.accountName}</td>
-                  <td>{address.addressLine}</td>
-                  <td>{address.source}</td>
-                  <td>
-                    <button type="button" className="primary-button compact" onClick={() => onSelect(address)}>
-                      선택
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredAddresses.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="lookup-empty-cell">조회된 주소가 없습니다.</td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
+          {filteredData.length > 0 ? (
+            <WmsGrid
+              columns={columns}
+              data={filteredData}
+              includeAuditColumns={false}
+              minBodyHeight={360}
+              onRowDoubleClick={onSelect}
+              rowHeaders={['rowNum']}
+            />
+          ) : (
+            <div className="lookup-empty-cell">{emptyMessage}</div>
+          )}
         </div>
       </section>
     </div>
