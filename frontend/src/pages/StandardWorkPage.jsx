@@ -72,12 +72,12 @@ export function StandardWorkPage({
   }
 
   const requestConfirm = ({
-    title = '실행하시겠습니까?',
-    text = '실행됩니다.',
-    icon = '!',
+    title = '처리하시겠습니까?',
+    text = '',
+    type = 'info',
   } = {}) => new Promise((resolve) => {
     setConfirmResolver(() => resolve)
-    setConfirmDialog({ icon, text, title })
+    setConfirmDialog({ text, title, type })
   })
 
   const closeConfirm = (confirmed) => {
@@ -156,7 +156,10 @@ export function StandardWorkPage({
     const validationError = validateRequired(detailFields, draftRow)
     if (validationError) { notify(validationError, 'warning'); return }
 
-    const confirmed = await requestConfirm()
+    const confirmed = await requestConfirm({
+      title: '저장하시겠습니까?',
+      type: 'save',
+    })
     if (!confirmed) return
 
     const method = selectedRow ? 'PUT' : 'POST'
@@ -189,7 +192,10 @@ export function StandardWorkPage({
     if (!canEdit) { notify('삭제할 수 없는 권한입니다.', 'error'); return }
     if (!endpoint || !selectedRow) { notify('삭제할 행을 선택하세요.', 'warning'); return }
 
-    const confirmed = await requestConfirm()
+    const confirmed = await requestConfirm({
+      title: '삭제하시겠습니까?',
+      type: 'delete',
+    })
     if (!confirmed) return
 
     try {
@@ -335,23 +341,32 @@ function ConfirmDialog({ dialog, onClose }) {
 
   return (
     <div className="confirm-dialog-layer" role="presentation">
-      <div className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+      <div className={`confirm-dialog confirm-dialog-${dialog.type}`} role="alertdialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+        <div className={`confirm-dialog-accent confirm-dialog-accent-${dialog.type}`} />
         <div className="confirm-dialog-body">
-          <div className="confirm-dialog-icon">{dialog.icon}</div>
+          <div className={`confirm-dialog-icon confirm-dialog-icon-${dialog.type}`} aria-hidden="true">
+            {confirmIcon(dialog.type)}
+          </div>
           <h3 id="confirm-dialog-title">{dialog.title}</h3>
-          <p>{dialog.text}</p>
+          {dialog.text ? <p>{dialog.text}</p> : null}
         </div>
         <div className="confirm-dialog-actions">
           <button type="button" onClick={() => onClose(false)}>
-            No
+            취소
           </button>
           <button type="button" onClick={() => onClose(true)}>
-            Yes
+            확인
           </button>
         </div>
       </div>
     </div>
   )
+}
+
+function confirmIcon(type) {
+  if (type === 'save') return 'S'
+  if (type === 'delete') return 'D'
+  return '!'
 }
 
 function ToastNotification({ toast, onClose }) {
