@@ -34,7 +34,6 @@ export function StandardWorkPage({
   const [selectedRow, setSelectedRow] = useState(null)
   const [draftRow, setDraftRow] = useState(null)
   const [gridData, setGridData] = useState(null)
-  const [message, setMessage] = useState('')
   const [searchParams, setSearchParams] = useState({})
   const [toast, setToast] = useState(null)
   const [confirmDialog, setConfirmDialog] = useState(null)
@@ -62,12 +61,11 @@ export function StandardWorkPage({
 
   const notify = (nextMessage, type, title) => {
     if (!nextMessage) {
-      setMessage('')
+      setToast(null)
       return
     }
 
     const resolvedType = type ?? inferToastType(nextMessage)
-    setMessage(nextMessage)
     showToast(nextMessage, resolvedType, title)
   }
 
@@ -90,14 +88,14 @@ export function StandardWorkPage({
     setSelectedRow(rowData)
     setDraftRow({ ...rowData })
     setActiveTab(1)
-    setMessage('')
+    setToast(null)
   }
 
   const handleNew = () => {
     setSelectedRow(null)
     setDraftRow(typeof createDefaults === 'function' ? createDefaults() : (createDefaults ?? {}))
     setActiveTab(1)
-    setMessage('')
+    setToast(null)
   }
 
   const handleSearch = async () => {
@@ -275,7 +273,6 @@ export function StandardWorkPage({
         </div>
       )}
 
-      {message ? <div className="info-banner">{message}</div> : null}
       <ToastNotification toast={toast} onClose={() => setToast(null)} />
       <ConfirmDialog dialog={confirmDialog} onClose={closeConfirm} />
 
@@ -342,7 +339,6 @@ function ConfirmDialog({ dialog, onClose }) {
   return (
     <div className="confirm-dialog-layer" role="presentation">
       <div className={`confirm-dialog confirm-dialog-${dialog.type}`} role="alertdialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
-        <div className={`confirm-dialog-accent confirm-dialog-accent-${dialog.type}`} />
         <div className="confirm-dialog-body">
           <div className={`confirm-dialog-icon confirm-dialog-icon-${dialog.type}`} aria-hidden="true">
             {confirmIcon(dialog.type)}
@@ -364,8 +360,8 @@ function ConfirmDialog({ dialog, onClose }) {
 }
 
 function confirmIcon(type) {
-  if (type === 'save') return 'S'
-  if (type === 'delete') return 'D'
+  if (type === 'save') return '!'
+  if (type === 'delete') return '!'
   return '!'
 }
 
