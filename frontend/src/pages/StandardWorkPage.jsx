@@ -37,6 +37,8 @@ export function StandardWorkPage({
   const [message, setMessage] = useState('')
   const [searchParams, setSearchParams] = useState({})
   const [toast, setToast] = useState(null)
+  const [confirmDialog, setConfirmDialog] = useState(null)
+  const [confirmResolver, setConfirmResolver] = useState(null)
 
   const canEdit = ['ADMIN', 'STAFF', 'GUEST'].includes(authUser?.roleSubCode)
   const visibleData = gridData ?? data
@@ -67,6 +69,21 @@ export function StandardWorkPage({
     const resolvedType = type ?? inferToastType(nextMessage)
     setMessage(nextMessage)
     showToast(nextMessage, resolvedType, title)
+  }
+
+  const requestConfirm = ({
+    title = '실행하시겠습니까?',
+    text = '실행됩니다.',
+    icon = '!',
+  } = {}) => new Promise((resolve) => {
+    setConfirmResolver(() => resolve)
+    setConfirmDialog({ icon, text, title })
+  })
+
+  const closeConfirm = (confirmed) => {
+    confirmResolver?.(confirmed)
+    setConfirmResolver(null)
+    setConfirmDialog(null)
   }
 
   const handleDblClick = (rowData) => {
@@ -139,6 +156,9 @@ export function StandardWorkPage({
     const validationError = validateRequired(detailFields, draftRow)
     if (validationError) { notify(validationError, 'warning'); return }
 
+    const confirmed = await requestConfirm()
+    if (!confirmed) return
+
     const method = selectedRow ? 'PUT' : 'POST'
     const saveUrl = selectedRow ? `${endpoint}/${selectedRow.id}` : endpoint
     const payload = buildPayload ? buildPayload(draftRow ?? {}, selectedRow) : (draftRow ?? {})
@@ -169,6 +189,9 @@ export function StandardWorkPage({
     if (!canEdit) { notify('삭제할 수 없는 권한입니다.', 'error'); return }
     if (!endpoint || !selectedRow) { notify('삭제할 행을 선택하세요.', 'warning'); return }
 
+    const confirmed = await requestConfirm()
+    if (!confirmed) return
+
     try {
       const response = await fetchWithAuth(`${endpoint}/${selectedRow.id}`, { method: 'DELETE' })
 
@@ -197,6 +220,7 @@ export function StandardWorkPage({
     setDraftRow,
     setGridData,
     setMessage: notify,
+    confirmAction: requestConfirm,
     showToast,
   }
 
@@ -247,6 +271,7 @@ export function StandardWorkPage({
 
       {message ? <div className="info-banner">{message}</div> : null}
       <ToastNotification toast={toast} onClose={() => setToast(null)} />
+      <ConfirmDialog dialog={confirmDialog} onClose={closeConfirm} />
 
       <SearchPanel
         fields={searchFields}
@@ -305,11 +330,38 @@ export function StandardWorkPage({
   )
 }
 
+function ConfirmDialog({ dialog, onClose }) {
+  if (!dialog) return null
+
+  return (
+    <div className="confirm-dialog-layer" role="presentation">
+      <div className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+        <div className="confirm-dialog-body">
+          <div className="confirm-dialog-icon">{dialog.icon}</div>
+          <h3 id="confirm-dialog-title">{dialog.title}</h3>
+          <p>{dialog.text}</p>
+        </div>
+        <div className="confirm-dialog-actions">
+          <button type="button" onClick={() => onClose(false)}>
+            No
+          </button>
+          <button type="button" onClick={() => onClose(true)}>
+            Yes
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ToastNotification({ toast, onClose }) {
   if (!toast) return null
 
   return (
     <div className={`toast-notification toast-notification-${toast.type}`} role="status" aria-live="polite">
+      <span className="toast-notification-icon" aria-hidden="true">
+        {toast.type === 'success' ? '✓' : '!'}
+      </span>
       <div>
         <strong>{toast.title}</strong>
         <p>{toast.message}</p>
