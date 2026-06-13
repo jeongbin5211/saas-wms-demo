@@ -1,6 +1,8 @@
 package com.wms.wms_backend.common.init;
 
 import com.wms.wms_backend.domain.account.entity.Account;
+import com.wms.wms_backend.domain.account.entity.AccountAddress;
+import com.wms.wms_backend.domain.account.repository.AccountAddressRepository;
 import com.wms.wms_backend.domain.account.repository.AccountRepository;
 import com.wms.wms_backend.domain.billing.entity.Bill;
 import com.wms.wms_backend.domain.billing.entity.BillDetail;
@@ -67,6 +69,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private final CommonCodeRepository commonCodeRepository;
     private final AccountRepository accountRepository;
+    private final AccountAddressRepository accountAddressRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final WarehouseRepository warehouseRepository;
@@ -155,6 +158,37 @@ public class DataInitializer implements CommandLineRunner {
         commonCodeRepository.save(new CommonCode(groupCode, subCode, codeName, description, sortOrder));
     }
 
+    private void saveAccountAddress(
+            Account account,
+            String addressCode,
+            String addressName,
+            String addressLine1,
+            String addressLine2,
+            String city,
+            String state,
+            String zipcode,
+            String country,
+            String phoneNo,
+            String faxNo,
+            String contactName
+    ) {
+        accountAddressRepository.findByAddressCode(addressCode)
+                .orElseGet(() -> accountAddressRepository.save(new AccountAddress(
+                        account,
+                        addressCode,
+                        addressName,
+                        addressLine1,
+                        addressLine2,
+                        city,
+                        state,
+                        zipcode,
+                        country,
+                        phoneNo,
+                        faxNo,
+                        contactName
+                )));
+    }
+
     private void initDemoData() {
         Account hq = accountRepository.findByAccountCode("GLOBAL-LOGISTICS-HQ")
                 .orElseGet(() -> accountRepository.save(new Account(null, "GLOBAL-LOGISTICS-HQ", "Global Logistics HQ", "HQ")));
@@ -168,6 +202,10 @@ public class DataInitializer implements CommandLineRunner {
 
         Account supplier = accountRepository.findByAccountCode("SMART-SUPPLY")
                 .orElseGet(() -> accountRepository.save(new Account(hq.getId(), "SMART-SUPPLY", "Smart Supplier", "SUPPLIER")));
+
+        saveAccountAddress(hq, "ADDR-HQ-SEOUL", "Global Logistics HQ", "서울시 강남구 위드웍스길 10", "본사 물류센터", "서울", "강남구", "06100", "KR", "02-1234-5678", "02-1234-5679", "관리자");
+        saveAccountAddress(customer, "ADDR-CUST-SEOUL", "Seoul Customer Main", "서울시 송파구 고객로 20", "A동 2층", "서울", "송파구", "05500", "KR", "02-2222-1000", "02-2222-1001", "고객 담당자");
+        saveAccountAddress(supplier, "ADDR-SUPPLY-SEONGNAM", "Smart Supplier DC", "경기도 성남시 분당구 공급로 30", "3층 출하장", "성남", "분당구", "13500", "KR", "031-555-2000", "031-555-2001", "공급 담당자");
 
         saveUser(hq, hq.getId(), "관리자", "admin@saas-wms-demo.com", "ADMIN");
         saveUser(customer, hq.getId(), "일반 직원", "staff@saas-wms-demo.com", "STAFF");

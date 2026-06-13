@@ -82,7 +82,7 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
   const [accountLookupContext, setAccountLookupContext] = useState(null)
   const [addressLookupContext, setAddressLookupContext] = useState(null)
   const catalog = data.locationCatalog
-  const addressCandidates = useMemo(() => buildAddressCandidates(data.accounts, catalog.warehouses), [data.accounts, catalog.warehouses])
+  const addressCandidates = useMemo(() => buildAddressCandidates(data.accountAddresses ?? []), [data.accountAddresses])
   const warehouseOptions = catalog.warehouses.map((warehouse) => ({
     label: `${warehouse.warehouseCode} / ${warehouse.warehouseName}`,
     value: warehouse.id,
@@ -137,6 +137,7 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
             ...(current ?? {}),
             addressName: address.addressName,
             phoneNo: current?.phoneNo || address.phoneNo,
+            faxNo: current?.faxNo || address.faxNo,
             contactName: current?.contactName || address.contactName,
           }))
           setAddressLookupContext(null)
@@ -225,39 +226,29 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
   )
 }
 
-function buildAddressCandidates(accounts, warehouses) {
+function buildAddressCandidates(accountAddresses) {
   const candidates = []
   const seen = new Set()
 
-  for (const account of accounts) {
-    addAddressCandidate(candidates, seen, {
-      id: `account-${account.id}`,
-      accountCode: account.accountCode,
-      accountName: account.accountName,
-      addressCode: `${account.accountCode}-MAIN`,
-      addressName: `${account.accountName} 기본 주소`,
-      addressLine: `${account.accountName} 기본 물류 주소`,
-      contactName: account.accountName,
-      phoneNo: '',
-      source: '거래처',
-    })
-  }
-
-  for (const warehouse of warehouses) {
-    if (!warehouse.addressName) {
+  for (const address of accountAddresses) {
+    if (!address.addressName) {
       continue
     }
 
     addAddressCandidate(candidates, seen, {
-      id: `warehouse-${warehouse.id}`,
-      accountCode: warehouse.accountCode,
-      accountName: warehouse.accountName,
-      addressCode: `${warehouse.warehouseCode}-ADDR`,
-      addressName: warehouse.addressName,
-      addressLine: warehouse.addressName,
-      contactName: warehouse.contactName ?? '',
-      phoneNo: warehouse.phoneNo ?? '',
-      source: '창고',
+      id: address.id,
+      accountCode: address.accountCode,
+      accountName: address.accountName,
+      addressCode: address.addressCode,
+      addressName: address.addressName,
+      addressLine: address.fullAddress
+        || [address.addressLine1, address.addressLine2, address.city, address.state, address.zipcode, address.country]
+          .filter(Boolean)
+          .join(' '),
+      contactName: address.contactName ?? '',
+      faxNo: address.faxNo ?? '',
+      phoneNo: address.phoneNo ?? '',
+      source: '거래처 주소',
     })
   }
 
