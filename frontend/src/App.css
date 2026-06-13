@@ -2540,23 +2540,19 @@ button {
 }
 
 .wms-grid .tui-grid-table {
-  border-collapse: separate !important;
-}
-
-.wms-grid .tui-grid-lside-area .tui-grid-cell,
-.wms-grid .tui-grid-rside-area .tui-grid-cell {
-  box-shadow: inset -1px 0 0 #cfd8e3;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
 }
 
 .tui-grid-cell-header {
   border-right: 1px solid #c7d1de !important;
-  border-bottom: 2px solid #9aa9bb !important;
+  border-bottom: 1px solid #c7d1de !important;
   font-weight: 700;
 }
 
 .tui-grid-rside-area .tui-grid-cell:last-child,
 .tui-grid-cell-row-header {
-  box-shadow: inset -1px 0 0 #cfd8e3;
+  border-right: 1px solid #cfd8e3 !important;
 }
 
 .status-badge {
