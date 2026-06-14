@@ -2,6 +2,8 @@ package com.wms.wms_backend.domain.warehouse.controller;
 
 import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.account.entity.Account;
+import com.wms.wms_backend.domain.account.entity.AccountAddress;
+import com.wms.wms_backend.domain.account.repository.AccountAddressRepository;
 import com.wms.wms_backend.domain.account.repository.AccountRepository;
 import com.wms.wms_backend.domain.inventory.repository.InventoryRepository;
 import com.wms.wms_backend.domain.warehouse.entity.Area;
@@ -37,6 +39,7 @@ import java.util.List;
 public class WarehouseController {
 
     private final AccountRepository accountRepository;
+    private final AccountAddressRepository accountAddressRepository;
     private final WarehouseRepository warehouseRepository;
     private final AreaRepository areaRepository;
     private final InventoryRepository inventoryRepository;
@@ -92,6 +95,7 @@ public class WarehouseController {
         }
 
         Account account = writableAccount(request.accountId());
+        AccountAddress address = writableAddress(request.addressId(), account);
         Warehouse warehouse = warehouseRepository.save(new Warehouse(
                 account,
                 account.getTopAccountId(),
@@ -100,6 +104,7 @@ public class WarehouseController {
                 request.warehouseTypeSubCode()
         ));
         warehouse.updateOptionalFields(
+                address,
                 request.addressName(),
                 request.priority(),
                 request.phoneNo(),
@@ -128,6 +133,7 @@ public class WarehouseController {
                 request.warehouseCode(),
                 request.warehouseName(),
                 request.warehouseTypeSubCode(),
+                writableAddress(request.addressId(), warehouse.getAccount()),
                 request.addressName(),
                 request.priority(),
                 request.phoneNo(),
@@ -425,6 +431,25 @@ public class WarehouseController {
         return account;
     }
 
+    private AccountAddress writableAddress(Long addressId, Account warehouseAccount) {
+        if (addressId == null) {
+            return null;
+        }
+
+        AccountAddress address = accountAddressRepository.findById(addressId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "주소 정보를 찾을 수 없습니다."));
+
+        if (!SecurityUtil.currentTopAccountId().equals(address.getTopAccountId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "접근할 수 없는 주소입니다.");
+        }
+
+        if (!address.getAccount().getId().equals(warehouseAccount.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "창고 소속 거래처의 주소만 선택할 수 있습니다.");
+        }
+
+        return address;
+    }
+
     private boolean contains(String source, String keyword) {
         return !hasText(keyword) || (source != null && source.toLowerCase().contains(keyword.toLowerCase()));
     }
@@ -486,6 +511,8 @@ public class WarehouseController {
             String accountCode,
             String accountName,
             Long topAccountId,
+            Long addressId,
+            String addressCode,
             String warehouseCode,
             String warehouseName,
             String warehouseTypeSubCode,
@@ -506,6 +533,8 @@ public class WarehouseController {
                     warehouse.getAccount().getAccountCode(),
                     warehouse.getAccount().getAccountName(),
                     warehouse.getTopAccountId(),
+                    warehouse.getAddress() == null ? null : warehouse.getAddress().getId(),
+                    warehouse.getAddress() == null ? null : warehouse.getAddress().getAddressCode(),
                     warehouse.getWarehouseCode(),
                     warehouse.getWarehouseName(),
                     warehouse.getWarehouseTypeSubCode(),
@@ -647,6 +676,7 @@ public class WarehouseController {
             @NotBlank String warehouseName,
             @NotBlank String warehouseTypeSubCode,
             String addressName,
+            Long addressId,
             Integer priority,
             String phoneNo,
             String faxNo,
@@ -662,6 +692,7 @@ public class WarehouseController {
             @NotBlank String warehouseName,
             @NotBlank String warehouseTypeSubCode,
             String addressName,
+            Long addressId,
             Integer priority,
             String phoneNo,
             String faxNo,

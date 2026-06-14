@@ -42,14 +42,15 @@ public class AccountController {
     @PostMapping("/api/account-addresses")
     @ResponseStatus(HttpStatus.CREATED)
     public AccountAddressResponse createAccountAddress(@RequestBody AccountAddressCreateRequest request) {
-        if (accountAddressRepository.findByAddressCode(request.addressCode()).isPresent()) {
+        String addressCode = hasText(request.addressCode()) ? request.addressCode().trim() : generateAddressCode();
+        if (accountAddressRepository.findByAddressCode(addressCode).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 사용 중인 주소 코드입니다.");
         }
         Account account = accountRepository.findById(request.accountId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "거래처를 찾을 수 없습니다."));
         AccountAddress address = new AccountAddress(
                 account,
-                request.addressCode(),
+                addressCode,
                 request.addressName(),
                 request.addressLine1(),
                 request.addressLine2(),
@@ -62,6 +63,19 @@ public class AccountController {
                 request.contactName()
         );
         return AccountAddressResponse.from(accountAddressRepository.save(address));
+    }
+
+    private String generateAddressCode() {
+        long next = accountAddressRepository.count() + 1;
+        String addressCode;
+        do {
+            addressCode = "A" + String.format("%09d", next++);
+        } while (accountAddressRepository.findByAddressCode(addressCode).isPresent());
+        return addressCode;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
     public record AccountAddressCreateRequest(

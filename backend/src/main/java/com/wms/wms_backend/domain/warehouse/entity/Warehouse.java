@@ -2,6 +2,7 @@ package com.wms.wms_backend.domain.warehouse.entity;
 
 import com.wms.wms_backend.common.entity.BaseEntity;
 import com.wms.wms_backend.domain.account.entity.Account;
+import com.wms.wms_backend.domain.account.entity.AccountAddress;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -28,6 +29,10 @@ public class Warehouse extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "address_id")
+    private AccountAddress address;
 
     @Column(nullable = false)
     private Long topAccountId;
@@ -71,10 +76,11 @@ public class Warehouse extends BaseEntity {
         this.useYn = "Y";
     }
 
-    public void update(String warehouseCode, String warehouseName, String warehouseTypeSubCode, String addressName, Integer priority, String phoneNo, String faxNo, String closeTime, String contactName, String useYn) {
+    public void update(String warehouseCode, String warehouseName, String warehouseTypeSubCode, AccountAddress address, String addressName, Integer priority, String phoneNo, String faxNo, String closeTime, String contactName, String useYn) {
         this.warehouseCode = warehouseCode;
         this.warehouseName = warehouseName;
         this.warehouseTypeSubCode = warehouseTypeSubCode;
+        this.address = address;
         this.addressName = addressName;
         this.priority = priority;
         this.phoneNo = phoneNo;
@@ -84,7 +90,8 @@ public class Warehouse extends BaseEntity {
         this.useYn = normalizeUseYn(useYn);
     }
 
-    public void updateOptionalFields(String addressName, Integer priority, String phoneNo, String faxNo, String closeTime, String contactName, String useYn) {
+    public void updateOptionalFields(AccountAddress address, String addressName, Integer priority, String phoneNo, String faxNo, String closeTime, String contactName, String useYn) {
+        this.address = address;
         this.addressName = addressName;
         this.priority = priority;
         this.phoneNo = phoneNo;
