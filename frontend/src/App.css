@@ -2764,6 +2764,10 @@ button {
   border-color: #cfd8e3 !important;
 }
 
+.wms-grid .tui-grid-rside-area {
+  border-left: 1px solid #cfd8e3 !important;
+}
+
 .wms-grid .tui-grid-lside-area .tui-grid-cell,
 .wms-grid .tui-grid-lside-area .tui-grid-cell-header,
 .wms-grid .tui-grid-cell-row-header {
