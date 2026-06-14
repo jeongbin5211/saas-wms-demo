@@ -43,7 +43,10 @@ Grid.applyTheme('clean', {
       background: '#dbeafe',
     },
     focused: {
-      border: '#2563eb',
+      border: '#cfd8e3',
+    },
+    focusedInactive: {
+      border: '#cfd8e3',
     },
   },
 })

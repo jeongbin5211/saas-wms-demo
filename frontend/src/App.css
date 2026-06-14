@@ -2768,10 +2768,19 @@ button {
   border-left: 1px solid #cfd8e3 !important;
 }
 
+.wms-grid .tui-grid-rside-area .tui-grid-table th:first-child,
+.wms-grid .tui-grid-rside-area .tui-grid-table td:first-child {
+  border-left: 1px solid #cfd8e3 !important;
+}
+
 .wms-grid .tui-grid-lside-area .tui-grid-cell,
 .wms-grid .tui-grid-lside-area .tui-grid-cell-header,
 .wms-grid .tui-grid-cell-row-header {
   border-right: 1px solid #cfd8e3 !important;
+}
+
+.wms-grid .tui-grid-layer-focus-border {
+  border-color: #cfd8e3 !important;
 }
 
 .tui-grid-cell {
