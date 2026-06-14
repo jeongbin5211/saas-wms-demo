@@ -80,9 +80,9 @@ const logicalTypeOptions = [
 ]
 
 const accountLookupColumns = [
-  { header: '거래처 코드', name: 'accountCode', width: 160 },
-  { header: '거래처명', name: 'accountName', width: 240 },
-  { header: '구분', name: 'accountTypeSubCode', width: 120, align: 'center' },
+  { header: '거래처 코드', name: 'accountCode', width: 190 },
+  { header: '거래처명', name: 'accountName', width: 340 },
+  { header: '구분', name: 'accountTypeSubCode', width: 156, align: 'center' },
 ]
 
 const addressLookupColumns = [
