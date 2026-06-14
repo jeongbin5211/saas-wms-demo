@@ -2779,10 +2779,6 @@ button {
   border-right: 1px solid #cfd8e3 !important;
 }
 
-.wms-grid .tui-grid-layer-focus-border {
-  border-color: #cfd8e3 !important;
-}
-
 .tui-grid-cell {
   border-right: 1px solid #cfd8e3 !important;
   border-bottom: 1px solid #cfd8e3 !important;

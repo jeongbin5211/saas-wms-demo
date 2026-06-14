@@ -43,10 +43,7 @@ Grid.applyTheme('clean', {
       background: '#dbeafe',
     },
     focused: {
-      border: '#cfd8e3',
-    },
-    focusedInactive: {
-      border: '#cfd8e3',
+      border: '#2563eb',
     },
   },
 })
@@ -71,6 +68,14 @@ export function WmsGrid({
     includeAuditColumns ? normalizeAuditRows(data) : data
   ), [data, includeAuditColumns])
   const summary = useMemo(() => buildSummary(summaryColumns), [summaryColumns])
+  const refreshGridLayout = () => {
+    window.requestAnimationFrame(() => {
+      gridRef.current?.refreshLayout?.()
+      window.requestAnimationFrame(() => {
+        gridRef.current?.refreshLayout?.()
+      })
+    })
+  }
 
   useEffect(() => {
     onRowDoubleClickRef.current = onRowDoubleClick
@@ -116,6 +121,8 @@ export function WmsGrid({
       }
     })
 
+    refreshGridLayout()
+
     return () => {
       gridRef.current.destroy()
       gridRef.current = null
@@ -154,6 +161,7 @@ export function WmsGrid({
     }
 
     gridRef.current.resetData(effectiveData)
+    refreshGridLayout()
   }, [effectiveData])
 
   return <div className="wms-grid" ref={containerRef} />
