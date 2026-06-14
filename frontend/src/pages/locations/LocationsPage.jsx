@@ -1,5 +1,5 @@
 import { Search, X } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { WmsGrid } from '../../components/common/WmsGrid.jsx'
 import { fetchWithAuth } from '../../router/session.js'
 import { StandardWorkPage } from '../StandardWorkPage.jsx'
@@ -148,9 +148,13 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
         open={Boolean(addressLookupContext)}
         onClose={() => setAddressLookupContext(null)}
         onRefresh={onRefresh}
+        confirmAction={addressLookupContext?.confirmAction}
+        showToast={addressLookupContext?.showToast}
         onSelect={(address) => {
           addressLookupContext?.setDraftRow((current) => ({
             ...(current ?? {}),
+            addressId: address.id,
+            addressCode: address.addressCode,
             addressName: address.addressName,
             phoneNo: current?.phoneNo || address.phoneNo || '',
             faxNo: current?.faxNo || address.faxNo || '',
@@ -174,6 +178,7 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
         warehouseCode: row.warehouseCode,
         warehouseName: row.warehouseName,
         warehouseTypeSubCode: row.warehouseTypeSubCode,
+        addressId: row.addressId ? Number(row.addressId) : null,
         addressName: row.addressName,
         priority: toOptionalNumber(row.priority),
         phoneNo: row.phoneNo,
@@ -199,6 +204,7 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
         { name: 'accountName', label: '소속 거래처명', section: '기본 정보', readOnly: true, required: true },
         { name: 'warehouseCode', label: '창고 코드', section: '기본 정보', required: true, readOnlyOnEdit: true },
         { name: 'warehouseName', label: '창고명', section: '기본 정보', required: true },
+        { name: 'addressCode', label: '주소 코드', section: '상세 정보', readOnly: true },
         { name: 'addressName', label: '주소명', section: '상세 정보', required: true, wide: true, placeholder: '예: 서울시 강남구 물류센터 1동', actionLabel: '조회' },
         { name: 'priority', label: '우선순위', section: '상세 정보', type: 'number', required: true },
         { name: 'phoneNo', label: '전화번호', section: '상세 정보' },
@@ -264,34 +270,72 @@ function AccountLookupModal({ accounts, open, onClose, onSelect }) {
   )
 }
 
-function AddressLookupModal({ accountCode: initialAccountCode, accounts, addresses, open, onClose, onRefresh, onSelect }) {
-  const [searchAccountCode, setSearchAccountCode] = useState('')
+function AddressLookupModal({
+  accountCode: initialAccountCode,
+  accounts,
+  addresses,
+  open,
+  onClose,
+  onRefresh,
+  onSelect,
+  confirmAction,
+  showToast,
+}) {
+  if (!open) return null
+
+  return (
+    <AddressLookupModalContent
+      key={initialAccountCode ?? 'all'}
+      initialAccountCode={initialAccountCode}
+      accounts={accounts}
+      addresses={addresses}
+      onClose={onClose}
+      onRefresh={onRefresh}
+      onSelect={onSelect}
+      confirmAction={confirmAction}
+      showToast={showToast}
+    />
+  )
+}
+
+function AddressLookupModalContent({
+  initialAccountCode,
+  accounts,
+  addresses,
+  onClose,
+  onRefresh,
+  onSelect,
+  confirmAction,
+  showToast,
+}) {
+  const [searchAccountCode, setSearchAccountCode] = useState(initialAccountCode ?? '')
   const [searchAddressCode, setSearchAddressCode] = useState('')
   const [formData, setFormData] = useState(null)
   const [isNew, setIsNew] = useState(false)
   const [saving, setSaving] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
-
-  useEffect(() => {
-    if (open) {
-      setSearchAccountCode(initialAccountCode ?? '')
-      setSearchAddressCode('')
-      setFormData(null)
-      setIsNew(false)
-      setErrorMsg('')
-    }
-  }, [open, initialAccountCode])
+  const [accountPopupOpen, setAccountPopupOpen] = useState(false)
 
   const filteredData = useMemo(() => {
     let result = addresses
     const accCode = searchAccountCode.trim().toLowerCase()
     const addrCode = searchAddressCode.trim().toLowerCase()
-    if (accCode) result = result.filter((r) => r.accountCode?.toLowerCase().includes(accCode))
-    if (addrCode) result = result.filter((r) => (
-      r.addressCode?.toLowerCase().includes(addrCode) || r.addressName?.toLowerCase().includes(addrCode)
-    ))
+
+    if (accCode) result = result.filter((row) => row.accountCode?.toLowerCase().includes(accCode))
+    if (addrCode) {
+      result = result.filter((row) => (
+        row.addressCode?.toLowerCase().includes(addrCode) || row.addressName?.toLowerCase().includes(addrCode)
+      ))
+    }
+
     return result
   }, [addresses, searchAccountCode, searchAddressCode])
+
+  const handleSearch = () => {
+    setFormData(null)
+    setIsNew(false)
+    setErrorMsg('')
+  }
 
   const handleRowOpen = (row) => {
     setFormData({ ...row })
@@ -299,21 +343,42 @@ function AddressLookupModal({ accountCode: initialAccountCode, accounts, address
     setErrorMsg('')
   }
 
+  const handleSelect = () => {
+    if (!formData || isNew) {
+      showToast?.('선택할 주소를 먼저 조회 목록에서 선택하세요.', 'warning')
+      return
+    }
+
+    onSelect(formData)
+  }
+
   const handleNew = () => {
     setFormData({
-      accountId: '', accountCode: '', accountName: '',
-      addressCode: '', addressName: '',
-      addressLine1: '', addressLine2: '', city: '', state: '', zipcode: '', country: '',
-      phoneNo: '', faxNo: '', contactName: '',
+      accountId: '',
+      accountCode: '',
+      accountName: '',
+      addressCode: '',
+      addressName: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      state: '',
+      zipcode: '',
+      country: 'KR',
+      phoneNo: '',
+      faxNo: '',
+      contactName: '',
     })
     setIsNew(true)
     setErrorMsg('')
   }
 
   const handleSave = async () => {
-    if (!formData?.addressCode?.trim()) { setErrorMsg('주소 코드는 필수입니다.'); return }
     if (!formData?.addressName?.trim()) { setErrorMsg('주소명은 필수입니다.'); return }
     if (!formData?.accountId) { setErrorMsg('거래처를 선택해 주세요.'); return }
+
+    const confirmed = confirmAction ? await confirmAction({ title: '저장하시겠습니까?', type: 'save' }) : true
+    if (!confirmed) return
 
     setSaving(true)
     setErrorMsg('')
@@ -323,7 +388,7 @@ function AddressLookupModal({ accountCode: initialAccountCode, accounts, address
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           accountId: Number(formData.accountId),
-          addressCode: formData.addressCode.trim(),
+          addressCode: formData.addressCode?.trim() || null,
           addressName: formData.addressName.trim(),
           addressLine1: formData.addressLine1?.trim() || null,
           addressLine2: formData.addressLine2?.trim() || null,
@@ -339,129 +404,139 @@ function AddressLookupModal({ accountCode: initialAccountCode, accounts, address
       if (!response.ok) {
         const body = await response.json().catch(() => ({}))
         setErrorMsg(body.message ?? '저장에 실패했습니다.')
+        showToast?.(body.message ?? '저장에 실패했습니다.', 'error')
         return
       }
       const created = await response.json()
       await onRefresh?.()
       setFormData({ ...created })
+      setSearchAccountCode(created.accountCode ?? searchAccountCode)
+      setSearchAddressCode(created.addressCode ?? '')
       setIsNew(false)
+      showToast?.('저장이 완료되었습니다.', 'success')
     } catch {
       setErrorMsg('저장에 실패했습니다.')
+      showToast?.('저장에 실패했습니다.', 'error')
     } finally {
       setSaving(false)
     }
   }
 
-  if (!open) return null
-
   return (
-    <div className="lookup-modal-backdrop" role="presentation" onMouseDown={onClose}>
-      <section className="lookup-modal address-lookup-modal" role="dialog" aria-modal="true" aria-label="주소 조회" onMouseDown={(e) => e.stopPropagation()}>
-        <header className="lookup-modal-header">
-          <strong>주소 조회</strong>
-          <div className="lookup-modal-header-actions">
-            <button type="button" className="primary-button compact" onClick={handleNew}>신규</button>
-            {isNew && (
-              <button type="button" className="save-button compact" onClick={handleSave} disabled={saving}>
-                {saving ? '저장 중...' : '저장'}
+    <>
+      <div className="lookup-modal-backdrop" role="presentation" onMouseDown={onClose}>
+        <section className="lookup-modal address-lookup-modal" role="dialog" aria-modal="true" aria-label="주소 조회" onMouseDown={(e) => e.stopPropagation()}>
+          <header className="lookup-modal-header">
+            <strong>주소 조회</strong>
+            <div className="lookup-modal-header-actions">
+              <button type="button" className="primary-button compact" onClick={handleSearch}>검색</button>
+              <button type="button" className="primary-button compact" onClick={handleSelect}>선택</button>
+              <button type="button" className="primary-button compact" onClick={handleNew}>신규</button>
+              {isNew && (
+                <button type="button" className="save-button compact" onClick={handleSave} disabled={saving}>
+                  {saving ? '저장 중...' : '저장'}
+                </button>
+              )}
+              <button type="button" className="icon-only-button" aria-label="닫기" onClick={onClose}>
+                <X size={18} />
               </button>
+            </div>
+          </header>
+          <div className="address-lookup-body">
+            <div className="address-lookup-list">
+              <div className="address-lookup-search">
+                <div className="address-lookup-search-row">
+                  <span>거래처 코드</span>
+                  <input placeholder="거래처 코드" value={searchAccountCode} onChange={(e) => setSearchAccountCode(e.target.value)} />
+                </div>
+                <div className="address-lookup-search-row">
+                  <span>주소 코드</span>
+                  <input placeholder="주소 코드 또는 주소명" value={searchAddressCode} onChange={(e) => setSearchAddressCode(e.target.value)} />
+                </div>
+              </div>
+              <div className="address-lookup-grid">
+                <WmsGrid
+                  columns={addressLookupColumns}
+                  data={filteredData}
+                  fillHeight
+                  includeAuditColumns={false}
+                  minBodyHeight={300}
+                  onRowDoubleClick={handleRowOpen}
+                  rowHeaders={['rowNum']}
+                />
+              </div>
+            </div>
+            {formData !== null && (
+              <div className="address-lookup-form">
+                <div className="address-lookup-form-inner">
+                  <AddressFormSection title="기본 정보">
+                    <AddressFormField label="주소 코드">
+                      <input value={formData.addressCode ?? ''} readOnly placeholder="저장 시 자동 생성" onChange={(e) => setFormData({ ...formData, addressCode: e.target.value })} />
+                    </AddressFormField>
+                    <AddressFormField label="주소명" required>
+                      <input value={formData.addressName ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, addressName: e.target.value })} />
+                    </AddressFormField>
+                    <AddressFormField label="거래처" required={isNew}>
+                      <div className="address-account-control">
+                        <input value={formData.accountCode ?? ''} readOnly placeholder="거래처 코드" />
+                        <button type="button" className="field-lookup-button" disabled={!isNew} onClick={() => setAccountPopupOpen(true)}>조회</button>
+                      </div>
+                    </AddressFormField>
+                    <AddressFormField label="거래처명">
+                      <input value={formData.accountName ?? ''} readOnly />
+                    </AddressFormField>
+                  </AddressFormSection>
+                  <AddressFormSection title="상세 주소">
+                    <AddressFormField label="주소 1">
+                      <input value={formData.addressLine1 ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })} />
+                    </AddressFormField>
+                    <AddressFormField label="주소 2">
+                      <input value={formData.addressLine2 ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })} />
+                    </AddressFormField>
+                    <AddressFormField label="시">
+                      <input value={formData.city ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+                    </AddressFormField>
+                    <AddressFormField label="우편번호">
+                      <input value={formData.zipcode ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, zipcode: e.target.value })} />
+                    </AddressFormField>
+                    <AddressFormField label="국가">
+                      <input value={formData.country ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, country: e.target.value })} />
+                    </AddressFormField>
+                  </AddressFormSection>
+                  <AddressFormSection title="연락처">
+                    <AddressFormField label="전화번호">
+                      <input value={formData.phoneNo ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, phoneNo: e.target.value })} />
+                    </AddressFormField>
+                    <AddressFormField label="팩스">
+                      <input value={formData.faxNo ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, faxNo: e.target.value })} />
+                    </AddressFormField>
+                    <AddressFormField label="담당자">
+                      <input value={formData.contactName ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} />
+                    </AddressFormField>
+                  </AddressFormSection>
+                  {errorMsg && <div className="address-lookup-error">{errorMsg}</div>}
+                </div>
+              </div>
             )}
-            {formData && !isNew && (
-              <button type="button" className="primary-button compact" onClick={() => onSelect(formData)}>선택</button>
-            )}
-            <button type="button" className="icon-only-button" aria-label="닫기" onClick={onClose}>
-              <X size={18} />
-            </button>
           </div>
-        </header>
-        <div className="address-lookup-body">
-          <div className="address-lookup-list">
-            <div className="address-lookup-search">
-              <div className="address-lookup-search-row">
-                <span>거래처 코드</span>
-                <input placeholder="거래처 코드" value={searchAccountCode} onChange={(e) => setSearchAccountCode(e.target.value)} />
-              </div>
-              <div className="address-lookup-search-row">
-                <span>주소 코드</span>
-                <input placeholder="주소 코드 또는 주소명" value={searchAddressCode} onChange={(e) => setSearchAddressCode(e.target.value)} />
-              </div>
-            </div>
-            <div className="address-lookup-grid">
-              <WmsGrid
-                columns={addressLookupColumns}
-                data={filteredData}
-                fillHeight
-                includeAuditColumns={false}
-                minBodyHeight={300}
-                onRowDoubleClick={handleRowOpen}
-                rowHeaders={['rowNum']}
-              />
-            </div>
-          </div>
-          {formData !== null && (
-            <div className="address-lookup-form">
-              <div className="address-lookup-form-inner">
-                <AddressFormSection title="기본 정보">
-                  <AddressFormField label="주소 코드" required={isNew}>
-                    <input value={formData.addressCode ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, addressCode: e.target.value })} />
-                  </AddressFormField>
-                  <AddressFormField label="주소명" required>
-                    <input value={formData.addressName ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, addressName: e.target.value })} />
-                  </AddressFormField>
-                  <AddressFormField label="거래처" required={isNew}>
-                    {isNew ? (
-                      <select
-                        value={formData.accountId ?? ''}
-                        onChange={(e) => {
-                          const account = accounts.find((a) => String(a.id) === e.target.value)
-                          setFormData({ ...formData, accountId: e.target.value, accountCode: account?.accountCode ?? '', accountName: account?.accountName ?? '' })
-                        }}
-                      >
-                        <option value="">거래처 선택</option>
-                        {accounts.map((a) => (
-                          <option key={a.id} value={String(a.id)}>{a.accountCode} / {a.accountName}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input value={`${formData.accountCode ?? ''} / ${formData.accountName ?? ''}`} readOnly />
-                    )}
-                  </AddressFormField>
-                </AddressFormSection>
-                <AddressFormSection title="상세 주소">
-                  <AddressFormField label="주소 1">
-                    <input value={formData.addressLine1 ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })} />
-                  </AddressFormField>
-                  <AddressFormField label="주소 2">
-                    <input value={formData.addressLine2 ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })} />
-                  </AddressFormField>
-                  <AddressFormField label="도시">
-                    <input value={formData.city ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
-                  </AddressFormField>
-                  <AddressFormField label="우편번호">
-                    <input value={formData.zipcode ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, zipcode: e.target.value })} />
-                  </AddressFormField>
-                  <AddressFormField label="국가">
-                    <input value={formData.country ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, country: e.target.value })} />
-                  </AddressFormField>
-                </AddressFormSection>
-                <AddressFormSection title="연락처">
-                  <AddressFormField label="전화번호">
-                    <input value={formData.phoneNo ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, phoneNo: e.target.value })} />
-                  </AddressFormField>
-                  <AddressFormField label="팩스">
-                    <input value={formData.faxNo ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, faxNo: e.target.value })} />
-                  </AddressFormField>
-                  <AddressFormField label="담당자">
-                    <input value={formData.contactName ?? ''} readOnly={!isNew} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} />
-                  </AddressFormField>
-                </AddressFormSection>
-                {errorMsg && <div className="address-lookup-error">{errorMsg}</div>}
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+      <AccountLookupModal
+        accounts={accounts}
+        open={accountPopupOpen}
+        onClose={() => setAccountPopupOpen(false)}
+        onSelect={(account) => {
+          setFormData((current) => ({
+            ...(current ?? {}),
+            accountId: account.id,
+            accountCode: account.accountCode,
+            accountName: account.accountName,
+          }))
+          setSearchAccountCode(account.accountCode)
+          setAccountPopupOpen(false)
+        }}
+      />
+    </>
   )
 }
 

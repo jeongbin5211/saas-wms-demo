@@ -2040,8 +2040,15 @@ button {
   gap: 8px;
 }
 
+.lookup-modal-header-actions .compact {
+  min-width: 58px;
+  height: 32px;
+  padding: 0 14px;
+}
+
 .address-lookup-modal {
   width: min(980px, calc(100vw - 48px));
+  height: min(700px, calc(100vh - 48px));
   max-height: min(700px, calc(100vh - 48px));
 }
 
@@ -2096,8 +2103,20 @@ button {
 
 .address-lookup-grid {
   flex: 1;
+  height: 100%;
   min-height: 0;
   overflow: hidden;
+}
+
+.address-account-control {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  min-width: 0;
+}
+
+.address-account-control input {
+  min-width: 0;
 }
 
 .address-lookup-form {
