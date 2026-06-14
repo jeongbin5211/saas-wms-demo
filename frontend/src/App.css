@@ -2034,6 +2034,153 @@ button {
   text-align: center !important;
 }
 
+.lookup-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.address-lookup-modal {
+  width: min(980px, calc(100vw - 48px));
+  max-height: min(700px, calc(100vh - 48px));
+}
+
+.address-lookup-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.address-lookup-list {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 460px;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+}
+
+.address-lookup-search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: #fbfcfe;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.address-lookup-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.address-lookup-search-row span {
+  flex: 0 0 72px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: right;
+}
+
+.address-lookup-search-row input {
+  flex: 1;
+  height: 30px;
+  padding: 0 10px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 13px;
+}
+
+.address-lookup-grid {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.address-lookup-form {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.address-lookup-form-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.address-lookup-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.address-lookup-form-title {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.address-lookup-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.address-form-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.address-form-field label {
+  flex: 0 0 72px;
+  color: var(--control-navy);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.address-form-field label.required::before {
+  content: '* ';
+  color: #ef4444;
+}
+
+.address-form-field input,
+.address-form-field select {
+  flex: 1;
+  height: 30px;
+  padding: 0 10px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 13px;
+}
+
+.address-form-field input[readonly] {
+  background: #f8fafc;
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.address-lookup-error {
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 13px;
+}
+
 .detail-form-actions {
   display: flex;
   justify-content: flex-end;
