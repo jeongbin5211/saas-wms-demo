@@ -2027,7 +2027,6 @@ button {
 
 .lookup-modal-grid .wms-grid {
   height: 400px;
-  border: 1px solid #cfd8e3;
 }
 
 .lookup-modal-grid table {
@@ -2763,6 +2762,12 @@ button {
 .wms-grid .tui-grid-body-area,
 .wms-grid .tui-grid-header-area {
   border-color: #cfd8e3 !important;
+}
+
+.wms-grid .tui-grid-lside-area .tui-grid-cell,
+.wms-grid .tui-grid-lside-area .tui-grid-cell-header,
+.wms-grid .tui-grid-cell-row-header {
+  border-right: 1px solid #cfd8e3 !important;
 }
 
 .tui-grid-cell {
