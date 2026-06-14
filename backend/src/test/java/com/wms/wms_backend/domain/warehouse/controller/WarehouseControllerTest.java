@@ -2,6 +2,7 @@ package com.wms.wms_backend.domain.warehouse.controller;
 
 import com.wms.wms_backend.common.security.SecurityUtil;
 import com.wms.wms_backend.domain.account.entity.Account;
+import com.wms.wms_backend.domain.account.repository.AccountAddressRepository;
 import com.wms.wms_backend.domain.account.repository.AccountRepository;
 import com.wms.wms_backend.domain.inventory.repository.InventoryRepository;
 import com.wms.wms_backend.domain.warehouse.entity.Area;
@@ -45,6 +46,9 @@ class WarehouseControllerTest {
     private AccountRepository accountRepository;
 
     @Mock
+    private AccountAddressRepository accountAddressRepository;
+
+    @Mock
     private WarehouseRepository warehouseRepository;
 
     @Mock
@@ -65,6 +69,7 @@ class WarehouseControllerTest {
     void setUp() {
         controller = new WarehouseController(
                 accountRepository,
+                accountAddressRepository,
                 warehouseRepository,
                 areaRepository,
                 inventoryRepository,
@@ -92,6 +97,7 @@ class WarehouseControllerTest {
                     "New Warehouse",
                     "OWN",
                     "Seoul DC",
+                    null,
                     1,
                     "02-1111-2222",
                     "02-1111-2223",
@@ -129,6 +135,7 @@ class WarehouseControllerTest {
                     "WH-DUP",
                     "Duplicate Warehouse",
                     "OWN",
+                    null,
                     null,
                     0,
                     null,
