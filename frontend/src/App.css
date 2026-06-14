@@ -2020,52 +2020,9 @@ button {
 }
 
 .lookup-modal-grid {
+  flex: 1;
   min-height: 0;
-  padding: 12px 16px 16px;
-  overflow: auto;
-}
-
-.lookup-modal-grid .wms-grid {
-  height: 400px;
-}
-
-.lookup-modal-grid table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.lookup-modal-grid th,
-.lookup-modal-grid td {
-  height: 40px;
-  padding: 0 12px;
-  border-right: 1px solid var(--line-soft);
-  border-bottom: 1px solid var(--line-soft);
-  text-align: left;
-}
-
-.lookup-modal-grid th:last-child,
-.lookup-modal-grid td:last-child {
-  border-right: 0;
-}
-
-.lookup-modal-grid th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  color: var(--control-navy);
-  background: #f3f6fa;
-  font-weight: 800;
-}
-
-.lookup-modal-grid tr:hover td {
-  background: #eff6ff;
-}
-
-.lookup-modal-grid td:last-child,
-.lookup-modal-grid th:last-child {
-  width: 86px;
-  text-align: center;
+  overflow: hidden;
 }
 
 .lookup-empty-cell {
@@ -2286,6 +2243,32 @@ button {
 .danger-button:hover {
   background: #b91c1c;
   border-color: #991b1b;
+}
+
+.save-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 15px;
+  color: #fff;
+  background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+  border: 1px solid #15803d;
+  border-radius: 7px;
+  box-shadow: 0 2px 5px rgb(22 163 74 / 20%);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.save-button:hover {
+  background: #15803d;
+  border-color: #166534;
+}
+
+.save-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .work-search-panel {
@@ -2745,6 +2728,7 @@ button {
 
 .tui-grid-container {
   font-family: inherit;
+  border: none !important;
 }
 
 .tui-grid-border-line-right {
@@ -2764,6 +2748,10 @@ button {
   border-color: #cfd8e3 !important;
 }
 
+.wms-grid .tui-grid-lside-area {
+  border-right: 1px solid #cfd8e3 !important;
+}
+
 .wms-grid .tui-grid-rside-area {
   border-left: 1px solid #cfd8e3 !important;
 }
@@ -2776,7 +2764,7 @@ button {
 .wms-grid .tui-grid-lside-area .tui-grid-cell,
 .wms-grid .tui-grid-lside-area .tui-grid-cell-header,
 .wms-grid .tui-grid-cell-row-header {
-  border-right: 1px solid #cfd8e3 !important;
+  border-right: none !important;
 }
 
 .tui-grid-cell {
@@ -2791,6 +2779,7 @@ button {
 }
 
 .tui-grid-cell-header {
+  border-top: none !important;
   border-right: 1px solid #c7d1de !important;
   border-bottom: 1px solid #c7d1de !important;
   font-weight: 700;

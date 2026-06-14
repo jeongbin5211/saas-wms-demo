@@ -273,8 +273,13 @@ export function StandardWorkPage({
 
   const detailToolbar = (
     <>
+      {allowNew ? (
+        <button type="button" className="primary-button" onClick={handleNew}>
+          <span>신규</span>
+        </button>
+      ) : null}
       {allowSave ? (
-        <button type="button" className="primary-button" onClick={() => handleSave()}>
+        <button type="button" className="save-button" onClick={() => handleSave()}>
           <span>저장</span>
         </button>
       ) : null}
