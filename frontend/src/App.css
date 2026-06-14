@@ -2103,7 +2103,6 @@ button {
 
 .address-lookup-grid {
   flex: 1;
-  height: 100%;
   min-height: 0;
   overflow: hidden;
 }

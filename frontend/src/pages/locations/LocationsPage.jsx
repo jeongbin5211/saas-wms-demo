@@ -458,9 +458,8 @@ function AddressLookupModalContent({
                 <WmsGrid
                   columns={addressLookupColumns}
                   data={filteredData}
-                  fillHeight
                   includeAuditColumns={false}
-                  minBodyHeight={300}
+                  minBodyHeight={400}
                   onRowDoubleClick={handleRowOpen}
                   rowHeaders={['rowNum']}
                 />
