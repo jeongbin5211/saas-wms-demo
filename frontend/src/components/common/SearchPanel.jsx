@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
 
-export function SearchPanel({ fields = [], onChange, onReset, onSearch, searchParams, title }) {
+export function SearchPanel({ fields = [], onChange, onFieldAction, onReset, onSearch, searchParams, title }) {
   const updateValue = (name, value) => {
     onChange({
       ...searchParams,
@@ -38,6 +38,19 @@ export function SearchPanel({ fields = [], onChange, onReset, onSearch, searchPa
                     </option>
                   ))}
                 </select>
+              ) : field.actionLabel ? (
+                <div className="search-field-with-action">
+                  <input
+                    placeholder={field.placeholder ?? ''}
+                    readOnly={field.readOnly}
+                    type={field.type ?? 'text'}
+                    value={searchParams[field.name] ?? ''}
+                    onChange={(event) => updateValue(field.name, event.target.value)}
+                  />
+                  <button type="button" className="field-lookup-button" onClick={() => onFieldAction?.(field)}>
+                    {field.actionLabel}
+                  </button>
+                </div>
               ) : (
                 <input
                   placeholder={field.placeholder ?? ''}

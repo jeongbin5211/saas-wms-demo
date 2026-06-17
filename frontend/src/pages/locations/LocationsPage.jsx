@@ -113,6 +113,10 @@ const zoneLookupSearchFields = [
   { name: 'keyword', label: 'Zone', placeholder: 'Zone 코드 또는 Zone명', keys: ['zoneCode', 'zoneName', 'warehouseCode', 'areaName'] },
 ]
 
+const locationLookupSearchFields = [
+  { name: 'keyword', label: 'Location', placeholder: 'Location 코드 또는 Location명', keys: ['locationCode', 'locationName', 'warehouseCode', 'zoneName'] },
+]
+
 const addressLookupSearchFields = [
   { name: 'accountCode', label: '거래처', placeholder: '거래처 코드/거래처 이름', keys: ['accountCode', 'accountName'] },
   { name: 'addressCode', label: '주소', placeholder: '주소 코드/주소명', keys: ['addressCode', 'addressName'] },
@@ -124,7 +128,14 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
   const [warehouseLookupContext, setWarehouseLookupContext] = useState(null)
   const [areaLookupContext, setAreaLookupContext] = useState(null)
   const [zoneLookupContext, setZoneLookupContext] = useState(null)
+  const [locationLookupContext, setLocationLookupContext] = useState(null)
   const catalog = data.locationCatalog
+  const lookups = {
+    openWarehouse: setWarehouseLookupContext,
+    openArea: setAreaLookupContext,
+    openZone: setZoneLookupContext,
+    openLocation: setLocationLookupContext,
+  }
   const pages = [
     buildWarehousePage({
       accounts: data.accounts,
@@ -135,9 +146,9 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
       onRefresh,
       page,
     }),
-    buildAreaPage({ authUser, catalog, onOpenWarehouseLookup: setWarehouseLookupContext, onRefresh, page }),
-    buildZonePage({ authUser, catalog, onOpenAreaLookup: setAreaLookupContext, onRefresh, page }),
-    buildLocationPage({ authUser, catalog, onOpenZoneLookup: setZoneLookupContext, onRefresh, page }),
+    buildAreaPage({ authUser, catalog, lookups, onRefresh, page }),
+    buildZonePage({ authUser, catalog, lookups, onRefresh, page }),
+    buildLocationPage({ authUser, catalog, lookups, onRefresh, page }),
   ]
 
   return (
@@ -183,51 +194,57 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
         open={Boolean(warehouseLookupContext)}
         warehouses={catalog.warehouses}
         onClose={() => setWarehouseLookupContext(null)}
-        onSelect={(warehouse) => {
-          warehouseLookupContext?.setDraftRow((current) => ({
-            ...(current ?? {}),
-            warehouseId: warehouse.id,
-            warehouseCode: warehouse.warehouseCode,
-            warehouseName: warehouse.warehouseName,
-          }))
-          setWarehouseLookupContext(null)
-        }}
+        onSelect={(warehouse) => applyLookupSelection(
+          warehouseLookupContext,
+          setWarehouseLookupContext,
+          { warehouseId: warehouse.id, warehouseCode: warehouse.warehouseCode, warehouseName: warehouse.warehouseName },
+          { warehouseCode: warehouse.warehouseCode, warehouseName: warehouse.warehouseName },
+        )}
       />
       <AreaLookupModal
         open={Boolean(areaLookupContext)}
         areas={catalog.areas}
         onClose={() => setAreaLookupContext(null)}
-        onSelect={(area) => {
-          areaLookupContext?.setDraftRow((current) => ({
-            ...(current ?? {}),
-            areaId: area.id,
-            areaCode: area.areaCode,
-            areaName: area.areaName,
-            warehouseCode: area.warehouseCode,
-            warehouseName: area.warehouseName,
-          }))
-          setAreaLookupContext(null)
-        }}
+        onSelect={(area) => applyLookupSelection(
+          areaLookupContext,
+          setAreaLookupContext,
+          { areaId: area.id, areaCode: area.areaCode, areaName: area.areaName, warehouseCode: area.warehouseCode, warehouseName: area.warehouseName },
+          { areaCode: area.areaCode, areaName: area.areaName },
+        )}
       />
       <ZoneLookupModal
         open={Boolean(zoneLookupContext)}
         zones={catalog.zones}
         onClose={() => setZoneLookupContext(null)}
-        onSelect={(zone) => {
-          zoneLookupContext?.setDraftRow((current) => ({
-            ...(current ?? {}),
-            zoneId: zone.id,
-            zoneCode: zone.zoneCode,
-            zoneName: zone.zoneName,
-            warehouseCode: zone.warehouseCode,
-            warehouseName: zone.warehouseName,
-            areaName: zone.areaName,
-          }))
-          setZoneLookupContext(null)
-        }}
+        onSelect={(zone) => applyLookupSelection(
+          zoneLookupContext,
+          setZoneLookupContext,
+          { zoneId: zone.id, zoneCode: zone.zoneCode, zoneName: zone.zoneName, warehouseCode: zone.warehouseCode, warehouseName: zone.warehouseName, areaName: zone.areaName },
+          { zoneCode: zone.zoneCode, zoneName: zone.zoneName },
+        )}
+      />
+      <LocationLookupModal
+        open={Boolean(locationLookupContext)}
+        locations={catalog.locations}
+        onClose={() => setLocationLookupContext(null)}
+        onSelect={(location) => applyLookupSelection(
+          locationLookupContext,
+          setLocationLookupContext,
+          { locationCode: location.locationCode, locationName: location.locationName },
+          { locationCode: location.locationCode, locationName: location.locationName },
+        )}
       />
     </>
   )
+}
+
+function applyLookupSelection(context, setContext, draftValues, searchValues) {
+  if (context?.mode === 'search') {
+    context.setSearchParams((current) => ({ ...current, ...searchValues }))
+  } else {
+    context?.setDraftRow((current) => ({ ...(current ?? {}), ...draftValues }))
+  }
+  setContext(null)
 }
 
 function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, onOpenAddressLookup, onRefresh, page }) {
@@ -386,6 +403,27 @@ function ZoneLookupModal({ open, onClose, onSelect, zones }) {
       open={open}
       searchFields={zoneLookupSearchFields}
       title="Zone 조회"
+      onClose={onClose}
+      onSelect={onSelect}
+    />
+  )
+}
+
+function LocationLookupModal({ open, onClose, onSelect, locations }) {
+  return (
+    <CommonGridLookupModal
+      columns={[
+        { header: '창고 코드', name: 'warehouseCode', width: 130 },
+        { header: 'Zone명', name: 'zoneName', width: 160 },
+        { header: 'Location 코드', name: 'locationCode', width: 160 },
+        { header: 'Location명', name: 'locationName', width: 220 },
+      ]}
+      data={locations}
+      emptyMessage="조회된 Location이 없습니다."
+      initialFilters={{ keyword: '' }}
+      open={open}
+      searchFields={locationLookupSearchFields}
+      title="Location 조회"
       onClose={onClose}
       onSelect={onSelect}
     />
@@ -676,7 +714,7 @@ function AddressFormField({ label, required, children }) {
   )
 }
 
-function buildAreaPage({ authUser, catalog, onOpenWarehouseLookup, onRefresh, page }) {
+function buildAreaPage({ authUser, catalog, lookups, onRefresh, page }) {
   const defaultWarehouse = catalog.warehouses[0]
 
   return (
@@ -725,12 +763,22 @@ function buildAreaPage({ authUser, catalog, onOpenWarehouseLookup, onRefresh, pa
           return
         }
 
-        onOpenWarehouseLookup({ ...context, values })
+        lookups.openWarehouse({ ...context, values })
+      }}
+      searchFieldAction={(field, searchParams, searchContext) => {
+        if (field.name === 'warehouseCode') {
+          lookups.openWarehouse({ mode: 'search', setSearchParams: searchContext.setSearchParams })
+          return
+        }
+
+        if (field.name === 'areaCode') {
+          lookups.openArea({ mode: 'search', setSearchParams: searchContext.setSearchParams })
+        }
       }}
       searchFields={[
-        { name: 'areaCode', label: 'Area 코드' },
+        { name: 'areaCode', label: 'Area 코드', actionLabel: '조회' },
         { name: 'areaName', label: 'Area명' },
-        { name: 'warehouseCode', label: '창고 코드' },
+        { name: 'warehouseCode', label: '창고 코드', actionLabel: '조회' },
         { name: 'warehouseName', label: '창고명' },
         { name: 'useYn', label: '사용 여부', type: 'select', options: useYnOptions },
       ]}
@@ -738,7 +786,7 @@ function buildAreaPage({ authUser, catalog, onOpenWarehouseLookup, onRefresh, pa
   )
 }
 
-function buildZonePage({ authUser, catalog, onOpenAreaLookup, onRefresh, page }) {
+function buildZonePage({ authUser, catalog, lookups, onRefresh, page }) {
   const defaultArea = catalog.areas[0]
 
   return (
@@ -790,12 +838,22 @@ function buildZonePage({ authUser, catalog, onOpenAreaLookup, onRefresh, page })
           return
         }
 
-        onOpenAreaLookup({ ...context, values })
+        lookups.openArea({ ...context, values })
+      }}
+      searchFieldAction={(field, searchParams, searchContext) => {
+        if (field.name === 'warehouseCode') {
+          lookups.openWarehouse({ mode: 'search', setSearchParams: searchContext.setSearchParams })
+          return
+        }
+
+        if (field.name === 'zoneCode') {
+          lookups.openZone({ mode: 'search', setSearchParams: searchContext.setSearchParams })
+        }
       }}
       searchFields={[
-        { name: 'zoneCode', label: 'Zone 코드' },
+        { name: 'zoneCode', label: 'Zone 코드', actionLabel: '조회' },
         { name: 'zoneName', label: 'Zone명' },
-        { name: 'warehouseCode', label: '창고 코드' },
+        { name: 'warehouseCode', label: '창고 코드', actionLabel: '조회' },
         { name: 'warehouseName', label: '창고명' },
         { name: 'useYn', label: '사용 여부', type: 'select', options: useYnOptions },
       ]}
@@ -803,7 +861,7 @@ function buildZonePage({ authUser, catalog, onOpenAreaLookup, onRefresh, page })
   )
 }
 
-function buildLocationPage({ authUser, catalog, onOpenZoneLookup, onRefresh, page }) {
+function buildLocationPage({ authUser, catalog, lookups, onRefresh, page }) {
   const defaultZone = catalog.zones[0]
 
   return (
@@ -874,14 +932,29 @@ function buildLocationPage({ authUser, catalog, onOpenZoneLookup, onRefresh, pag
           return
         }
 
-        onOpenZoneLookup({ ...context, values })
+        lookups.openZone({ ...context, values })
+      }}
+      searchFieldAction={(field, searchParams, searchContext) => {
+        if (field.name === 'warehouseCode') {
+          lookups.openWarehouse({ mode: 'search', setSearchParams: searchContext.setSearchParams })
+          return
+        }
+
+        if (field.name === 'zoneCode') {
+          lookups.openZone({ mode: 'search', setSearchParams: searchContext.setSearchParams })
+          return
+        }
+
+        if (field.name === 'locationCode') {
+          lookups.openLocation({ mode: 'search', setSearchParams: searchContext.setSearchParams })
+        }
       }}
       searchFields={[
-        { name: 'locationCode', label: 'Location 코드' },
+        { name: 'locationCode', label: 'Location 코드', actionLabel: '조회' },
         { name: 'locationName', label: 'Location명' },
-        { name: 'warehouseCode', label: '창고 코드' },
+        { name: 'warehouseCode', label: '창고 코드', actionLabel: '조회' },
         { name: 'warehouseName', label: '창고명' },
-        { name: 'zoneCode', label: 'Zone 코드' },
+        { name: 'zoneCode', label: 'Zone 코드', actionLabel: '조회' },
         { name: 'zoneName', label: 'Zone명' },
         { name: 'useYn', label: '사용 여부', type: 'select', options: useYnOptions },
       ]}

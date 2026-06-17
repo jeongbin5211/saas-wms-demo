@@ -33,6 +33,7 @@ export function StandardWorkPage({
   onRefresh,
   page,
   searchFields,
+  searchFieldAction,
   saveConfirmTitle = '저장하시겠습니까?',
   title,
   updateSuccessMessage = '수정이 완료되었습니다.',
@@ -325,6 +326,11 @@ export function StandardWorkPage({
         searchParams={searchParams}
         title={title ?? page.title}
         onChange={setSearchParams}
+        onFieldAction={(field) => searchFieldAction?.(field, searchParams, {
+          searchParams,
+          setSearchParams,
+          setMessage: notify,
+        })}
         onReset={handleReset}
         onSearch={handleSearch}
       />
