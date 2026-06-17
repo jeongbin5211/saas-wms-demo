@@ -161,11 +161,32 @@ public class WarehouseController {
     }
 
     @GetMapping("/api/areas")
-    public List<AreaResponse> findAreas() {
+    public List<AreaResponse> findAreas(
+            @RequestParam(required = false) String areaCode,
+            @RequestParam(required = false) String areaName,
+            @RequestParam(required = false) String warehouseCode,
+            @RequestParam(required = false) String warehouseName,
+            @RequestParam(required = false) String useYn
+    ) {
         Long topAccountId = SecurityUtil.currentTopAccountId();
         List<AreaResponse> responses = new ArrayList<>();
+        List<Area> areas = hasText(useYn)
+                ? areaRepository.findAllByTopAccountIdAndUseYnOrderByIdAsc(topAccountId, useYn)
+                : areaRepository.findAllByTopAccountIdOrderByIdAsc(topAccountId);
 
-        for (Area area : areaRepository.findAllByTopAccountId(topAccountId)) {
+        for (Area area : areas) {
+            if (!contains(area.getAreaCode(), areaCode)) {
+                continue;
+            }
+            if (!contains(area.getAreaName(), areaName)) {
+                continue;
+            }
+            if (!contains(area.getWarehouse().getWarehouseCode(), warehouseCode)) {
+                continue;
+            }
+            if (!contains(area.getWarehouse().getWarehouseName(), warehouseName)) {
+                continue;
+            }
             responses.add(AreaResponse.from(area));
         }
 
@@ -184,7 +205,7 @@ public class WarehouseController {
 
         Warehouse warehouse = findWarehouse(request.warehouseId());
         Area area = areaRepository.save(new Area(warehouse.getAccount(), warehouse, request.areaCode(), request.areaName()));
-        area.updateOptionalFields(request.detailDescription(), request.priority());
+        area.updateOptionalFields(request.detailDescription(), request.priority(), request.useYn());
 
         return AreaResponse.from(area);
     }
@@ -201,7 +222,7 @@ public class WarehouseController {
         }
 
         Warehouse warehouse = findWarehouse(request.warehouseId());
-        area.update(warehouse, request.areaCode(), request.areaName(), request.detailDescription(), request.priority());
+        area.update(warehouse, request.areaCode(), request.areaName(), request.detailDescription(), request.priority(), request.useYn());
 
         return AreaResponse.from(area);
     }
@@ -388,7 +409,7 @@ public class WarehouseController {
         String baseName = warehouse.getWarehouseName();
 
         Area area = areaRepository.save(new Area(warehouse.getAccount(), warehouse, baseCode, baseName));
-        area.updateOptionalFields("창고 생성 시 자동 생성된 기본 Area입니다.", 1);
+        area.updateOptionalFields("창고 생성 시 자동 생성된 기본 Area입니다.", 1, "Y");
 
         Zone zone = zoneRepository.save(new Zone(warehouse.getAccount(), area, baseCode, baseName));
         zone.updateOptionalFields("창고 생성 시 자동 생성된 기본 Zone입니다.", 1);
@@ -707,7 +728,8 @@ public class WarehouseController {
             @NotBlank String areaCode,
             @NotBlank String areaName,
             String detailDescription,
-            Integer priority
+            Integer priority,
+            String useYn
     ) {
     }
 
@@ -716,7 +738,8 @@ public class WarehouseController {
             @NotBlank String areaCode,
             @NotBlank String areaName,
             String detailDescription,
-            Integer priority
+            Integer priority,
+            String useYn
     ) {
     }
 

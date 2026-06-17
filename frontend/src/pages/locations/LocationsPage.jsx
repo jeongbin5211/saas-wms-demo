@@ -98,6 +98,10 @@ const accountLookupSearchFields = [
   { name: 'keyword', label: '거래처', placeholder: '거래처 코드 또는 거래처명', keys: ['accountCode', 'accountName', 'accountTypeSubCode'] },
 ]
 
+const warehouseLookupSearchFields = [
+  { name: 'keyword', label: '창고', placeholder: '창고 코드 또는 창고명', keys: ['warehouseCode', 'warehouseName', 'warehouseTypeSubCode'] },
+]
+
 const addressLookupSearchFields = [
   { name: 'accountCode', label: '거래처', placeholder: '거래처 코드/거래처 이름', keys: ['accountCode', 'accountName'] },
   { name: 'addressCode', label: '주소', placeholder: '주소 코드/주소명', keys: ['addressCode', 'addressName'] },
@@ -106,11 +110,8 @@ const addressLookupSearchFields = [
 export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, page }) {
   const [accountLookupContext, setAccountLookupContext] = useState(null)
   const [addressLookupContext, setAddressLookupContext] = useState(null)
+  const [warehouseLookupContext, setWarehouseLookupContext] = useState(null)
   const catalog = data.locationCatalog
-  const warehouseOptions = catalog.warehouses.map((warehouse) => ({
-    label: `${warehouse.warehouseCode} / ${warehouse.warehouseName}`,
-    value: warehouse.id,
-  }))
   const areaOptions = catalog.areas.map((area) => ({
     label: `${area.warehouseCode} / ${area.areaCode} / ${area.areaName}`,
     value: area.id,
@@ -129,7 +130,7 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
       onRefresh,
       page,
     }),
-    buildAreaPage({ areaOptions, authUser, catalog, onRefresh, page, warehouseOptions }),
+    buildAreaPage({ authUser, catalog, onOpenWarehouseLookup: setWarehouseLookupContext, onRefresh, page }),
     buildZonePage({ areaOptions, authUser, catalog, onRefresh, page }),
     buildLocationPage({ authUser, catalog, onRefresh, page, zoneOptions }),
   ]
@@ -171,6 +172,20 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
             contactName: current?.contactName || address.contactName || '',
           }))
           setAddressLookupContext(null)
+        }}
+      />
+      <WarehouseLookupModal
+        open={Boolean(warehouseLookupContext)}
+        warehouses={catalog.warehouses}
+        onClose={() => setWarehouseLookupContext(null)}
+        onSelect={(warehouse) => {
+          warehouseLookupContext?.setDraftRow((current) => ({
+            ...(current ?? {}),
+            warehouseId: warehouse.id,
+            warehouseCode: warehouse.warehouseCode,
+            warehouseName: warehouse.warehouseName,
+          }))
+          setWarehouseLookupContext(null)
         }}
       />
     </>
@@ -274,6 +289,26 @@ function AccountLookupModal({ accounts, open, onClose, onSelect }) {
       open={open}
       searchFields={accountLookupSearchFields}
       title="창고 소속 거래처 조회"
+      onClose={onClose}
+      onSelect={onSelect}
+    />
+  )
+}
+
+function WarehouseLookupModal({ open, onClose, onSelect, warehouses }) {
+  return (
+    <CommonGridLookupModal
+      columns={[
+        { header: '창고 코드', name: 'warehouseCode', width: 180 },
+        { header: '창고명', name: 'warehouseName', width: 280 },
+        { header: '유형', name: 'warehouseTypeSubCode', width: 120, align: 'center' },
+      ]}
+      data={warehouses}
+      emptyMessage="조회된 창고가 없습니다."
+      initialFilters={{ keyword: '' }}
+      open={open}
+      searchFields={warehouseLookupSearchFields}
+      title="창고 조회"
       onClose={onClose}
       onSelect={onSelect}
     />
@@ -564,7 +599,9 @@ function AddressFormField({ label, required, children }) {
   )
 }
 
-function buildAreaPage({ authUser, catalog, onRefresh, page, warehouseOptions }) {
+function buildAreaPage({ authUser, catalog, onOpenWarehouseLookup, onRefresh, page }) {
+  const defaultWarehouse = catalog.warehouses[0]
+
   return (
     <StandardWorkPage
       authUser={authUser}
@@ -574,24 +611,48 @@ function buildAreaPage({ authUser, catalog, onRefresh, page, warehouseOptions })
         areaName: row.areaName,
         detailDescription: row.detailDescription,
         priority: toOptionalNumber(row.priority),
+        useYn: row.useYn ?? 'Y',
       })}
       columns={areaColumns}
-      createDefaults={{ priority: 0, warehouseId: catalog.warehouses[0]?.id ?? '' }}
+      createDefaults={{
+        priority: 0,
+        useYn: 'Y',
+        warehouseCode: defaultWarehouse?.warehouseCode ?? '',
+        warehouseId: defaultWarehouse?.id ?? '',
+        warehouseName: defaultWarehouse?.warehouseName ?? '',
+      }}
       data={catalog.areas}
       detailFields={[
-        { name: 'areaCode', label: 'Area 코드', required: true },
-        { name: 'areaName', label: 'Area명', required: true },
-        { name: 'warehouseId', label: '창고', type: 'select', options: warehouseOptions, required: true },
-        { name: 'detailDescription', label: '상세 설명', wide: true },
-        { name: 'priority', label: '우선순위', type: 'number' },
-        { name: 'useYn', label: '사용 여부', readOnly: true },
+        { name: 'warehouseCode', label: '창고', section: '기본 정보', readOnly: true, required: true, actionLabel: '조회', actionDisabledOnEdit: true },
+        { name: 'warehouseName', label: '창고명', section: '기본 정보', readOnly: true, required: true },
+        { name: 'areaCode', label: 'Area 코드', section: '기본 정보', required: true, readOnlyOnEdit: true },
+        { name: 'areaName', label: 'Area명', section: '기본 정보', required: true },
+        { name: 'detailDescription', label: '상세 설명', section: '상세 정보', wide: true },
+        { name: 'priority', label: '우선순위', section: '상세 정보', type: 'number', required: true },
+        { name: 'useYn', label: '사용 여부', section: '상세 정보', type: 'select', options: useYnOptions, required: true },
       ]}
       detailTabLabel="상세 목록"
+      deleteConfirmTitle="미사용 처리하시겠습니까?"
+      deleteLabel="미사용 처리"
+      deleteSuccessMessage="미사용 처리되었습니다."
       endpoint="/api/areas"
       headerActions={<button type="button" className="icon-text-button">엑셀 업로드</button>}
+      keepDetailAfterSave
       listTabLabel="Area 목록"
       onRefresh={onRefresh}
       page={{ ...page, eyebrow: '로케이션 정보', title: 'Area' }}
+      detailFieldAction={(field, values, context) => {
+        if (field.name !== 'warehouseCode') {
+          return
+        }
+
+        if (!context.isCreateMode) {
+          context.setMessage('수정 중에는 Area의 창고를 변경할 수 없습니다.')
+          return
+        }
+
+        onOpenWarehouseLookup({ ...context, values })
+      }}
       searchFields={[
         { name: 'areaCode', label: 'Area 코드' },
         { name: 'areaName', label: 'Area명' },

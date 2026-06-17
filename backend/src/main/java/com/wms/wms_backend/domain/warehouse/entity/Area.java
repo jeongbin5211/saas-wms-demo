@@ -56,21 +56,27 @@ public class Area extends BaseEntity {
         this.useYn = "Y";
     }
 
-    public void update(Warehouse warehouse, String areaCode, String areaName, String detailDescription, Integer priority) {
+    public void update(Warehouse warehouse, String areaCode, String areaName, String detailDescription, Integer priority, String useYn) {
         this.account = warehouse.getAccount();
         this.warehouse = warehouse;
         this.areaCode = areaCode;
         this.areaName = areaName;
         this.detailDescription = detailDescription;
         this.priority = priority;
+        this.useYn = normalizeUseYn(useYn);
     }
 
-    public void updateOptionalFields(String detailDescription, Integer priority) {
+    public void updateOptionalFields(String detailDescription, Integer priority, String useYn) {
         this.detailDescription = detailDescription;
         this.priority = priority;
+        this.useYn = normalizeUseYn(useYn);
     }
 
     public void deactivate() {
         this.useYn = "N";
+    }
+
+    private String normalizeUseYn(String useYn) {
+        return "N".equals(useYn) ? "N" : "Y";
     }
 }
