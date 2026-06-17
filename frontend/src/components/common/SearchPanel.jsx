@@ -27,7 +27,7 @@ export function SearchPanel({ fields = [], onChange, onFieldAction, onReset, onS
       <div className="search-panel">
         <div className="search-panel-fields">
           {fields.map((field) => (
-            <label className={field.wide ? 'wide' : ''} key={field.name}>
+            <label className={field.wide || field.type === 'lookup' ? 'wide' : ''} key={field.name}>
               <span>{field.label}</span>
               {field.type === 'select' ? (
                 <select value={searchParams[field.name] ?? ''} onChange={(event) => updateValue(field.name, event.target.value)}>
@@ -38,17 +38,20 @@ export function SearchPanel({ fields = [], onChange, onFieldAction, onReset, onS
                     </option>
                   ))}
                 </select>
-              ) : field.actionLabel ? (
+              ) : field.type === 'lookup' ? (
                 <div className="search-field-with-action">
                   <input
-                    placeholder={field.placeholder ?? ''}
-                    readOnly={field.readOnly}
-                    type={field.type ?? 'text'}
-                    value={searchParams[field.name] ?? ''}
-                    onChange={(event) => updateValue(field.name, event.target.value)}
+                    placeholder={field.codePlaceholder ?? '코드'}
+                    value={searchParams[field.codeField] ?? ''}
+                    onChange={(event) => updateValue(field.codeField, event.target.value)}
                   />
-                  <button type="button" className="field-lookup-button" onClick={() => onFieldAction?.(field)}>
-                    {field.actionLabel}
+                  <input
+                    placeholder={field.namePlaceholder ?? '이름'}
+                    value={searchParams[field.nameField] ?? ''}
+                    onChange={(event) => updateValue(field.nameField, event.target.value)}
+                  />
+                  <button type="button" className="field-lookup-button" aria-label={`${field.label} 조회`} onClick={() => onFieldAction?.(field)}>
+                    <Search size={15} />
                   </button>
                 </div>
               ) : (

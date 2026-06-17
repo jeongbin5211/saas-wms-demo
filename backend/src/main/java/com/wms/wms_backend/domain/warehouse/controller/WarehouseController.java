@@ -237,11 +237,32 @@ public class WarehouseController {
     }
 
     @GetMapping("/api/zones")
-    public List<ZoneResponse> findZones() {
+    public List<ZoneResponse> findZones(
+            @RequestParam(required = false) String zoneCode,
+            @RequestParam(required = false) String zoneName,
+            @RequestParam(required = false) String warehouseCode,
+            @RequestParam(required = false) String warehouseName,
+            @RequestParam(required = false) String useYn
+    ) {
         Long topAccountId = SecurityUtil.currentTopAccountId();
         List<ZoneResponse> responses = new ArrayList<>();
 
         for (Zone zone : zoneRepository.findAllByTopAccountId(topAccountId)) {
+            if (!contains(zone.getZoneCode(), zoneCode)) {
+                continue;
+            }
+            if (!contains(zone.getZoneName(), zoneName)) {
+                continue;
+            }
+            if (!contains(zone.getWarehouse().getWarehouseCode(), warehouseCode)) {
+                continue;
+            }
+            if (!contains(zone.getWarehouse().getWarehouseName(), warehouseName)) {
+                continue;
+            }
+            if (hasText(useYn) && !useYn.equals(zone.getUseYn())) {
+                continue;
+            }
             responses.add(ZoneResponse.from(zone));
         }
 
@@ -292,11 +313,40 @@ public class WarehouseController {
     }
 
     @GetMapping("/api/locations")
-    public List<LocationResponse> findLocations() {
+    public List<LocationResponse> findLocations(
+            @RequestParam(required = false) String locationCode,
+            @RequestParam(required = false) String locationName,
+            @RequestParam(required = false) String warehouseCode,
+            @RequestParam(required = false) String warehouseName,
+            @RequestParam(required = false) String zoneCode,
+            @RequestParam(required = false) String zoneName,
+            @RequestParam(required = false) String useYn
+    ) {
         Long topAccountId = SecurityUtil.currentTopAccountId();
         List<LocationResponse> responses = new ArrayList<>();
 
         for (Location location : locationRepository.findAllByTopAccountId(topAccountId)) {
+            if (!contains(location.getLocationCode(), locationCode)) {
+                continue;
+            }
+            if (!contains(location.getLocationName(), locationName)) {
+                continue;
+            }
+            if (!contains(location.getWarehouse().getWarehouseCode(), warehouseCode)) {
+                continue;
+            }
+            if (!contains(location.getWarehouse().getWarehouseName(), warehouseName)) {
+                continue;
+            }
+            if (!contains(location.getZone().getZoneCode(), zoneCode)) {
+                continue;
+            }
+            if (!contains(location.getZone().getZoneName(), zoneName)) {
+                continue;
+            }
+            if (hasText(useYn) && !useYn.equals(location.getUseYn())) {
+                continue;
+            }
             responses.add(LocationResponse.from(location));
         }
 
