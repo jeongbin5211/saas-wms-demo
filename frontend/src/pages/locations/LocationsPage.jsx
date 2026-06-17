@@ -20,6 +20,7 @@ const warehouseColumns = [
 
 const areaColumns = [
   { header: '창고 코드', name: 'warehouseCode', width: 150 },
+  { header: '창고명', name: 'warehouseName', width: 200 },
   { header: 'Area 코드', name: 'areaCode', width: 150 },
   { header: 'Area명', name: 'areaName', width: 220 },
   { header: '상세 설명', name: 'detailDescription', width: 260 },
@@ -636,7 +637,7 @@ function buildAreaPage({ authUser, catalog, onOpenWarehouseLookup, onRefresh, pa
       deleteLabel="미사용 처리"
       deleteSuccessMessage="미사용 처리되었습니다."
       endpoint="/api/areas"
-      headerActions={<button type="button" className="icon-text-button">엑셀 업로드</button>}
+      hideHeader
       keepDetailAfterSave
       listTabLabel="Area 목록"
       onRefresh={onRefresh}
