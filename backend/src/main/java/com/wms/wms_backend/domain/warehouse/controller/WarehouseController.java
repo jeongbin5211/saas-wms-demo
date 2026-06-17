@@ -260,7 +260,7 @@ public class WarehouseController {
 
         Area area = findArea(request.areaId());
         Zone zone = zoneRepository.save(new Zone(area.getAccount(), area, request.zoneCode(), request.zoneName()));
-        zone.updateOptionalFields(request.detailDescription(), request.priority());
+        zone.updateOptionalFields(request.detailDescription(), request.priority(), request.useYn());
 
         return ZoneResponse.from(zone);
     }
@@ -277,7 +277,7 @@ public class WarehouseController {
         }
 
         Area area = findArea(request.areaId());
-        zone.update(area, request.zoneCode(), request.zoneName(), request.detailDescription(), request.priority());
+        zone.update(area, request.zoneCode(), request.zoneName(), request.detailDescription(), request.priority(), request.useYn());
 
         return ZoneResponse.from(zone);
     }
@@ -352,7 +352,8 @@ public class WarehouseController {
                 request.priority(),
                 request.putawayPriority(),
                 request.pickingPriority(),
-                request.allocPriority()
+                request.allocPriority(),
+                request.useYn()
         );
 
         return LocationResponse.from(location);
@@ -381,7 +382,8 @@ public class WarehouseController {
                 request.priority(),
                 request.putawayPriority(),
                 request.pickingPriority(),
-                request.allocPriority()
+                request.allocPriority(),
+                request.useYn()
         );
 
         return LocationResponse.from(location);
@@ -412,7 +414,7 @@ public class WarehouseController {
         area.updateOptionalFields("창고 생성 시 자동 생성된 기본 Area입니다.", 1, "Y");
 
         Zone zone = zoneRepository.save(new Zone(warehouse.getAccount(), area, baseCode, baseName));
-        zone.updateOptionalFields("창고 생성 시 자동 생성된 기본 Zone입니다.", 1);
+        zone.updateOptionalFields("창고 생성 시 자동 생성된 기본 Zone입니다.", 1, "Y");
 
         createDefaultLocation(warehouse, zone, baseCode, "-RCV", "입고대기", "RECEIVING", 1);
         createDefaultLocation(warehouse, zone, baseCode, "-STG", "보관", "STORAGE", 2);
@@ -431,7 +433,8 @@ public class WarehouseController {
                 priority,
                 priority,
                 priority,
-                priority
+                priority,
+                "Y"
         );
     }
 
@@ -609,6 +612,7 @@ public class WarehouseController {
             Long accountId,
             Long warehouseId,
             String warehouseCode,
+            String warehouseName,
             Long areaId,
             String areaCode,
             String zoneCode,
@@ -626,6 +630,7 @@ public class WarehouseController {
                     zone.getAccount().getId(),
                     zone.getWarehouse().getId(),
                     zone.getWarehouse().getWarehouseCode(),
+                    zone.getWarehouse().getWarehouseName(),
                     zone.getArea().getId(),
                     zone.getArea().getAreaCode(),
                     zone.getZoneCode(),
@@ -645,6 +650,7 @@ public class WarehouseController {
             Long accountId,
             Long warehouseId,
             String warehouseCode,
+            String warehouseName,
             Long areaId,
             String areaCode,
             Long zoneId,
@@ -671,6 +677,7 @@ public class WarehouseController {
                     location.getAccount().getId(),
                     location.getWarehouse().getId(),
                     location.getWarehouse().getWarehouseCode(),
+                    location.getWarehouse().getWarehouseName(),
                     zone.getArea().getId(),
                     zone.getArea().getAreaCode(),
                     zone.getId(),
@@ -750,7 +757,8 @@ public class WarehouseController {
             @NotBlank String zoneCode,
             @NotBlank String zoneName,
             String detailDescription,
-            Integer priority
+            Integer priority,
+            String useYn
     ) {
     }
 
@@ -759,7 +767,8 @@ public class WarehouseController {
             @NotBlank String zoneCode,
             @NotBlank String zoneName,
             String detailDescription,
-            Integer priority
+            Integer priority,
+            String useYn
     ) {
     }
 
@@ -774,7 +783,8 @@ public class WarehouseController {
             Integer priority,
             Integer putawayPriority,
             Integer pickingPriority,
-            Integer allocPriority
+            Integer allocPriority,
+            String useYn
     ) {
     }
 
@@ -789,7 +799,8 @@ public class WarehouseController {
             Integer priority,
             Integer putawayPriority,
             Integer pickingPriority,
-            Integer allocPriority
+            Integer allocPriority,
+            String useYn
     ) {
     }
 

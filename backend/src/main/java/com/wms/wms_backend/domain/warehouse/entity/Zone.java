@@ -65,7 +65,7 @@ public class Zone extends BaseEntity {
         return warehouse != null ? warehouse : area.getWarehouse();
     }
 
-    public void update(Area area, String zoneCode, String zoneName, String detailDescription, Integer priority) {
+    public void update(Area area, String zoneCode, String zoneName, String detailDescription, Integer priority, String useYn) {
         this.account = area.getAccount();
         this.warehouse = area.getWarehouse();
         this.area = area;
@@ -73,14 +73,20 @@ public class Zone extends BaseEntity {
         this.zoneName = zoneName;
         this.detailDescription = detailDescription;
         this.priority = priority;
+        this.useYn = normalizeUseYn(useYn);
     }
 
-    public void updateOptionalFields(String detailDescription, Integer priority) {
+    public void updateOptionalFields(String detailDescription, Integer priority, String useYn) {
         this.detailDescription = detailDescription;
         this.priority = priority;
+        this.useYn = normalizeUseYn(useYn);
     }
 
     public void deactivate() {
         this.useYn = "N";
+    }
+
+    private String normalizeUseYn(String useYn) {
+        return "N".equals(useYn) ? "N" : "Y";
     }
 }

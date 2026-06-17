@@ -30,6 +30,7 @@ const areaColumns = [
 
 const zoneColumns = [
   { header: '창고 코드', name: 'warehouseCode', width: 150 },
+  { header: '창고명', name: 'warehouseName', width: 200 },
   { header: 'Zone 코드', name: 'zoneCode', width: 150 },
   { header: 'Zone명', name: 'zoneName', width: 220 },
   { header: 'Area 코드', name: 'areaCode', width: 150 },
@@ -41,6 +42,7 @@ const zoneColumns = [
 
 const locationColumns = [
   { header: '창고 코드', name: 'warehouseCode', width: 150 },
+  { header: '창고명', name: 'warehouseName', width: 200 },
   { header: 'Location 코드', name: 'locationCode', width: 170 },
   { header: 'Location명', name: 'locationName', width: 230 },
   { header: 'Zone명', name: 'zoneName', width: 170 },
@@ -103,6 +105,14 @@ const warehouseLookupSearchFields = [
   { name: 'keyword', label: '창고', placeholder: '창고 코드 또는 창고명', keys: ['warehouseCode', 'warehouseName', 'warehouseTypeSubCode'] },
 ]
 
+const areaLookupSearchFields = [
+  { name: 'keyword', label: 'Area', placeholder: 'Area 코드 또는 Area명', keys: ['areaCode', 'areaName', 'warehouseCode', 'warehouseName'] },
+]
+
+const zoneLookupSearchFields = [
+  { name: 'keyword', label: 'Zone', placeholder: 'Zone 코드 또는 Zone명', keys: ['zoneCode', 'zoneName', 'warehouseCode', 'areaName'] },
+]
+
 const addressLookupSearchFields = [
   { name: 'accountCode', label: '거래처', placeholder: '거래처 코드/거래처 이름', keys: ['accountCode', 'accountName'] },
   { name: 'addressCode', label: '주소', placeholder: '주소 코드/주소명', keys: ['addressCode', 'addressName'] },
@@ -112,15 +122,9 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
   const [accountLookupContext, setAccountLookupContext] = useState(null)
   const [addressLookupContext, setAddressLookupContext] = useState(null)
   const [warehouseLookupContext, setWarehouseLookupContext] = useState(null)
+  const [areaLookupContext, setAreaLookupContext] = useState(null)
+  const [zoneLookupContext, setZoneLookupContext] = useState(null)
   const catalog = data.locationCatalog
-  const areaOptions = catalog.areas.map((area) => ({
-    label: `${area.warehouseCode} / ${area.areaCode} / ${area.areaName}`,
-    value: area.id,
-  }))
-  const zoneOptions = catalog.zones.map((zone) => ({
-    label: `${zone.warehouseCode} / ${zone.zoneCode} / ${zone.zoneName}`,
-    value: zone.id,
-  }))
   const pages = [
     buildWarehousePage({
       accounts: data.accounts,
@@ -132,8 +136,8 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
       page,
     }),
     buildAreaPage({ authUser, catalog, onOpenWarehouseLookup: setWarehouseLookupContext, onRefresh, page }),
-    buildZonePage({ areaOptions, authUser, catalog, onRefresh, page }),
-    buildLocationPage({ authUser, catalog, onRefresh, page, zoneOptions }),
+    buildZonePage({ authUser, catalog, onOpenAreaLookup: setAreaLookupContext, onRefresh, page }),
+    buildLocationPage({ authUser, catalog, onOpenZoneLookup: setZoneLookupContext, onRefresh, page }),
   ]
 
   return (
@@ -187,6 +191,39 @@ export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, p
             warehouseName: warehouse.warehouseName,
           }))
           setWarehouseLookupContext(null)
+        }}
+      />
+      <AreaLookupModal
+        open={Boolean(areaLookupContext)}
+        areas={catalog.areas}
+        onClose={() => setAreaLookupContext(null)}
+        onSelect={(area) => {
+          areaLookupContext?.setDraftRow((current) => ({
+            ...(current ?? {}),
+            areaId: area.id,
+            areaCode: area.areaCode,
+            areaName: area.areaName,
+            warehouseCode: area.warehouseCode,
+            warehouseName: area.warehouseName,
+          }))
+          setAreaLookupContext(null)
+        }}
+      />
+      <ZoneLookupModal
+        open={Boolean(zoneLookupContext)}
+        zones={catalog.zones}
+        onClose={() => setZoneLookupContext(null)}
+        onSelect={(zone) => {
+          zoneLookupContext?.setDraftRow((current) => ({
+            ...(current ?? {}),
+            zoneId: zone.id,
+            zoneCode: zone.zoneCode,
+            zoneName: zone.zoneName,
+            warehouseCode: zone.warehouseCode,
+            warehouseName: zone.warehouseName,
+            areaName: zone.areaName,
+          }))
+          setZoneLookupContext(null)
         }}
       />
     </>
@@ -307,6 +344,48 @@ function WarehouseLookupModal({ open, onClose, onSelect, warehouses }) {
       open={open}
       searchFields={warehouseLookupSearchFields}
       title="창고 조회"
+      onClose={onClose}
+      onSelect={onSelect}
+    />
+  )
+}
+
+function AreaLookupModal({ open, onClose, onSelect, areas }) {
+  return (
+    <CommonGridLookupModal
+      columns={[
+        { header: '창고 코드', name: 'warehouseCode', width: 130 },
+        { header: '창고명', name: 'warehouseName', width: 180 },
+        { header: 'Area 코드', name: 'areaCode', width: 150 },
+        { header: 'Area명', name: 'areaName', width: 220 },
+      ]}
+      data={areas}
+      emptyMessage="조회된 Area가 없습니다."
+      initialFilters={{ keyword: '' }}
+      open={open}
+      searchFields={areaLookupSearchFields}
+      title="Area 조회"
+      onClose={onClose}
+      onSelect={onSelect}
+    />
+  )
+}
+
+function ZoneLookupModal({ open, onClose, onSelect, zones }) {
+  return (
+    <CommonGridLookupModal
+      columns={[
+        { header: '창고 코드', name: 'warehouseCode', width: 130 },
+        { header: 'Area명', name: 'areaName', width: 180 },
+        { header: 'Zone 코드', name: 'zoneCode', width: 150 },
+        { header: 'Zone명', name: 'zoneName', width: 220 },
+      ]}
+      data={zones}
+      emptyMessage="조회된 Zone이 없습니다."
+      initialFilters={{ keyword: '' }}
+      open={open}
+      searchFields={zoneLookupSearchFields}
+      title="Zone 조회"
       onClose={onClose}
       onSelect={onSelect}
     />
@@ -659,7 +738,9 @@ function buildAreaPage({ authUser, catalog, onOpenWarehouseLookup, onRefresh, pa
   )
 }
 
-function buildZonePage({ areaOptions, authUser, catalog, onRefresh, page }) {
+function buildZonePage({ authUser, catalog, onOpenAreaLookup, onRefresh, page }) {
+  const defaultArea = catalog.areas[0]
+
   return (
     <StandardWorkPage
       authUser={authUser}
@@ -669,27 +750,48 @@ function buildZonePage({ areaOptions, authUser, catalog, onRefresh, page }) {
         zoneName: row.zoneName,
         detailDescription: row.detailDescription,
         priority: toOptionalNumber(row.priority),
+        useYn: row.useYn ?? 'Y',
       })}
       columns={zoneColumns}
-      createDefaults={{ areaId: catalog.areas[0]?.id ?? '', priority: 0 }}
+      createDefaults={{
+        areaCode: defaultArea?.areaCode ?? '',
+        areaId: defaultArea?.id ?? '',
+        areaName: defaultArea?.areaName ?? '',
+        priority: 0,
+        useYn: 'Y',
+        warehouseCode: defaultArea?.warehouseCode ?? '',
+        warehouseName: defaultArea?.warehouseName ?? '',
+      }}
       data={catalog.zones}
       detailFields={[
-        { name: 'zoneCode', label: 'Zone 코드', required: true },
-        { name: 'zoneName', label: 'Zone명', required: true },
-        { name: 'areaId', label: 'Area', type: 'select', options: areaOptions, required: true },
-        { name: 'warehouseCode', label: '창고 코드', readOnly: true },
-        { name: 'areaCode', label: 'Area 코드', readOnly: true },
-        { name: 'areaName', label: 'Area명', readOnly: true },
-        { name: 'detailDescription', label: '상세 설명', wide: true },
-        { name: 'priority', label: '우선순위', type: 'number' },
-        { name: 'useYn', label: '사용 여부', readOnly: true },
+        { name: 'areaCode', label: 'Area', section: '기본 정보', readOnly: true, required: true, actionLabel: '조회', actionDisabledOnEdit: true },
+        { name: 'areaName', label: 'Area명', section: '기본 정보', readOnly: true, required: true },
+        { name: 'warehouseCode', label: '창고 코드', section: '기본 정보', readOnly: true },
+        { name: 'zoneCode', label: 'Zone 코드', section: '기본 정보', required: true, readOnlyOnEdit: true },
+        { name: 'zoneName', label: 'Zone명', section: '기본 정보', required: true },
+        { name: 'detailDescription', label: '상세 설명', section: '상세 정보', wide: true },
+        { name: 'priority', label: '우선순위', section: '상세 정보', type: 'number', required: true },
+        { name: 'useYn', label: '사용 여부', section: '상세 정보', type: 'select', options: useYnOptions, required: true },
       ]}
       detailTabLabel="상세 목록"
       endpoint="/api/zones"
-      headerActions={<button type="button" className="icon-text-button">엑셀 업로드</button>}
+      hideHeader
+      keepDetailAfterSave
       listTabLabel="Zone 목록"
       onRefresh={onRefresh}
       page={{ ...page, eyebrow: '로케이션 정보', title: 'Zone' }}
+      detailFieldAction={(field, values, context) => {
+        if (field.name !== 'areaCode') {
+          return
+        }
+
+        if (!context.isCreateMode) {
+          context.setMessage('수정 중에는 Zone의 Area를 변경할 수 없습니다.')
+          return
+        }
+
+        onOpenAreaLookup({ ...context, values })
+      }}
       searchFields={[
         { name: 'zoneCode', label: 'Zone 코드' },
         { name: 'zoneName', label: 'Zone명' },
@@ -701,7 +803,9 @@ function buildZonePage({ areaOptions, authUser, catalog, onRefresh, page }) {
   )
 }
 
-function buildLocationPage({ authUser, catalog, onRefresh, page, zoneOptions }) {
+function buildLocationPage({ authUser, catalog, onOpenZoneLookup, onRefresh, page }) {
+  const defaultZone = catalog.zones[0]
+
   return (
     <StandardWorkPage
       authUser={authUser}
@@ -717,6 +821,7 @@ function buildLocationPage({ authUser, catalog, onRefresh, page, zoneOptions }) 
         putawayPriority: toOptionalNumber(row.putawayPriority),
         pickingPriority: toOptionalNumber(row.pickingPriority),
         allocPriority: toOptionalNumber(row.allocPriority),
+        useYn: row.useYn ?? 'Y',
       })}
       columns={locationColumns}
       createDefaults={{
@@ -726,32 +831,51 @@ function buildLocationPage({ authUser, catalog, onRefresh, page, zoneOptions }) 
         pickingPriority: 0,
         priority: 0,
         putawayPriority: 0,
-        zoneId: catalog.zones[0]?.id ?? '',
+        useYn: 'Y',
+        warehouseCode: defaultZone?.warehouseCode ?? '',
+        areaName: defaultZone?.areaName ?? '',
+        zoneCode: defaultZone?.zoneCode ?? '',
+        zoneId: defaultZone?.id ?? '',
+        zoneName: defaultZone?.zoneName ?? '',
       }}
       data={catalog.locations}
       detailActions={() => <button type="button" className="icon-text-button">바코드</button>}
       detailFields={[
-        { name: 'locationCode', label: 'Location 코드', required: true },
-        { name: 'locationName', label: 'Location명', required: true },
-        { name: 'zoneId', label: 'Zone', type: 'select', options: zoneOptions, required: true },
-        { name: 'warehouseCode', label: '창고 코드', readOnly: true },
-        { name: 'zoneName', label: 'Zone명', readOnly: true },
-        { name: 'detailDescription', label: '상세 설명', wide: true },
-        { name: 'locationTypeSubCode', label: '유형', type: 'select', options: locationTypeOptions },
-        { name: 'priority', label: '우선순위', type: 'number' },
-        { name: 'logicalTypeSubCode', label: 'Location 논리 유형', type: 'select', options: logicalTypeOptions },
-        { name: 'mixKey', label: 'Mix Key' },
-        { name: 'putawayPriority', label: '적치 우선순위', type: 'number' },
-        { name: 'pickingPriority', label: '피킹 우선순위', type: 'number' },
-        { name: 'allocPriority', label: '할당우선순위', type: 'number' },
-        { name: 'useYn', label: '사용 여부', readOnly: true },
+        { name: 'zoneCode', label: 'Zone', section: '기본 정보', readOnly: true, required: true, actionLabel: '조회', actionDisabledOnEdit: true },
+        { name: 'zoneName', label: 'Zone명', section: '기본 정보', readOnly: true, required: true },
+        { name: 'warehouseCode', label: '창고 코드', section: '기본 정보', readOnly: true },
+        { name: 'areaName', label: 'Area명', section: '기본 정보', readOnly: true },
+        { name: 'locationCode', label: 'Location 코드', section: '기본 정보', required: true, readOnlyOnEdit: true },
+        { name: 'locationName', label: 'Location명', section: '기본 정보', required: true },
+        { name: 'detailDescription', label: '상세 설명', section: '상세 정보', wide: true },
+        { name: 'locationTypeSubCode', label: '유형', section: '상세 정보', type: 'select', options: locationTypeOptions },
+        { name: 'priority', label: '우선순위', section: '상세 정보', type: 'number' },
+        { name: 'logicalTypeSubCode', label: 'Location 논리 유형', section: '상세 정보', type: 'select', options: logicalTypeOptions },
+        { name: 'mixKey', label: 'Mix Key', section: '상세 정보' },
+        { name: 'putawayPriority', label: '적치 우선순위', section: '상세 정보', type: 'number' },
+        { name: 'pickingPriority', label: '피킹 우선순위', section: '상세 정보', type: 'number' },
+        { name: 'allocPriority', label: '할당우선순위', section: '상세 정보', type: 'number' },
+        { name: 'useYn', label: '사용 여부', section: '상세 정보', type: 'select', options: useYnOptions, required: true },
       ]}
       detailTabLabel="상세 목록"
       endpoint="/api/locations"
-      headerActions={<button type="button" className="icon-text-button">엑셀 업로드</button>}
+      hideHeader
+      keepDetailAfterSave
       listTabLabel="Location 목록"
       onRefresh={onRefresh}
       page={{ ...page, eyebrow: '로케이션 정보', title: 'Location' }}
+      detailFieldAction={(field, values, context) => {
+        if (field.name !== 'zoneCode') {
+          return
+        }
+
+        if (!context.isCreateMode) {
+          context.setMessage('수정 중에는 Location의 Zone을 변경할 수 없습니다.')
+          return
+        }
+
+        onOpenZoneLookup({ ...context, values })
+      }}
       searchFields={[
         { name: 'locationCode', label: 'Location 코드' },
         { name: 'locationName', label: 'Location명' },

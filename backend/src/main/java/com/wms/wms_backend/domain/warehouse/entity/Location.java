@@ -94,7 +94,8 @@ public class Location extends BaseEntity {
             Integer priority,
             Integer putawayPriority,
             Integer pickingPriority,
-            Integer allocPriority
+            Integer allocPriority,
+            String useYn
     ) {
         this.account = zone.getAccount();
         this.warehouse = zone.getWarehouse();
@@ -109,6 +110,7 @@ public class Location extends BaseEntity {
         this.putawayPriority = putawayPriority;
         this.pickingPriority = pickingPriority;
         this.allocPriority = allocPriority;
+        this.useYn = normalizeUseYn(useYn);
     }
 
     public void updateOptionalFields(
@@ -119,7 +121,8 @@ public class Location extends BaseEntity {
             Integer priority,
             Integer putawayPriority,
             Integer pickingPriority,
-            Integer allocPriority
+            Integer allocPriority,
+            String useYn
     ) {
         this.detailDescription = detailDescription;
         this.locationTypeSubCode = locationTypeSubCode;
@@ -129,9 +132,14 @@ public class Location extends BaseEntity {
         this.putawayPriority = putawayPriority;
         this.pickingPriority = pickingPriority;
         this.allocPriority = allocPriority;
+        this.useYn = normalizeUseYn(useYn);
     }
 
     public void deactivate() {
         this.useYn = "N";
+    }
+
+    private String normalizeUseYn(String useYn) {
+        return "N".equals(useYn) ? "N" : "Y";
     }
 }
