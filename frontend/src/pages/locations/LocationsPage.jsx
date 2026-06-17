@@ -99,8 +99,8 @@ const accountLookupSearchFields = [
 ]
 
 const addressLookupSearchFields = [
-  { name: 'accountCode', label: '거래처 코드', placeholder: '거래처 코드', keys: ['accountCode'] },
-  { name: 'addressCode', label: '주소 코드', placeholder: '주소 코드', keys: ['addressCode'] },
+  { name: 'accountCode', label: '거래처', placeholder: '거래처 코드/거래처 이름', keys: ['accountCode', 'accountName'] },
+  { name: 'addressCode', label: '주소', placeholder: '주소 코드/주소명', keys: ['addressCode', 'addressName'] },
 ]
 
 export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, page }) {
