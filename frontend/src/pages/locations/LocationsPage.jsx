@@ -100,12 +100,7 @@ const accountLookupSearchFields = [
 
 const addressLookupSearchFields = [
   { name: 'accountCode', label: '거래처 코드', placeholder: '거래처 코드', keys: ['accountCode'] },
-  {
-    name: 'addressKeyword',
-    label: '주소 코드',
-    placeholder: '주소 코드 또는 주소명',
-    match: (row, value) => ['addressCode', 'addressName', 'fullAddress'].some((key) => String(row[key] ?? '').toLowerCase().includes(value)),
-  },
+  { name: 'addressCode', label: '주소 코드', placeholder: '주소 코드', keys: ['addressCode'] },
 ]
 
 export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, page }) {
@@ -324,7 +319,7 @@ function AddressLookupModalContent({
 }) {
   const initialSearchFilters = {
     accountCode: initialAccountCode ?? '',
-    addressKeyword: '',
+    addressCode: '',
   }
   const [draftFilters, setDraftFilters] = useState(initialSearchFilters)
   const [appliedFilters, setAppliedFilters] = useState(initialSearchFilters)
@@ -424,7 +419,7 @@ function AddressLookupModalContent({
       setFormData({ ...created })
       const nextFilters = {
         accountCode: created.accountCode ?? draftFilters.accountCode,
-        addressKeyword: created.addressCode ?? '',
+        addressCode: created.addressCode ?? '',
       }
       setDraftFilters(nextFilters)
       setAppliedFilters(nextFilters)
