@@ -27,7 +27,7 @@ export function SearchPanel({ fields = [], onChange, onFieldAction, onReset, onS
       <div className="search-panel">
         <div className="search-panel-fields">
           {fields.map((field) => (
-            <label className={field.wide || field.type === 'lookup' ? 'wide' : ''} key={field.name}>
+            <label className={[field.wide ? 'wide' : '', field.type === 'lookup' ? 'lookup' : ''].filter(Boolean).join(' ')} key={field.name}>
               <span>{field.label}</span>
               {field.type === 'select' ? (
                 <select value={searchParams[field.name] ?? ''} onChange={(event) => updateValue(field.name, event.target.value)}>

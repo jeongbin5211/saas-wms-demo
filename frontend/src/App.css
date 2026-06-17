@@ -1808,7 +1808,22 @@ button {
 }
 
 .search-field-with-action .field-lookup-button {
+  flex: 0 0 auto;
   height: 34px;
+}
+
+.search-panel-fields label.lookup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-panel-fields label.lookup > span {
+  flex: 0 0 auto;
+}
+
+.search-panel-fields label.lookup .search-field-with-action {
+  flex: 1;
 }
 
 .search-panel-actions {
