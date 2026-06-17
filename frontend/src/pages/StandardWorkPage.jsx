@@ -27,6 +27,7 @@ export function StandardWorkPage({
   endpoint,
   headerActions,
   hideHeader = false,
+  keepDetailAfterSave = false,
   listTabLabel,
   detailTabLabel,
   onRefresh,
@@ -206,8 +207,17 @@ export function StandardWorkPage({
         return
       }
 
+      const savedRow = await response.json()
       notify(selectedRow ? updateSuccessMessage : (createSuccessMessage ?? '등록이 완료되었습니다.'), 'success')
       await onRefresh?.()
+      if (keepDetailAfterSave) {
+        setSelectedRow(savedRow)
+        setDraftRow({ ...savedRow })
+        setGridData((current) => mergeSavedRow(current ?? data, savedRow))
+        setActiveTab(1)
+        return
+      }
+
       setGridData(null)
       setActiveTab(0)
     } catch {
@@ -473,10 +483,23 @@ function validateRequired(fields = [], row) {
     if (!field.required) continue
     const value = row?.[field.name]
     if (value === undefined || value === null || String(value).trim() === '') {
-      return `'${field.label}' 항목은 필수입니다.`
+      return `${field.label}은(는) 필수입니다.`
     }
   }
   return null
+}
+
+function mergeSavedRow(rows = [], savedRow) {
+  if (!savedRow?.id) {
+    return rows
+  }
+
+  const index = rows.findIndex((row) => row.id === savedRow.id)
+  if (index < 0) {
+    return [...rows, savedRow]
+  }
+
+  return rows.map((row) => (row.id === savedRow.id ? savedRow : row))
 }
 
 async function parseApiError(response, fallback) {

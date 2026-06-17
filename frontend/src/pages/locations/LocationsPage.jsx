@@ -229,6 +229,7 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
       deleteSuccessMessage="미사용 처리되었습니다."
       endpoint="/api/warehouses"
       hideHeader
+      keepDetailAfterSave
       listTabLabel="창고 목록"
       onRefresh={onRefresh}
       page={{ ...page, eyebrow: '로케이션 정보', title: '창고' }}
