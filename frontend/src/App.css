@@ -2067,6 +2067,7 @@ button {
   border-right: 1px solid var(--line);
 }
 
+.lookup-search-panel,
 .address-lookup-search {
   display: flex;
   flex-direction: column;
@@ -2076,12 +2077,14 @@ button {
   border-bottom: 1px solid var(--line-soft);
 }
 
+.lookup-search-row,
 .address-lookup-search-row {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+.lookup-search-row span,
 .address-lookup-search-row span {
   flex: 0 0 72px;
   font-size: 12px;
@@ -2090,6 +2093,7 @@ button {
   text-align: right;
 }
 
+.lookup-search-row input,
 .address-lookup-search-row input {
   flex: 1;
   height: 30px;

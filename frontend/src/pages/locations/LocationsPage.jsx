@@ -1,7 +1,8 @@
-import { Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { CommonGridLookupModal, LookupPopupFrame, LookupSearchPanel } from '../../components/common/LookupPopup.jsx'
 import { WmsGrid } from '../../components/common/WmsGrid.jsx'
 import { fetchWithAuth } from '../../router/session.js'
+import { matchesSearchFields } from '../../utils/lookupSearch.js'
 import { StandardWorkPage } from '../StandardWorkPage.jsx'
 
 const warehouseColumns = [
@@ -91,6 +92,20 @@ const addressLookupColumns = [
   { header: '주소명', name: 'addressName', width: 190 },
   { header: '거래처', name: 'accountName', width: 150 },
   { header: '주소', name: 'fullAddress', width: 260 },
+]
+
+const accountLookupSearchFields = [
+  { name: 'keyword', label: '거래처', placeholder: '거래처 코드 또는 거래처명', keys: ['accountCode', 'accountName', 'accountTypeSubCode'] },
+]
+
+const addressLookupSearchFields = [
+  { name: 'accountCode', label: '거래처 코드', placeholder: '거래처 코드', keys: ['accountCode'] },
+  {
+    name: 'addressKeyword',
+    label: '주소 코드',
+    placeholder: '주소 코드 또는 주소명',
+    match: (row, value) => ['addressCode', 'addressName', 'fullAddress'].some((key) => String(row[key] ?? '').toLowerCase().includes(value)),
+  },
 ]
 
 export function LocationsPage({ authUser, data, initialTypeTab = 0, onRefresh, page }) {
@@ -247,7 +262,6 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
       searchFields={[
         { name: 'warehouseCode', label: '창고 코드' },
         { name: 'warehouseName', label: '창고명' },
-        { name: 'warehouseTypeSubCode', label: '창고 유형', type: 'select', options: warehouseTypeOptions },
       ]}
     />
   )
@@ -256,13 +270,13 @@ function buildWarehousePage({ accounts, authUser, catalog, onOpenAccountLookup, 
 
 function AccountLookupModal({ accounts, open, onClose, onSelect }) {
   return (
-    <LookupGridModal
+    <CommonGridLookupModal
       columns={accountLookupColumns}
       data={accounts}
       emptyMessage="조회된 거래처가 없습니다."
+      initialFilters={{ keyword: '' }}
       open={open}
-      placeholder="거래처 코드 또는 거래처명"
-      searchKeys={['accountCode', 'accountName', 'accountTypeSubCode']}
+      searchFields={accountLookupSearchFields}
       title="창고 소속 거래처 조회"
       onClose={onClose}
       onSelect={onSelect}
@@ -308,8 +322,12 @@ function AddressLookupModalContent({
   confirmAction,
   showToast,
 }) {
-  const [searchAccountCode, setSearchAccountCode] = useState(initialAccountCode ?? '')
-  const [searchAddressCode, setSearchAddressCode] = useState('')
+  const initialSearchFilters = {
+    accountCode: initialAccountCode ?? '',
+    addressKeyword: '',
+  }
+  const [draftFilters, setDraftFilters] = useState(initialSearchFilters)
+  const [appliedFilters, setAppliedFilters] = useState(initialSearchFilters)
   const [formData, setFormData] = useState(null)
   const [isNew, setIsNew] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -317,24 +335,18 @@ function AddressLookupModalContent({
   const [accountPopupOpen, setAccountPopupOpen] = useState(false)
 
   const filteredData = useMemo(() => {
-    let result = addresses
-    const accCode = searchAccountCode.trim().toLowerCase()
-    const addrCode = searchAddressCode.trim().toLowerCase()
-
-    if (accCode) result = result.filter((row) => row.accountCode?.toLowerCase().includes(accCode))
-    if (addrCode) {
-      result = result.filter((row) => (
-        row.addressCode?.toLowerCase().includes(addrCode) || row.addressName?.toLowerCase().includes(addrCode)
-      ))
-    }
-
-    return result
-  }, [addresses, searchAccountCode, searchAddressCode])
+    return addresses.filter((row) => matchesSearchFields(row, addressLookupSearchFields, appliedFilters))
+  }, [addresses, appliedFilters])
 
   const handleSearch = () => {
+    setAppliedFilters(draftFilters)
     setFormData(null)
     setIsNew(false)
     setErrorMsg('')
+  }
+
+  const handleSearchChange = (name, value) => {
+    setDraftFilters((current) => ({ ...current, [name]: value }))
   }
 
   const handleRowOpen = (row) => {
@@ -410,8 +422,12 @@ function AddressLookupModalContent({
       const created = await response.json()
       await onRefresh?.()
       setFormData({ ...created })
-      setSearchAccountCode(created.accountCode ?? searchAccountCode)
-      setSearchAddressCode(created.addressCode ?? '')
+      const nextFilters = {
+        accountCode: created.accountCode ?? draftFilters.accountCode,
+        addressKeyword: created.addressCode ?? '',
+      }
+      setDraftFilters(nextFilters)
+      setAppliedFilters(nextFilters)
       setIsNew(false)
       showToast?.('저장이 완료되었습니다.', 'success')
     } catch {
@@ -424,36 +440,31 @@ function AddressLookupModalContent({
 
   return (
     <>
-      <div className="lookup-modal-backdrop" role="presentation" onMouseDown={onClose}>
-        <section className="lookup-modal address-lookup-modal" role="dialog" aria-modal="true" aria-label="주소 조회" onMouseDown={(e) => e.stopPropagation()}>
-          <header className="lookup-modal-header">
-            <strong>주소 조회</strong>
-            <div className="lookup-modal-header-actions">
-              <button type="button" className="primary-button compact" onClick={handleSearch}>검색</button>
-              <button type="button" className="primary-button compact" onClick={handleSelect}>선택</button>
-              <button type="button" className="primary-button compact" onClick={handleNew}>신규</button>
-              {isNew && (
-                <button type="button" className="save-button compact" onClick={handleSave} disabled={saving}>
-                  {saving ? '저장 중...' : '저장'}
-                </button>
-              )}
-              <button type="button" className="icon-only-button" aria-label="닫기" onClick={onClose}>
-                <X size={18} />
+      <LookupPopupFrame
+        className="address-lookup-modal"
+        title="주소 조회"
+        onClose={onClose}
+        actions={(
+          <>
+            <button type="button" className="primary-button compact" onClick={handleSearch}>검색</button>
+            <button type="button" className="primary-button compact" onClick={handleSelect}>선택</button>
+            <button type="button" className="primary-button compact" onClick={handleNew}>신규</button>
+            {isNew && (
+              <button type="button" className="save-button compact" onClick={handleSave} disabled={saving}>
+                {saving ? '저장 중...' : '저장'}
               </button>
-            </div>
-          </header>
-          <div className="address-lookup-body">
-            <div className="address-lookup-list">
-              <div className="address-lookup-search">
-                <div className="address-lookup-search-row">
-                  <span>거래처 코드</span>
-                  <input placeholder="거래처 코드" value={searchAccountCode} onChange={(e) => setSearchAccountCode(e.target.value)} />
-                </div>
-                <div className="address-lookup-search-row">
-                  <span>주소 코드</span>
-                  <input placeholder="주소 코드 또는 주소명" value={searchAddressCode} onChange={(e) => setSearchAddressCode(e.target.value)} />
-                </div>
-              </div>
+            )}
+          </>
+        )}
+      >
+        <div className="address-lookup-body">
+          <div className="address-lookup-list">
+            <LookupSearchPanel
+              fields={addressLookupSearchFields}
+              values={draftFilters}
+              onChange={handleSearchChange}
+              onSubmit={handleSearch}
+            />
               <div className="address-lookup-grid">
                 <WmsGrid
                   columns={addressLookupColumns}
@@ -518,8 +529,7 @@ function AddressLookupModalContent({
               </div>
             )}
           </div>
-        </section>
-      </div>
+      </LookupPopupFrame>
       <AccountLookupModal
         accounts={accounts}
         open={accountPopupOpen}
@@ -531,7 +541,8 @@ function AddressLookupModalContent({
             accountCode: account.accountCode,
             accountName: account.accountName,
           }))
-          setSearchAccountCode(account.accountCode)
+          setDraftFilters((current) => ({ ...current, accountCode: account.accountCode }))
+          setAppliedFilters((current) => ({ ...current, accountCode: account.accountCode }))
           setAccountPopupOpen(false)
         }}
       />
@@ -553,72 +564,6 @@ function AddressFormField({ label, required, children }) {
     <div className="address-form-field">
       <label className={required ? 'required' : ''}>{label}</label>
       {children}
-    </div>
-  )
-}
-
-function LookupGridModal({
-  columns,
-  data,
-  emptyMessage,
-  open,
-  placeholder,
-  searchKeys,
-  title,
-  wide = false,
-  onClose,
-  onSelect,
-}) {
-  const [keyword, setKeyword] = useState('')
-  const filteredData = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase()
-
-    if (!normalizedKeyword) {
-      return data
-    }
-
-    return data.filter((row) => searchKeys.some((key) => (
-      String(row[key] ?? '').toLowerCase().includes(normalizedKeyword)
-    )))
-  }, [data, keyword, searchKeys])
-
-  if (!open) {
-    return null
-  }
-
-  return (
-    <div className="lookup-modal-backdrop" role="presentation" onMouseDown={onClose}>
-      <section className={`lookup-modal${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} onMouseDown={(event) => event.stopPropagation()}>
-        <header className="lookup-modal-header">
-          <strong>{title}</strong>
-          <button type="button" className="icon-only-button" aria-label="닫기" onClick={onClose}>
-            <X size={18} />
-          </button>
-        </header>
-        <div className="lookup-modal-filter">
-          <Search size={16} />
-          <input
-            autoFocus
-            placeholder={placeholder}
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-          />
-        </div>
-        <div className="lookup-modal-grid">
-          {filteredData.length > 0 ? (
-            <WmsGrid
-              columns={columns}
-              data={filteredData}
-              includeAuditColumns={false}
-              minBodyHeight={360}
-              onRowDoubleClick={onSelect}
-              rowHeaders={['rowNum']}
-            />
-          ) : (
-            <div className="lookup-empty-cell">{emptyMessage}</div>
-          )}
-        </div>
-      </section>
     </div>
   )
 }
