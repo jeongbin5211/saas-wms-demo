@@ -249,6 +249,7 @@ public class ItemController {
                 request.purchasePrice(),
                 request.salesPrice()
         ));
+        item.changeSupplier(resolveSupplier(request.supplierId()));
 
         return ItemResponse.from(item);
     }
@@ -282,6 +283,7 @@ public class ItemController {
                 request.salesPrice(),
                 request.useYn()
         );
+        item.changeSupplier(resolveSupplier(request.supplierId()));
 
         return ItemResponse.from(item);
     }
@@ -323,6 +325,14 @@ public class ItemController {
     private Account currentAccount() {
         return accountRepository.findById(SecurityUtil.currentAccountId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래처 정보를 찾을 수 없습니다."));
+    }
+
+    private Account resolveSupplier(Long supplierId) {
+        if (supplierId == null) {
+            return null;
+        }
+        return accountRepository.findById(supplierId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "공급처를 찾을 수 없습니다."));
     }
 
     private void requireEditableRole() {
@@ -403,6 +413,9 @@ public class ItemController {
             String itemClassCode,
             String itemClassName,
             String itemMasterName,
+            Long supplierId,
+            String supplierCode,
+            String supplierName,
             String itemCode,
             String itemName,
             String barcode,
@@ -415,12 +428,16 @@ public class ItemController {
     ) {
         public static ItemResponse from(Item item) {
             ItemClass itemClass = item.getItemClass();
+            Account supplier = item.getSupplier();
             return new ItemResponse(
                     item.getId(),
                     itemClass.getId(),
                     itemClass.getItemClassCode(),
                     itemClass.getItemClassName(),
                     itemClass.getItemMaster().getItemMasterName(),
+                    supplier != null ? supplier.getId() : null,
+                    supplier != null ? supplier.getAccountCode() : null,
+                    supplier != null ? supplier.getAccountName() : null,
                     item.getItemCode(),
                     item.getItemName(),
                     item.getBarcode(),
@@ -451,6 +468,7 @@ public class ItemController {
 
     public record ItemCreateRequest(
             @NotNull Long itemClassId,
+            Long supplierId,
             @NotBlank String itemCode,
             @NotBlank String itemName,
             String barcode,
@@ -462,6 +480,7 @@ public class ItemController {
 
     public record ItemUpdateRequest(
             @NotNull Long itemClassId,
+            Long supplierId,
             @NotBlank String itemCode,
             @NotBlank String itemName,
             String barcode,

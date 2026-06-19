@@ -35,6 +35,10 @@ public class Item extends BaseEntity {
     @JoinColumn(name = "item_class_id", nullable = false)
     private ItemClass itemClass;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id")
+    private Account supplier;
+
     @Column(nullable = false, unique = true, length = 50)
     private String itemCode;
 
@@ -96,6 +100,10 @@ public class Item extends BaseEntity {
         this.purchasePrice = purchasePrice;
         this.salesPrice = salesPrice;
         this.useYn = normalizeUseYn(useYn);
+    }
+
+    public void changeSupplier(Account supplier) {
+        this.supplier = supplier;
     }
 
     public void deactivate() {

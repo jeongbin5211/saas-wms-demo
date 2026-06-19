@@ -25,6 +25,7 @@ const itemColumns = [
   { header: '단위', name: 'unit', width: 80, align: 'center' },
   { header: '매입가', name: 'purchasePrice', width: 110, align: 'right' },
   { header: '판매가', name: 'salesPrice', width: 110, align: 'right' },
+  { header: '공급처', name: 'supplierName', width: 180 },
   { header: '사용 여부', name: 'useYn', width: 90, align: 'center' },
 ]
 
@@ -52,13 +53,26 @@ const itemClassLookupSearchFields = [
   { name: 'keyword', label: '품목 클래스', placeholder: '클래스 코드 또는 클래스명', keys: ['itemClassCode', 'itemClassName', 'itemMasterName'] },
 ]
 
+const accountLookupColumns = [
+  { header: '거래처 코드', name: 'accountCode', width: 200 },
+  { header: '거래처명', name: 'accountName', width: 320 },
+  { header: '구분', name: 'accountTypeSubCode', width: 140, align: 'center' },
+]
+
+const accountLookupSearchFields = [
+  { name: 'keyword', label: '거래처', placeholder: '거래처 코드 또는 거래처명', keys: ['accountCode', 'accountName', 'accountTypeSubCode'] },
+]
+
 export function ItemsPage({ authUser, data, initialTypeTab = 0, onRefresh, page }) {
   const [itemMasterLookupContext, setItemMasterLookupContext] = useState(null)
   const [itemClassLookupContext, setItemClassLookupContext] = useState(null)
+  const [accountLookupContext, setAccountLookupContext] = useState(null)
   const catalog = data.itemCatalog
+  const accounts = data.accounts ?? []
   const lookups = {
     openItemMaster: setItemMasterLookupContext,
     openItemClass: setItemClassLookupContext,
+    openAccount: setAccountLookupContext,
   }
   const pages = [
     buildItemMasterPage({ authUser, catalog, onRefresh, page }),
@@ -99,6 +113,22 @@ export function ItemsPage({ authUser, data, initialTypeTab = 0, onRefresh, page 
           setItemClassLookupContext,
           { itemClassId: itemClass.id, itemClassCode: itemClass.itemClassCode, itemClassName: itemClass.itemClassName },
           { itemClassCode: itemClass.itemClassCode, itemClassName: itemClass.itemClassName },
+        )}
+      />
+      <CommonGridLookupModal
+        columns={accountLookupColumns}
+        data={accounts}
+        emptyMessage="조회된 거래처가 없습니다."
+        initialFilters={{ keyword: '' }}
+        open={Boolean(accountLookupContext)}
+        searchFields={accountLookupSearchFields}
+        title="공급처 조회"
+        onClose={() => setAccountLookupContext(null)}
+        onSelect={(account) => applyLookupSelection(
+          accountLookupContext,
+          setAccountLookupContext,
+          { supplierId: account.id, supplierCode: account.accountCode, supplierName: account.accountName },
+          { supplierCode: account.accountCode, supplierName: account.accountName },
         )}
       />
     </>
@@ -216,6 +246,7 @@ function buildItemPage({ authUser, catalog, lookups, onRefresh, page }) {
       authUser={authUser}
       buildPayload={(row) => ({
         itemClassId: Number(row.itemClassId),
+        supplierId: row.supplierId ? Number(row.supplierId) : null,
         itemCode: row.itemCode,
         itemName: row.itemName,
         barcode: row.barcode || null,
@@ -241,6 +272,8 @@ function buildItemPage({ authUser, catalog, lookups, onRefresh, page }) {
         { name: 'itemCode', label: '품목 코드', section: '기본 정보', required: true, readOnlyOnEdit: true },
         { name: 'itemName', label: '품목명', section: '기본 정보', required: true },
         { name: 'barcode', label: '바코드', section: '기본 정보' },
+        { name: 'supplierCode', label: '공급처', section: '상세 정보', readOnly: true, actionLabel: '조회' },
+        { name: 'supplierName', label: '공급처명', section: '상세 정보', readOnly: true },
         { name: 'unit', label: '단위', section: '상세 정보', required: true },
         { name: 'purchasePrice', label: '매입가', section: '상세 정보', type: 'number', required: true },
         { name: 'salesPrice', label: '판매가', section: '상세 정보', type: 'number', required: true },
@@ -254,6 +287,11 @@ function buildItemPage({ authUser, catalog, lookups, onRefresh, page }) {
       onRefresh={onRefresh}
       page={{ ...page, eyebrow: '기준정보', title: '품목' }}
       detailFieldAction={(field, values, context) => {
+        if (field.name === 'supplierCode') {
+          lookups.openAccount({ ...context, values })
+          return
+        }
+
         if (field.name !== 'itemClassCode') {
           return
         }
