@@ -11,6 +11,8 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
 
     Optional<ItemMaster> findByItemMasterCode(String itemMasterCode);
 
+    boolean existsByItemMasterCode(String itemMasterCode);
+
     @EntityGraph(attributePaths = "account")
     List<ItemMaster> findAllByUseYnOrderByIdAsc(String useYn);
 

@@ -22,7 +22,11 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @EntityGraph(attributePaths = "itemClass")
     List<Item> findAllByUseYnOrderByIdAsc(String useYn);
 
-    @EntityGraph(attributePaths = "itemClass")
+    @EntityGraph(attributePaths = {"itemClass", "itemClass.itemMaster"})
     @Query("SELECT i FROM Item i WHERE i.account.topAccountId = :topAccountId AND i.useYn = 'Y' ORDER BY i.id ASC")
     List<Item> findAllByTopAccountId(@Param("topAccountId") Long topAccountId);
+
+    @EntityGraph(attributePaths = {"itemClass", "itemClass.itemMaster"})
+    @Query("SELECT i FROM Item i WHERE i.account.topAccountId = :topAccountId AND i.useYn = :useYn ORDER BY i.id ASC")
+    List<Item> findAllByTopAccountIdAndUseYn(@Param("topAccountId") Long topAccountId, @Param("useYn") String useYn);
 }

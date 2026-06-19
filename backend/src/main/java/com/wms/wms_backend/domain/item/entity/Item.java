@@ -84,7 +84,8 @@ public class Item extends BaseEntity {
             String barcode,
             String unit,
             BigDecimal purchasePrice,
-            BigDecimal salesPrice
+            BigDecimal salesPrice,
+            String useYn
     ) {
         this.account = itemClass.getAccount();
         this.itemClass = itemClass;
@@ -94,9 +95,14 @@ public class Item extends BaseEntity {
         this.unit = unit;
         this.purchasePrice = purchasePrice;
         this.salesPrice = salesPrice;
+        this.useYn = normalizeUseYn(useYn);
     }
 
     public void deactivate() {
         this.useYn = "N";
+    }
+
+    private String normalizeUseYn(String useYn) {
+        return "N".equals(useYn) ? "N" : "Y";
     }
 }

@@ -49,4 +49,19 @@ public class ItemClass extends BaseEntity {
         this.itemClassName = itemClassName;
         this.useYn = "Y";
     }
+
+    public void update(ItemMaster itemMaster, String itemClassName, String useYn) {
+        this.account = itemMaster.getAccount();
+        this.itemMaster = itemMaster;
+        this.itemClassName = itemClassName;
+        this.useYn = normalizeUseYn(useYn);
+    }
+
+    public void deactivate() {
+        this.useYn = "N";
+    }
+
+    private String normalizeUseYn(String useYn) {
+        return "N".equals(useYn) ? "N" : "Y";
+    }
 }
