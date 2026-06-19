@@ -45,9 +45,9 @@ const menuGroups = [
         label: '품목',
         icon: PackageSearch,
         children: [
-          { id: 'item-master', label: '품목 마스터', route: '/app/items' },
-          { id: 'item-class', label: '품목 클래스', route: '/app/items' },
-          { id: 'item', label: '품목', route: '/app/items' },
+          { id: 'item-master', label: '품목 마스터', route: '/app/item-master' },
+          { id: 'item-class', label: '품목 클래스', route: '/app/item-class' },
+          { id: 'item', label: '품목', route: '/app/item' },
         ],
       },
     ],

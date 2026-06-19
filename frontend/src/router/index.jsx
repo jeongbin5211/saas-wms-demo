@@ -32,6 +32,9 @@ const internalPages = {
   zone: { title: 'Zone', eyebrow: '기준정보', description: 'Area 하위 보관/작업 구역인 Zone을 관리합니다.' },
   location: { title: 'Location', eyebrow: '기준정보', description: '재고가 실제로 보관되는 최하위 로케이션을 관리합니다.' },
   items: { title: '품목정보', eyebrow: '기준정보', description: '품목 마스터, 품목 클래스, 품목 기준정보를 관리합니다.' },
+  'item-master': { title: '품목 마스터', eyebrow: '기준정보', description: '품목 분류의 최상위 단위인 품목 마스터를 관리합니다.' },
+  'item-class': { title: '품목 클래스', eyebrow: '기준정보', description: '품목 마스터 하위 분류인 품목 클래스를 관리합니다.' },
+  item: { title: '품목', eyebrow: '기준정보', description: '품목 클래스에 속한 개별 품목을 관리합니다.' },
   inventory: { title: '재고 현황', eyebrow: '운영관리', description: '품목과 로케이션 기준의 현재고와 가용 재고를 조회합니다.' },
   'inventory-history': { title: '재고 이력', eyebrow: '운영관리', description: '입고, 출고, 반품, 조정으로 발생한 수량 변화를 추적합니다.' },
   purchase: { title: '구매주문', eyebrow: '운영관리', description: '거래처별 구매 요청과 주문 상태를 관리합니다.' },
@@ -217,6 +220,9 @@ function renderPage(activeMenu, pageProps) {
   if (activeMenu === 'zone') return <LocationsPage key="zone" {...pageProps} initialTypeTab={2} />
   if (activeMenu === 'location') return <LocationsPage key="location" {...pageProps} initialTypeTab={3} />
   if (activeMenu === 'items') return <ItemsPage {...pageProps} />
+  if (activeMenu === 'item-master') return <ItemsPage key="item-master" {...pageProps} initialTypeTab={0} />
+  if (activeMenu === 'item-class') return <ItemsPage key="item-class" {...pageProps} initialTypeTab={1} />
+  if (activeMenu === 'item') return <ItemsPage key="item" {...pageProps} initialTypeTab={2} />
   if (activeMenu === 'inventory') return <InventoryPage {...pageProps} />
   if (activeMenu === 'inventory-history') return <InventoryHistoryPage {...pageProps} />
   if (activeMenu === 'purchase') return <PurchasePage {...pageProps} />
