@@ -1,5 +1,6 @@
 import {
   Boxes,
+  Building2,
   ChevronDown,
   ClipboardList,
   FileText,
@@ -27,6 +28,7 @@ const menuGroups = [
   {
     title: '기준 정보',
     items: [
+      { id: 'accounts', label: '거래처', icon: Building2 },
       {
         id: 'location-info',
         label: '로케이션 정보',

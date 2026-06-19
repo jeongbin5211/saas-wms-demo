@@ -7,13 +7,19 @@ import com.wms.wms_backend.domain.account.repository.AccountAddressRepository;
 import com.wms.wms_backend.domain.account.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -24,11 +30,114 @@ public class AccountController {
     private final AccountAddressRepository accountAddressRepository;
 
     @GetMapping("/api/accounts")
-    public List<AccountResponse> findAll() {
+    public List<AccountResponse> findAll(
+            @RequestParam(required = false) String accountCode,
+            @RequestParam(required = false) String accountName,
+            @RequestParam(required = false) String accountTypeSubCode,
+            @RequestParam(required = false) String useYn
+    ) {
         Long topAccountId = SecurityUtil.currentTopAccountId();
-        return accountRepository.findByTopAccountIdAndUseYnOrderByIdAsc(topAccountId, "Y").stream()
-                .map(AccountResponse::from)
-                .toList();
+        String effectiveUseYn = hasText(useYn) ? useYn : "Y";
+        List<AccountResponse> responses = new ArrayList<>();
+
+        for (Account account : accountRepository.findByTopAccountIdAndUseYnOrderByIdAsc(topAccountId, effectiveUseYn)) {
+            if (!contains(account.getAccountCode(), accountCode)) {
+                continue;
+            }
+            if (!contains(account.getAccountName(), accountName)) {
+                continue;
+            }
+            if (hasText(accountTypeSubCode) && !accountTypeSubCode.equals(account.getAccountTypeSubCode())) {
+                continue;
+            }
+            responses.add(AccountResponse.from(account));
+        }
+
+        return responses;
+    }
+
+    @PostMapping("/api/accounts")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
+    public AccountResponse createAccount(@RequestBody AccountSaveRequest request) {
+        requireEditableRole();
+
+        if (accountRepository.existsByAccountCode(request.accountCode())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 거래처 코드입니다.");
+        }
+
+        Account account = accountRepository.save(new Account(
+                SecurityUtil.currentTopAccountId(),
+                request.accountCode(),
+                request.accountName(),
+                request.accountTypeSubCode()
+        ));
+        applyRequest(account, request);
+
+        return AccountResponse.from(account);
+    }
+
+    @PutMapping("/api/accounts/{id}")
+    @Transactional
+    public AccountResponse updateAccount(@PathVariable Long id, @RequestBody AccountSaveRequest request) {
+        requireEditableRole();
+
+        Account account = findAccount(id);
+        if (accountRepository.existsByAccountCodeAndIdNot(request.accountCode(), id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 거래처 코드입니다.");
+        }
+        applyRequest(account, request);
+
+        return AccountResponse.from(account);
+    }
+
+    @DeleteMapping("/api/accounts/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
+    public void deleteAccount(@PathVariable Long id) {
+        requireEditableRole();
+
+        findAccount(id).deactivate();
+    }
+
+    private void applyRequest(Account account, AccountSaveRequest request) {
+        account.update(
+                request.accountName(),
+                request.accountTypeSubCode(),
+                request.useYn(),
+                request.detailDescription(),
+                request.billAccountName(),
+                request.businessRegNo(),
+                request.ceoName(),
+                request.businessType(),
+                request.businessItem(),
+                request.country(),
+                request.email(),
+                request.phoneNo(),
+                request.faxNo(),
+                request.managerName(),
+                request.note()
+        );
+    }
+
+    private Account findAccount(Long id) {
+        return accountRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래처를 찾을 수 없습니다."));
+    }
+
+    private void requireEditableRole() {
+        String role = SecurityUtil.currentClaims().get("role", String.class);
+
+        if (!"ADMIN".equals(role) && !"STAFF".equals(role) && !"GUEST".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "기준정보를 변경할 권한이 없습니다.");
+        }
+    }
+
+    private boolean contains(String source, String keyword) {
+        if (!hasText(keyword)) {
+            return true;
+        }
+        return source != null && source.toLowerCase().contains(keyword.toLowerCase());
     }
 
     @GetMapping("/api/account-addresses")
@@ -93,6 +202,25 @@ public class AccountController {
             String contactName
     ) {}
 
+    public record AccountSaveRequest(
+            String accountCode,
+            String accountName,
+            String accountTypeSubCode,
+            String useYn,
+            String detailDescription,
+            String billAccountName,
+            String businessRegNo,
+            String ceoName,
+            String businessType,
+            String businessItem,
+            String country,
+            String email,
+            String phoneNo,
+            String faxNo,
+            String managerName,
+            String note
+    ) {}
+
     public record AccountResponse(
             Long id,
             Long topAccountId,
@@ -100,6 +228,18 @@ public class AccountController {
             String accountName,
             String accountTypeSubCode,
             String useYn,
+            String detailDescription,
+            String billAccountName,
+            String businessRegNo,
+            String ceoName,
+            String businessType,
+            String businessItem,
+            String country,
+            String email,
+            String phoneNo,
+            String faxNo,
+            String managerName,
+            String note,
             String createdAt,
             String updatedAt
     ) {
@@ -111,6 +251,18 @@ public class AccountController {
                     account.getAccountName(),
                     account.getAccountTypeSubCode(),
                     account.getUseYn(),
+                    account.getDetailDescription(),
+                    account.getBillAccountName(),
+                    account.getBusinessRegNo(),
+                    account.getCeoName(),
+                    account.getBusinessType(),
+                    account.getBusinessItem(),
+                    account.getCountry(),
+                    account.getEmail(),
+                    account.getPhoneNo(),
+                    account.getFaxNo(),
+                    account.getManagerName(),
+                    account.getNote(),
                     String.valueOf(account.getCreatedAt()),
                     String.valueOf(account.getUpdatedAt())
             );

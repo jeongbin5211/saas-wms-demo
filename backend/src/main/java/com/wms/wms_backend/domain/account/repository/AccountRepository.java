@@ -10,6 +10,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     boolean existsByAccountCode(String accountCode);
 
+    boolean existsByAccountCodeAndIdNot(String accountCode, Long id);
+
     Optional<Account> findByAccountCode(String accountCode);
 
     List<Account> findByTopAccountIdAndUseYnOrderByIdAsc(Long topAccountId, String useYn);

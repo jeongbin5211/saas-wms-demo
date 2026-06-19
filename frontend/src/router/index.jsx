@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Header } from '../components/layout/Header.jsx'
 import { Sidebar } from '../components/layout/Sidebar.jsx'
+import { AccountsPage } from '../pages/accounts/AccountsPage.jsx'
 import { BillingPage } from '../pages/billing/BillingPage.jsx'
 import { DashboardPage } from '../pages/dashboard/DashboardPage.jsx'
 import { InventoryHistoryPage } from '../pages/inventory/InventoryHistoryPage.jsx'
@@ -24,6 +25,7 @@ const emptyBillingFlow = { bills: [], billDetails: [] }
 const internalPages = {
   dashboard: { title: '대시보드', eyebrow: '개요', description: '주요 운영 지표와 진행 상태를 한 화면에서 확인합니다.' },
   guide: { title: '시연 가이드', eyebrow: '개요', description: '업무 흐름을 순서대로 확인하는 안내 화면입니다.' },
+  accounts: { title: '거래처', eyebrow: '기준정보', description: '거래처(고객사/공급사) 기준정보를 관리합니다.' },
   locations: { title: '위치정보', eyebrow: '기준정보', description: '창고, Area, Zone, Location 기준정보를 관리합니다.' },
   warehouse: { title: '창고', eyebrow: '기준정보', description: '로케이션 정보의 최상위 단위인 창고를 관리합니다.' },
   area: { title: 'Area', eyebrow: '기준정보', description: '창고 하위 작업 구역인 Area를 관리합니다.' },
@@ -208,6 +210,7 @@ export function WorkspaceRouter({ authUser, onLogout, onMoveHome, onNavigate, ro
 
 function renderPage(activeMenu, pageProps) {
   if (activeMenu === 'dashboard') return <DashboardPage {...pageProps} />
+  if (activeMenu === 'accounts') return <AccountsPage {...pageProps} />
   if (activeMenu === 'locations') return <LocationsPage {...pageProps} />
   if (activeMenu === 'warehouse') return <LocationsPage key="warehouse" {...pageProps} initialTypeTab={0} />
   if (activeMenu === 'area') return <LocationsPage key="area" {...pageProps} initialTypeTab={1} />
