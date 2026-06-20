@@ -7,6 +7,8 @@ import com.wms.wms_backend.domain.purchase.repository.PurchaseOrderDetailReposit
 import com.wms.wms_backend.domain.purchase.repository.PurchaseOrderRepository;
 import com.wms.wms_backend.domain.account.entity.Account;
 import com.wms.wms_backend.domain.account.repository.AccountRepository;
+import com.wms.wms_backend.domain.item.entity.Item;
+import com.wms.wms_backend.domain.item.repository.ItemRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -34,6 +36,7 @@ public class PurchaseOrderController {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final PurchaseOrderDetailRepository purchaseOrderDetailRepository;
     private final AccountRepository accountRepository;
+    private final ItemRepository itemRepository;
 
     @GetMapping("/api/purchase-orders")
     public List<PurchaseOrderResponse> findPurchaseOrders(
@@ -54,6 +57,7 @@ public class PurchaseOrderController {
 
     @PostMapping("/api/purchase-orders")
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public PurchaseOrderResponse createPurchaseOrder(@Valid @RequestBody PurchaseOrderRequest request) {
         if (purchaseOrderRepository.existsByPurchaseOrderNo(request.purchaseOrderNo())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 구매주문 번호입니다.");
@@ -69,6 +73,7 @@ public class PurchaseOrderController {
                 request.orderDate(),
                 normalizeNote(request.note())
         ));
+        replaceDetails(purchaseOrder, request.details());
 
         return PurchaseOrderResponse.from(purchaseOrder);
     }
@@ -93,6 +98,7 @@ public class PurchaseOrderController {
                 request.orderDate(),
                 normalizeNote(request.note())
         );
+        replaceDetails(purchaseOrder, request.details());
 
         return PurchaseOrderResponse.from(purchaseOrder);
     }
@@ -109,6 +115,7 @@ public class PurchaseOrderController {
             Long id,
             Long accountId,
             Long supplierAccountId,
+            String supplierAccountCode,
             String supplierAccountName,
             String purchaseOrderNo,
             String orderStatusSubCode,
@@ -122,6 +129,7 @@ public class PurchaseOrderController {
                     purchaseOrder.getId(),
                     purchaseOrder.getAccount().getId(),
                     purchaseOrder.getSupplierAccount().getId(),
+                    purchaseOrder.getSupplierAccount().getAccountCode(),
                     purchaseOrder.getSupplierAccount().getAccountName(),
                     purchaseOrder.getPurchaseOrderNo(),
                     purchaseOrder.getOrderStatusSubCode(),
@@ -168,8 +176,36 @@ public class PurchaseOrderController {
             @NotNull Long supplierAccountId,
             @NotBlank String purchaseOrderNo,
             @NotNull LocalDate orderDate,
-            String note
+            String note,
+            List<PurchaseOrderLineRequest> details
     ) {
+    }
+
+    public record PurchaseOrderLineRequest(
+            @NotNull Long itemId,
+            @NotNull Integer orderQuantity,
+            @NotNull BigDecimal unitPrice
+    ) {
+    }
+
+    private void replaceDetails(PurchaseOrder purchaseOrder, List<PurchaseOrderLineRequest> lines) {
+        purchaseOrderDetailRepository.deleteByPurchaseOrderId(purchaseOrder.getId());
+        purchaseOrderDetailRepository.flush();
+
+        if (lines == null) {
+            return;
+        }
+
+        for (PurchaseOrderLineRequest line : lines) {
+            Item item = itemRepository.findById(line.itemId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "품목을 찾을 수 없습니다."));
+            purchaseOrderDetailRepository.save(new PurchaseOrderDetail(
+                    purchaseOrder,
+                    item,
+                    line.orderQuantity(),
+                    line.unitPrice()
+            ));
+        }
     }
 
     private Account findAccount(Long id, String message) {

@@ -21,4 +21,6 @@ public interface PurchaseOrderDetailRepository extends JpaRepository<PurchaseOrd
 
     @EntityGraph(attributePaths = {"purchaseOrder", "item"})
     List<PurchaseOrderDetail> findByPurchaseOrderIdOrderByIdAsc(Long purchaseOrderId);
+
+    void deleteByPurchaseOrderId(Long purchaseOrderId);
 }

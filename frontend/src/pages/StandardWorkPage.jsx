@@ -24,6 +24,7 @@ export function StandardWorkPage({
   detailAfter,
   detailFieldAction,
   detailFields,
+  enrichDraftRow,
   endpoint,
   headerActions,
   hideHeader = false,
@@ -116,15 +117,17 @@ export function StandardWorkPage({
   }
 
   const handleDblClick = (rowData) => {
+    const base = { ...rowData }
     setSelectedRow(rowData)
-    setDraftRow({ ...rowData })
+    setDraftRow(enrichDraftRow ? enrichDraftRow(base, { isCreateMode: false }) : base)
     setActiveTab(1)
     setToast(null)
   }
 
   const handleNew = () => {
+    const base = typeof createDefaults === 'function' ? createDefaults() : (createDefaults ?? {})
     setSelectedRow(null)
-    setDraftRow(typeof createDefaults === 'function' ? createDefaults() : (createDefaults ?? {}))
+    setDraftRow(enrichDraftRow ? enrichDraftRow({ ...base }, { isCreateMode: true }) : base)
     setActiveTab(1)
     setToast(null)
   }
